@@ -1395,6 +1395,7 @@ _PyObject_GenericSetAttrWithDict(PyObject *obj, PyObject *name,
         Py_INCREF(descr);
         f = Py_TYPE(descr)->tp_descr_set;
         if (f != NULL) {
+            // rtgc
             res = f(descr, obj, value);
             goto done;
         }

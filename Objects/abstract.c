@@ -209,6 +209,9 @@ PyObject_SetItem(PyObject *o, PyObject *key, PyObject *value)
 
     PyMappingMethods *m = Py_TYPE(o)->tp_as_mapping;
     if (m && m->mp_ass_subscript) {
+        /* rtgc
+           cf) dict_as_mapping.dict_ass_sub -> dict_ass_sub -> PyDict_SetItem
+        */
         int res = m->mp_ass_subscript(o, key, value);
         assert(_Py_CheckSlotResult(o, "__setitem__", res >= 0));
         return res;
@@ -220,6 +223,9 @@ PyObject_SetItem(PyObject *o, PyObject *key, PyObject *value)
             key_value = PyNumber_AsSsize_t(key, PyExc_IndexError);
             if (key_value == -1 && PyErr_Occurred())
                 return -1;
+            /* rtgc 
+               cf) o->tp_as_sequence.sq_ass_item -> list_ass_item -> Py_SETREF(list->ob_item[i], v);
+            */
             return PySequence_SetItem(o, key_value, value);
         }
         else if (Py_TYPE(o)->tp_as_sequence->sq_ass_item) {
@@ -1942,6 +1948,7 @@ PySequence_SetItem(PyObject *s, Py_ssize_t i, PyObject *o)
                 i += l;
             }
         }
+        // rtgc m->sq_ass_item -> list_ass_item -> Py_SETREF(list->ob_item[i], v);
         int res = m->sq_ass_item(s, i, o);
         assert(_Py_CheckSlotResult(s, "__setitem__", res >= 0));
         return res;

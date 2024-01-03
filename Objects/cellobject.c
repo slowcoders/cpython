@@ -71,6 +71,7 @@ PyCell_Set(PyObject *op, PyObject *obj)
     oldobj = PyCell_GET(op);
     Py_XINCREF(obj);
     PyCell_SET(op, obj);
+    // rtgc
     Py_XDECREF(oldobj);
     return 0;
 }

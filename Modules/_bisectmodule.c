@@ -56,6 +56,7 @@ internal_bisect_right(PyObject *list, PyObject *item, Py_ssize_t lo, Py_ssize_t 
                 Py_DECREF(litem);
                 return -1;
             }
+            // rtgc
             Py_SETREF(litem, newitem);
         }
         res = PyObject_RichCompareBool(item, litem, Py_LT);
@@ -182,6 +183,7 @@ internal_bisect_left(PyObject *list, PyObject *item, Py_ssize_t lo, Py_ssize_t h
                 Py_DECREF(litem);
                 return -1;
             }
+            // rtgc
             Py_SETREF(litem, newitem);
         }
         res = PyObject_RichCompareBool(litem, item, Py_LT);

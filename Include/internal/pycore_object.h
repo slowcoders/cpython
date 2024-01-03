@@ -14,6 +14,7 @@ extern "C" {
 #include "pycore_pystate.h"       // _PyInterpreterState_GET()
 #include "pycore_runtime.h"       // _PyRuntime
 
+// rtgc
 #define _PyObject_IMMORTAL_INIT(type) \
     { \
         .ob_refcnt = 999999999, \
@@ -31,6 +32,7 @@ PyAPI_FUNC(void) _Py_NO_RETURN _Py_FatalRefcountErrorFunc(
 
 #define _Py_FatalRefcountError(message) _Py_FatalRefcountErrorFunc(__func__, message)
 
+// rtgc
 static inline void
 _Py_DECREF_SPECIALIZED(PyObject *op, const destructor destruct)
 {
@@ -48,6 +50,7 @@ _Py_DECREF_SPECIALIZED(PyObject *op, const destructor destruct)
     }
 }
 
+// rtgc
 static inline void
 _Py_DECREF_NO_DEALLOC(PyObject *op)
 {

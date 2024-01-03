@@ -51,6 +51,7 @@
 // Define them as macros to make sure that they are always inlined by the
 // preprocessor.
 
+// rtgc
 #undef Py_DECREF
 #define Py_DECREF(arg) \
     do { \
@@ -74,6 +75,7 @@
 #define Py_IS_TYPE(ob, type) \
     (_PyObject_CAST(ob)->ob_type == (type))
 
+// rtgc
 #undef _Py_DECREF_SPECIALIZED
 #define _Py_DECREF_SPECIALIZED(arg, dealloc) \
     do { \
@@ -3189,6 +3191,7 @@ handle_eval_breaker:
         }
 
         TARGET(STORE_DEREF) {
+            // rtgc
             PyObject *v = POP();
             PyObject *cell = GETLOCAL(oparg);
             PyObject *oldobj = PyCell_GET(cell);

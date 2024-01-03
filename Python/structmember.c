@@ -247,6 +247,7 @@ PyMember_SetOne(char *addr, PyMemberDef *l, PyObject *v)
         break;
     case T_OBJECT:
     case T_OBJECT_EX:
+        // rtgc
         Py_XINCREF(v);
         oldv = *(PyObject **)addr;
         *(PyObject **)addr = v;

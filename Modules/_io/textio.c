@@ -844,6 +844,7 @@ set_newline(textio *self, const char *newline)
         self->writenl = NULL;
 #endif
     }
+    // rtgc
     Py_XDECREF(old);
     return 0;
 }

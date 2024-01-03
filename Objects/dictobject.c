@@ -1301,6 +1301,7 @@ insertdict(PyDictObject *mp, PyObject *key, Py_hash_t hash, PyObject *value)
         }
         mp->ma_version_tag = DICT_NEXT_VERSION();
     }
+    // rtgc (old_v 처리)
     Py_XDECREF(old_value); /* which **CAN** re-enter (see issue #22653) */
     ASSERT_CONSISTENT(mp);
     Py_DECREF(key);
@@ -1874,6 +1875,7 @@ _PyDict_SetItem_Take2(PyDictObject *mp, PyObject *key, PyObject *value)
     if (!PyUnicode_CheckExact(key) || (hash = unicode_get_hash(key)) == -1) {
         hash = PyObject_Hash(key);
         if (hash == -1) {
+            // rtgc (_PyDict_SetItem 에서 호출됨)
             Py_DECREF(key);
             Py_DECREF(value);
             return -1;
@@ -1901,6 +1903,7 @@ PyDict_SetItem(PyObject *op, PyObject *key, PyObject *value)
     }
     assert(key);
     assert(value);
+    // rtgc
     Py_INCREF(key);
     Py_INCREF(value);
     return _PyDict_SetItem_Take2((PyDictObject *)op, key, value);
