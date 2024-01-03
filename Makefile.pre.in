@@ -440,8 +440,13 @@ PYTHON_OBJS=	\
 
 
 ##########################################################################
+# RTGC Objects
+RTGC_OBJS=  \
+		Objects/_rtgc.o
+
+##########################################################################
 # Objects
-OBJECT_OBJS=	\
+OBJECT_OBJS= $(RTGC_OBJS) \
 		Objects/abstract.o \
 		Objects/accu.o \
 		Objects/boolobject.o \

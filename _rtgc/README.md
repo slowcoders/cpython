@@ -6,7 +6,7 @@ for Debug
 ```sh
 mkdir _debug
 cd _debug
-../configure --with-pydebug
+../configure --with-pydebug --with-lto
 make
 make test
 ```
