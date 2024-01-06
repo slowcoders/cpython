@@ -332,7 +332,7 @@ int
 PyList_Append(PyObject *op, PyObject *newitem)
 {
     if (PyList_Check(op) && (newitem != NULL)) {
-        // rtgc
+        // rtgc. [add list item]
         Py_INCREF(newitem);
         return _PyList_AppendTakeRef((PyListObject *)op, newitem);
     }
@@ -484,7 +484,7 @@ list_slice(PyListObject *a, Py_ssize_t ilow, Py_ssize_t ihigh)
     dest = np->ob_item;
     for (i = 0; i < len; i++) {
         PyObject *v = src[i];
-        // rtgc
+        // rtgc. [list.substr]
         Py_INCREF(v);
         dest[i] = v;
     }
@@ -3013,7 +3013,7 @@ list_ass_subscript(PyListObject* self, PyObject* item, PyObject* value)
             Py_SET_SIZE(self, Py_SIZE(self) - slicelength);
             res = list_resize(self, Py_SIZE(self));
 
-            // rtgc
+            // rtgc. [deassign list item]
             for (i = 0; i < slicelength; i++) {
                 Py_DECREF(garbage[i]);
             }
@@ -3075,7 +3075,7 @@ list_ass_subscript(PyListObject* self, PyObject* item, PyObject* value)
                 selfitems[cur] = ins;
             }
 
-            // rtgc
+            // rtgc. [deassign list item]
             for (i = 0; i < slicelength; i++) {
                 Py_DECREF(garbage[i]);
             }

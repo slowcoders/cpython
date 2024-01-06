@@ -51,7 +51,7 @@ _PyErr_Restore(PyThreadState *tstate, PyObject *type, PyObject *value,
     tstate->curexc_value = value;
     tstate->curexc_traceback = traceback;
 
-    // rtgc
+    // rtgc-pass. (non-object)
     Py_XDECREF(oldtype);
     Py_XDECREF(oldvalue);
     Py_XDECREF(oldtraceback);

@@ -97,7 +97,7 @@ whose size is determined when the object is allocated.
  * by hand.  Similarly every pointer to a variable-size Python object can,
  * in addition, be cast to PyVarObject*.
  */
-// rtgc 
+// rtgc. (_object = PyObject)
 struct _object {
     _PyObject_HEAD_EXTRA
     Py_ssize_t ob_refcnt;
@@ -155,7 +155,7 @@ static inline int Py_IS_TYPE(PyObject *ob, PyTypeObject *type) {
 #endif
 
 
-// rtgc
+// rtgc. (Py_SET_REFCNT ??????)
 static inline void Py_SET_REFCNT(PyObject *ob, Py_ssize_t refcnt) {
     ob->ob_refcnt = refcnt;
 }
@@ -490,7 +490,6 @@ PyAPI_FUNC(void) Py_DecRef(PyObject *);
 PyAPI_FUNC(void) _Py_IncRef(PyObject *);
 PyAPI_FUNC(void) _Py_DecRef(PyObject *);
 
-// rtgc
 static inline void Py_INCREF(PyObject *op)
 {
 #if defined(Py_REF_DEBUG) && defined(Py_LIMITED_API) && Py_LIMITED_API+0 >= 0x030A0000
@@ -502,7 +501,11 @@ static inline void Py_INCREF(PyObject *op)
 #ifdef Py_REF_DEBUG
     _Py_RefTotal++;
 #endif
+#if USE_RTGC // debug && release.
+    RT_increaseGroundRefCount(op);
+#else
     op->ob_refcnt++;
+#endif
 #endif
 }
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 < 0x030b0000
@@ -512,17 +515,18 @@ static inline void Py_INCREF(PyObject *op)
 
 #if defined(Py_REF_DEBUG) && defined(Py_LIMITED_API) && Py_LIMITED_API+0 >= 0x030A0000
 // Stable ABI for limited C API version 3.10 of Python debug build
-// rtgc
 static inline void Py_DECREF(PyObject *op) {
     _Py_DecRef(op);
 }
 #define Py_DECREF(op) Py_DECREF(_PyObject_CAST(op))
 
 #elif defined(Py_REF_DEBUG)
-// rtgc
 static inline void Py_DECREF(const char *filename, int lineno, PyObject *op)
 {
     _Py_RefTotal--;
+#if USE_RTGC
+    RT_decreaseGroundRefCount(op)
+#else
     if (--op->ob_refcnt != 0) {
         if (op->ob_refcnt < 0) {
             _Py_NegativeRefcount(filename, lineno, op);
@@ -531,18 +535,22 @@ static inline void Py_DECREF(const char *filename, int lineno, PyObject *op)
     else {
         _Py_Dealloc(op);
     }
+#endif
 }
 #define Py_DECREF(op) Py_DECREF(__FILE__, __LINE__, _PyObject_CAST(op))
 
 #else
-// rtgc
 static inline void Py_DECREF(PyObject *op)
 {
     // Non-limited C API and limited C API for Python 3.9 and older access
     // directly PyObject.ob_refcnt.
+#if USE_RTGC
+    RT_decreaseGroundRefCount(op)
+#else
     if (--op->ob_refcnt == 0) {
         _Py_Dealloc(op);
     }
+#endif
 }
 #define Py_DECREF(op) Py_DECREF(_PyObject_CAST(op))
 #endif

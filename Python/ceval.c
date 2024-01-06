@@ -53,6 +53,13 @@
 
 // rtgc
 #undef Py_DECREF
+#if USE_RTGC
+#define Py_DECREF(arg) \
+    do { \
+        PyObject *op = _PyObject_CAST(arg); \
+        RT_decreaseGroundRefCount(op);
+    } while (0)
+#else
 #define Py_DECREF(arg) \
     do { \
         PyObject *op = _PyObject_CAST(arg); \
@@ -61,6 +68,7 @@
             (*dealloc)(op); \
         } \
     } while (0)
+#endif
 
 #undef Py_XDECREF
 #define Py_XDECREF(arg) \
@@ -75,8 +83,8 @@
 #define Py_IS_TYPE(ob, type) \
     (_PyObject_CAST(ob)->ob_type == (type))
 
-// rtgc
 #undef _Py_DECREF_SPECIALIZED
+// rtgc-pass (_Py_DECREF_SPECIALIZED called only primitive values like number and unicode(?))
 #define _Py_DECREF_SPECIALIZED(arg, dealloc) \
     do { \
         PyObject *op = _PyObject_CAST(arg); \
@@ -3191,7 +3199,7 @@ handle_eval_breaker:
         }
 
         TARGET(STORE_DEREF) {
-            // rtgc
+            // rtgc-pass (cell: multi scope variable??)
             PyObject *v = POP();
             PyObject *cell = GETLOCAL(oparg);
             PyObject *oldobj = PyCell_GET(cell);

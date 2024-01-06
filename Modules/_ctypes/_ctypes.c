@@ -3280,7 +3280,7 @@ PyCFuncPtr_set_restype(PyCFuncPtrObject *self, PyObject *ob, void *Py_UNUSED(ign
         oldchecker = self->checker;
         self->checker = NULL;
         Py_CLEAR(self->restype);
-        // rtgc ??
+        // rtgc-pass. (function object)
         Py_XDECREF(oldchecker);
         return 0;
     }

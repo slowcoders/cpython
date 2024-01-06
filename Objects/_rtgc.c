@@ -242,7 +242,7 @@ void ContractedEndpoint::removeGarbageReferrer(GCObject* referrer) {}
 
 
 
-bool TransitNode::isGarbage() {
+BOOL TransitNode::isGarbage() {
     return this->_refCount == 0 && this->_referrer == NULL;
 }
 
@@ -343,7 +343,7 @@ void ContractedEndpoint::decreaseOutgoingLinkCountInCircuit() {
     }
 }
 
-bool ContractedEndpoint::isGarbage() {
+BOOL ContractedEndpoint::isGarbage() {
     if (this->_refCount > 0) return false;
     if (this->_incomingLinks->size() == 0) return true;
     return this->_parentCircuit != NULL && this->_parentCircuit->_refCount == 0;

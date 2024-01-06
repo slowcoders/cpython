@@ -844,7 +844,7 @@ set_newline(textio *self, const char *newline)
         self->writenl = NULL;
 #endif
     }
-    // rtgc
+    // rtgc-pass. (old_v = string)
     Py_XDECREF(old);
     return 0;
 }

@@ -1225,6 +1225,7 @@ Consumes key and value references.
 static int
 insertdict(PyDictObject *mp, PyObject *key, Py_hash_t hash, PyObject *value)
 {
+    // rtgc. [insert dict key/value]
     PyObject *old_value;
 
     if (DK_IS_UNICODE(mp->ma_keys) && !PyUnicode_CheckExact(key)) {
@@ -1301,7 +1302,7 @@ insertdict(PyDictObject *mp, PyObject *key, Py_hash_t hash, PyObject *value)
         }
         mp->ma_version_tag = DICT_NEXT_VERSION();
     }
-    // rtgc (old_v 처리)
+    // rtgc (clear old_v of dict)
     Py_XDECREF(old_value); /* which **CAN** re-enter (see issue #22653) */
     ASSERT_CONSISTENT(mp);
     Py_DECREF(key);
@@ -1903,7 +1904,7 @@ PyDict_SetItem(PyObject *op, PyObject *key, PyObject *value)
     }
     assert(key);
     assert(value);
-    // rtgc
+    // rtgc. [set dict value]
     Py_INCREF(key);
     Py_INCREF(value);
     return _PyDict_SetItem_Take2((PyDictObject *)op, key, value);

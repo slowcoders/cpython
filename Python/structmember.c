@@ -104,6 +104,7 @@ PyMember_GetOne(const char *obj_addr, PyMemberDef *l)
 int
 PyMember_SetOne(char *addr, PyMemberDef *l, PyObject *v)
 {
+    // rtgc-pass. (access C struct)
     PyObject *oldv;
 
     addr += l->offset;
@@ -247,7 +248,7 @@ PyMember_SetOne(char *addr, PyMemberDef *l, PyObject *v)
         break;
     case T_OBJECT:
     case T_OBJECT_EX:
-        // rtgc
+        // rtgc-pass. (access C struct)
         Py_XINCREF(v);
         oldv = *(PyObject **)addr;
         *(PyObject **)addr = v;

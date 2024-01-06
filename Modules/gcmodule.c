@@ -415,10 +415,10 @@ validate_list(PyGC_Head *head, enum flagstates flags)
 /* Set all gc_refs = ob_refcnt.  After this, gc_refs is > 0 and
  * PREV_MASK_COLLECTING bit is set for all objects in containers.
  */
-// rtgc (reset gc_ref)
 static void
 update_refs(PyGC_Head *containers)
 {
+    // rtgc. garbage-scanner. (reset gc_ref)
     PyGC_Head *gc = GC_NEXT(containers);
     for (; gc != containers; gc = GC_NEXT(gc)) {
         gc_reset_refs(gc, Py_REFCNT(FROM_GC(gc)));

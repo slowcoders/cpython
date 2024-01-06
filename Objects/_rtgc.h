@@ -3,8 +3,7 @@
 
 #include "Python.h"
 #include <stdlib.h>
-// #include <vector>
-// #include <assert.h>
+#include <assert.h>
 
 enum GCNodeType { Acyclic, Transit, Endpoint, Circuit };
 
@@ -18,7 +17,7 @@ typedef struct _CircuitNode CircuitNode;
 typedef struct _ContractedLink ContractedLink;
 typedef struct _CircuitNode CircuitNode;
 
-typedef int bool;
+typedef int BOOL;
 
 static const int MAX_DESTINATION_COUNT = 4; 
 static const int ENABLE_RT_CIRCULAR_GARBAGE_DETECTION = 1;
@@ -31,32 +30,75 @@ struct _GCNode {
     enum GCNodeType _nodeType;
 };
 
-GCNode* createMemoryManagementNode(GCObject* obj);
+struct _RT_Methods {
+    BOOL (*isGarbage)(GCNode* self);
+    void (*increaseGroundRefCount)(GCNode* self);
+    BOOL (*decreaseGroundRefCount)(GCNode* self);
+    void (*addIncomingLink)(GCNode* self, GCObject* referrer);
+    BOOL (*removeIncomingLink)(GCNode* self, GCObject* referrer);
+    void (*removeGarbageReferrer)(GCNode* self, GCObject* referrer);
+    CircuitNode* (*getCircuitContainer)(GCNode* self);
+};
 
-void processRootVariableChange(GCObject* assigned, GCObject* erased);
+extern const struct _RT_Methods _rt_vtables[5]; 
+#define NUM_ARGS(...)  (sizeof((int[]){0, ##__VA_ARGS__})/sizeof(int)-1)
 
-void processFieldVariableChange(GCObject* owner, GCObject* assigned, GCObject* erased);
+#define RT_INVOKE_V(method, self) \
+    _rt_vtables[self->_nodeType].method(self)
 
-void detectCircuit(ContractedEndpoint* endpoint);
+#define RT_INVOKE(method, self, ...) \
+    _rt_vtables[self->_nodeType].method(self, __VA_ARGS__)
 
-void collectGarbage(GCNode* node);
 
-inline GCNode* getGCNode(GCObject* obj) { return (GCNode*)obj; }
+inline GCNode* RT_getGCNode(GCObject* obj) { return (GCNode*)obj; }
+void RT_detectCircuit(ContractedEndpoint* endpoint);
+void RT_collectGarbage(GCNode* node, void* dealloc);
+
+inline void RT_increaseGroundRefCount(GCObject* assigned) {
+    GCNode* node = RT_getGCNode(assigned);
+    RT_INVOKE_V(increaseGroundRefCount, node);
+}
+
+inline void RT_decreaseGroundRefCount(GCObject* erased) {
+    GCNode* node = RT_getGCNode(erased);
+    if (RT_INVOKE_V(decreaseGroundRefCount, node)) {
+        RT_collectGarbage(node, NULL);
+    }
+}
+
+inline void RT_decreaseGroundRefCountEx(GCObject* erased, void* dealloc) {
+    GCNode* node = RT_getGCNode(erased);
+    if (RT_INVOKE_V(decreaseGroundRefCount, node)) {
+        RT_collectGarbage(node, dealloc);
+    }
+}
+
+inline void RT_onFieldAssigned(GCObject* owner, GCObject* assigned) {
+    if (assigned != NULL && assigned != owner) {
+        GCNode* node = RT_getGCNode(assigned);
+        RT_INVOKE(addIncomingLink, node, owner);
+    }
+}
+
+inline void RT_onFieldErased(GCObject* owner, GCObject* erased) {
+    if (erased != NULL && erased != owner) {
+        GCNode* node = RT_getGCNode(erased);
+        if (RT_INVOKE(removeIncomingLink, node, owner)) {
+            RT_collectGarbage(node, NULL);
+        }
+    }
+}
+
 /*
 GCObject
 */
 
-inline bool isAcyclic(GCObject* obj) { return getGCNode(obj)->_nodeType == Acyclic; }
+inline BOOL isAcyclic(GCObject* obj) { return RT_getGCNode(obj)->_nodeType == Acyclic; }
 
 inline void reclaimObject(GCObject* obj) { printf("deleted %p\n", obj); }
 
 int getReferents(GCObject* obj, GCObject** referents, int max_count);
 
-// inline void replaceMemberVariable(GCObject* owner, GCObject** pField, GCObject* v) {
-//     GCObject* erased = *pField;
-//     *pField = v;
-//     processFieldVariableChange(owner, v, erased);
-// }
 
 
 /* 축약 연결 정보 */
@@ -77,34 +119,6 @@ typedef struct {
     ContractedLink* _links;
 } ContractedLinkSet;
 
-/* GCNode 는 각 객체 또는 객체 집합의 가비지 여부를 판별하기 위한 정보 구조체에 대한 추상적인 정의이다. 
-   그 기본적인 구조는 아래와 같다.   
-class GCNode {
-public:
-#ifdef DEBUG
-    const char* _id;
-#endif    
-    GCObject* _obj;
-    int       _refCount;
-
-    GCNode() {}
-    void markDestroyed() { this->_obj = NULL; }
-    bool isDestroyed()   { return this->_obj == NULL; }
-
-    virtual GCNodeType getNodeType() = 0;
-    virtual void increaseGroundRefCount() = 0;
-    virtual void decreaseGroundRefCount(int amount) = 0;
-    virtual void addIncomingLink(GCObject* referrer) = 0;
-    virtual void removeIncomingLink(GCObject* referrer) = 0;
-    virtual void removeGarbageReferrer(GCObject* referrer) = 0;
-    virtual bool isGarbage() = 0;
-    virtual CircuitNode* getCircuitContainer() = 0;
-
-};
-inline GCNodeType getNodeType(GCNode* n) {
-    return n->_nodeType;
-}
-*/
 
 
 inline TransitNode* asTransit(GCNode* n) { 
@@ -118,8 +132,7 @@ inline ContractedEndpoint* asEndpoint(GCNode* n) {
 AcyclicNode
 */
 
-bool AC_isGarbage(GCNode* self) { return self->_refCount == 0; }
-
+BOOL AC_isGarbage(GCNode* self) { return self->_refCount == 0; }
 void AC_increaseGroundRefCount(GCNode* self) { self->_refCount ++; }
 void AC_decreaseGroundRefCount(GCNode* self, int amount) { self->_refCount -= amount; }
 void AC_addIncomingLink(GCNode* self, GCObject* referrer) { self->_refCount ++; }
@@ -170,7 +183,7 @@ void EP_removeIncomingTrack(ContractedEndpoint* self, ContractedEndpoint* source
 
 void EP_decreaseOutgoingLinkCountInCircuit(ContractedEndpoint* self);
 
-bool EP_isGarbage(ContractedEndpoint* self);
+BOOL EP_isGarbage(ContractedEndpoint* self);
 
 
 // 경유점 노드.
@@ -190,7 +203,7 @@ void TR_removeIncomingLink(TransitNode* self, GCObject* referrer);
 
 void TR_removeGarbageReferrer(TransitNode* self, GCObject* referrer);
 
-bool TR_isGarbage(TransitNode* self);
+BOOL TR_isGarbage(TransitNode* self);
 
 ContractedEndpoint* TR_getSourceOfIncomingTrack(TransitNode* self);
 

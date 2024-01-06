@@ -14,7 +14,7 @@ extern "C" {
 #include "pycore_pystate.h"       // _PyInterpreterState_GET()
 #include "pycore_runtime.h"       // _PyRuntime
 
-// rtgc
+// rtgc. (immortal refcnt)
 #define _PyObject_IMMORTAL_INIT(type) \
     { \
         .ob_refcnt = 999999999, \
@@ -32,10 +32,10 @@ PyAPI_FUNC(void) _Py_NO_RETURN _Py_FatalRefcountErrorFunc(
 
 #define _Py_FatalRefcountError(message) _Py_FatalRefcountErrorFunc(__func__, message)
 
-// rtgc
 static inline void
 _Py_DECREF_SPECIALIZED(PyObject *op, const destructor destruct)
 {
+    // rtgc-pass. (_Py_DECREF_SPECIALIZED called only for primitive objects)
 #ifdef Py_REF_DEBUG
     _Py_RefTotal--;
 #endif
@@ -50,14 +50,17 @@ _Py_DECREF_SPECIALIZED(PyObject *op, const destructor destruct)
     }
 }
 
-// rtgc
 static inline void
 _Py_DECREF_NO_DEALLOC(PyObject *op)
 {
 #ifdef Py_REF_DEBUG
     _Py_RefTotal--;
 #endif
+#if USE_RTGC
+    RT_decreaseGroundRefCountEx(op, unexpected_garbaged_dected_fn);
+#else
     op->ob_refcnt--;
+#endif
 #ifdef Py_DEBUG
     if (op->ob_refcnt <= 0) {
         _Py_FatalRefcountError("Expected a positive remaining refcount");

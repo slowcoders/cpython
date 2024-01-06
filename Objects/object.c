@@ -1395,7 +1395,7 @@ _PyObject_GenericSetAttrWithDict(PyObject *obj, PyObject *name,
         Py_INCREF(descr);
         f = Py_TYPE(descr)->tp_descr_set;
         if (f != NULL) {
-            // rtgc
+            // rtgc. [calling set-function]
             res = f(descr, obj, value);
             goto done;
         }
@@ -1421,12 +1421,14 @@ _PyObject_GenericSetAttrWithDict(PyObject *obj, PyObject *name,
                 goto done;
             }
             else {
+                // rtgc. [set object-dict value]
                 res = _PyObjectDict_SetItem(tp, dictptr, name, value);
             }
         }
     }
     else {
         Py_INCREF(dict);
+        // rtgc. [set dict value]
         if (value == NULL)
             res = PyDict_DelItem(dict, name);
         else

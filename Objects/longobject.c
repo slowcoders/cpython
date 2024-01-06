@@ -42,6 +42,7 @@ medium_value(PyLongObject *x)
 static inline void
 _Py_DECREF_INT(PyLongObject *op)
 {
+    // rtgc-pass. (integer type)
     assert(PyLong_CheckExact(op));
     _Py_DECREF_SPECIALIZED((PyObject *)op, (destructor)PyObject_Free);
 }
