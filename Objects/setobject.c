@@ -102,6 +102,7 @@ static int set_table_resize(PySetObject *, Py_ssize_t);
 static int
 set_add_entry(PySetObject *so, PyObject *key, Py_hash_t hash)
 {
+    // rtgc. [add item to PySetObject]
     setentry *table;
     setentry *freeslot;
     setentry *entry;
@@ -196,6 +197,7 @@ the setobject's fill and used fields.
 static void
 set_insert_clean(setentry *table, size_t mask, PyObject *key, Py_hash_t hash)
 {
+    // rtgc. [add item to PySetObject]
     setentry *entry;
     size_t perturb = hash;
     size_t i = (size_t)hash & mask;
@@ -324,6 +326,7 @@ set_contains_entry(PySetObject *so, PyObject *key, Py_hash_t hash)
 static int
 set_discard_entry(PySetObject *so, PyObject *key, Py_hash_t hash)
 {
+    // rtgc. [remove item from PySetObject]
     setentry *entry;
     PyObject *old_key;
 
@@ -396,6 +399,8 @@ set_empty_to_minsize(PySetObject *so)
 static int
 set_clear_internal(PySetObject *so)
 {
+    // rtgc. [remove all item from PySetObject]
+    
     setentry *entry;
     setentry *table = so->table;
     Py_ssize_t fill = so->fill;

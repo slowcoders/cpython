@@ -2,6 +2,7 @@
 #  error "this header file must not be included directly"
 #endif
 
+// rtgc. (struct PyTupleObject)
 typedef struct {
     PyObject_VAR_HEAD
     /* ob_item contains space for 'ob_size' elements.

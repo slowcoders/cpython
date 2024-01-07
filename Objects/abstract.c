@@ -221,7 +221,7 @@ PyObject_SetItem(PyObject *o, PyObject *key, PyObject *value)
             key_value = PyNumber_AsSsize_t(key, PyExc_IndexError);
             if (key_value == -1 && PyErr_Occurred())
                 return -1;
-            // rtgc o->tp_as_sequence.sq_ass_item -> list_ass_item -> Py_SETREF(list->ob_item[i], v);
+            // rtgc [o->tp_as_sequence.sq_ass_item -> list_ass_item -> Py_SETREF(list->ob_item[i], v)];
             return PySequence_SetItem(o, key_value, value);
         }
         else if (Py_TYPE(o)->tp_as_sequence->sq_ass_item) {
