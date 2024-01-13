@@ -148,6 +148,7 @@ PyObject_LengthHint(PyObject *o, Py_ssize_t defaultvalue)
 PyObject *
 PyObject_GetItem(PyObject *o, PyObject *key)
 {
+    // rtgc (PyObject_GetItem)
     if (o == NULL || key == NULL) {
         return null_error();
     }

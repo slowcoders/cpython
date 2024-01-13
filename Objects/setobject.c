@@ -400,7 +400,7 @@ static int
 set_clear_internal(PySetObject *so)
 {
     // rtgc. [remove all item from PySetObject]
-    
+
     setentry *entry;
     setentry *table = so->table;
     Py_ssize_t fill = so->fill;
@@ -496,6 +496,7 @@ set_dealloc(PySetObject *so)
     if (so->weakreflist != NULL)
         PyObject_ClearWeakRefs((PyObject *) so);
 
+    // rtgc. [remove all item from PySetObject]
     for (entry = so->table; used > 0; entry++) {
         if (entry->key && entry->key != dummy) {
                 used--;
@@ -562,6 +563,7 @@ set_len(PyObject *so)
 static int
 set_merge(PySetObject *so, PyObject *otherset)
 {
+    // rtgc. [merge two PySetObject's into the first one]
     PySetObject *other;
     PyObject *key;
     Py_ssize_t i;

@@ -4205,6 +4205,7 @@ static PyGetSetDef element_getsetlist[] = {
     {NULL},
 };
 
+// rtgc (is dictionary???)
 static PyTypeObject Element_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "xml.etree.ElementTree.Element", sizeof(ElementObject), 0,

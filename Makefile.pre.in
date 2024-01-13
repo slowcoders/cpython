@@ -443,6 +443,7 @@ PYTHON_OBJS=	\
 # RTGC Objects
 RTGC_OBJS=  \
 		Objects/_rtgc.o
+		rtgc/util.o
 
 ##########################################################################
 # Objects

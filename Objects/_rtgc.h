@@ -15,6 +15,7 @@ typedef struct _TransitNode TransitNode;
 typedef struct _ContractedEndpoint ContractedEndpoint;
 typedef struct _CircuitNode CircuitNode;
 typedef struct _ContractedLink ContractedLink;
+typedef struct _LinkArray LinkArray;
 typedef struct _CircuitNode CircuitNode;
 
 typedef int BOOL;
@@ -22,12 +23,15 @@ typedef int BOOL;
 static const int MAX_DESTINATION_COUNT = 4; 
 static const int ENABLE_RT_CIRCULAR_GARBAGE_DETECTION = 1;
 
+#define RTNode_Header()         \
+    int32_t _refCount;          \
+    enum GCNodeType _nodeType;
+
 /*
 GarbageCollector
 */
 struct _GCNode {
-    int32_t _refCount;
-    enum GCNodeType _nodeType;
+    RTNode_Header() 
 };
 
 struct _RT_Methods {
@@ -100,13 +104,6 @@ inline void reclaimObject(GCObject* obj) { printf("deleted %p\n", obj); }
 int getReferents(GCObject* obj, GCObject** referents, int max_count);
 
 
-
-/* 축약 연결 정보 */
-struct _ContractedLink {
-    ContractedEndpoint* _endpoint;
-    int _linkCount;
-};
-
 inline void initContractedLink(ContractedLink* self, ContractedEndpoint* endpoint, int count) {
     self->_endpoint = endpoint;
     self->_linkCount = count;
@@ -145,8 +142,8 @@ CircuitNode* AC_getCircuitContainer(GCNode* self) { return NULL; }
 TrackableNode
  */
 
-void addDestinatonToIncomingTrack(TrackableNode* node, ContractedEndpoint* destination);
-void removeDestinatonFromIncomingTrack(TrackableNode* node, ContractedEndpoint* destination);  
+void TX_addDestinatonToIncomingTrack(TrackableNode* node, ContractedEndpoint* destination);
+void TX_removeDestinatonFromIncomingTrack(TrackableNode* node, ContractedEndpoint* destination);  
 
 /*
 ContractedEndpoint
@@ -188,14 +185,14 @@ BOOL EP_isGarbage(ContractedEndpoint* self);
 
 // 경유점 노드.
 struct _TransitNode {
+    RTNode_Header()
     TrackableNode* _referrer;
-    ContractedLinkSet* _destinationLinks;
+    LinkArray* _destinationLinks;
 };
-
 
 void TR_increaseGroundRefCount(TransitNode* self);
 
-void TR_decreaseGroundRefCount(TransitNode* self, int amount);
+void TR_decreaseGroundRefCount(TransitNode* self);
 
 void TR_addIncomingLink(TransitNode* self, GCObject* newReferrer);
 

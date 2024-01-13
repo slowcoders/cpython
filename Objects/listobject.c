@@ -3100,6 +3100,7 @@ static PyMappingMethods list_as_mapping = {
     (objobjargproc)list_ass_subscript
 };
 
+// rtgc (list is a kind of mapping)
 PyTypeObject PyList_Type = {
     PyVarObject_HEAD_INIT(&PyType_Type, 0)
     "list",

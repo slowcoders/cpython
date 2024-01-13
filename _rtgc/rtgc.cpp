@@ -1,7 +1,6 @@
-#include "_rtgc.h"
-#include "_rtgc_util.h"
+#include "GCNode.hpp"
 
-#if 0
+
 /**
  * NodeType 별 필수 항목
  * 0) Off-road Node		: _rootRefCount, _objRefCount, _referrer  --> Linear cluster = directed acyclic graph region.
@@ -81,35 +80,103 @@ void GarbageCollector::processRootVariableChange(GCObject* assigned, GCObject* e
 }
 
 
+void TransitNode::increaseGroundRefCount() {
+    if (this->_refCount ++ == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
+        for (auto link : *_destinationLinks) {
+            link._endpoint->increaseGroundRefCount();
+        }
+    }
+}
+
+void TransitNode::decreaseGroundRefCount(int amount) {
+    if ((this->_refCount -= amount) == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
+        for (auto link : *_destinationLinks) {
+            link._endpoint->decreaseGroundRefCount(1);
+        }
+    }
+}
+
 void ContractedEndpoint::increaseGroundRefCount() {
-    if (self->_refCount ++ == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
-        if (self->_parentCircuit != NULL) {
-            self->_parentCircuit->_refCount ++;
+    if (this->_refCount ++ == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
+        if (this->_parentCircuit != NULL) {
+            this->_parentCircuit->_refCount ++;
         }
     }
 }
 
 void ContractedEndpoint::decreaseGroundRefCount(int delta) {
-    if ((self->_refCount -= delta) == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
-        if (self->_parentCircuit != NULL) {
-            self->_parentCircuit->_refCount --;
+    if ((this->_refCount -= delta) == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
+        if (this->_parentCircuit != NULL) {
+            this->_parentCircuit->_refCount --;
         }
     }
 }
 
+/*
+ 참조 연결 생성 삭제 처리.
+ 두 객체 간의 참조 연결이 생성되거나 삭제된 경우, 해당 객체가 속한 GCNode 의 타입에 따라 처리 방식이 달라진다.
+ AcyclicNode 는 기존의 참조수 처리 방식을 사용하다.
+ 경유점 노드의 경우, 자신의 객체 참조수 또는 참조자 수가 시스템이 정한 숫자보다 작으면 목표점을 추가하고,
+ 그 보다 큰 경우에는 해당 경유점 노드를 축약 연결점 노드로 변경한다.
+ 아래의 예시는 경유점 노드의 최대 객체 참조수를 1로 설정한 경우를 처리하는 예시이다. 단일 연결만으로 허용하므로,
+ 참조 연결수(_objLinkCount) 대신에 _referrer 필드만을 사용하여 축약 연결점 생성 조건을 판별한다.
+*/
 
+
+void TransitNode::addIncomingLink(GCObject* newReferrer) {
+    auto oldReferrer = this->_referrer;
+    if (oldReferrer == NULL) {
+        this->_referrer = (TrackableNode*)newReferrer->_node;
+        if (!_destinationLinks->empty()) {
+            ContractedEndpoint* oldSource = this->getSourceOfIncomingTrack();
+            for (auto link : *_destinationLinks) {
+                link._endpoint->removeIncomingTrack(oldSource);
+                addDestinatonToIncomingTrack(_referrer, link._endpoint);
+            }
+        } else {
+            this->detectCircuitInDestinationlessPath();
+        }
+    } else {
+        auto oldDestinations = this->_destinationLinks;
+        auto stopover = ContractedEndpoint::transform(this);
+        for (auto link : *oldDestinations) {
+            removeDestinatonFromIncomingTrack(oldReferrer, link._endpoint);
+        }
+        addDestinatonToIncomingTrack(oldReferrer, stopover);
+        for (auto link : *oldDestinations) {
+            // newReferrer->addDestinatonToIncomingTrack() 전에 decreaseGroundRefCount 처리->
+            link._endpoint->decreaseGroundRefCount(stopover->_refCount);
+            link._endpoint->addIncomingTrack(stopover, link._linkCount);
+        }
+        addDestinatonToIncomingTrack((TrackableNode*)newReferrer->_node, stopover);
+        delete oldDestinations;
+    }
+}
 
 /*
 축약점 노드에 대한 참조 연결이 발생한 경우, 참조자를 종착점으로 하는 진입 트랙에 속한 객체 들에
 축약점 노드를 축약 경로 목표점으로 추가한다. 
 */
 void ContractedEndpoint::addIncomingLink(GCObject* referrer) {
-    addDestinatonToIncomingTrack((TrackableNode*)referrer->_node, self);
+    addDestinatonToIncomingTrack((TrackableNode*)referrer->_node, this);
 }
 
 
+/*
+경유점 노드와 한 참조자 객체와의 참조 연결이 삭제되면, 참조자를 종착점으로 하는 진입 트랙에 속한 객체 들에
+상기 경유점 노드를 경유하는 축약 경로 목표점들을 삭제한다.
+*/
+void TransitNode::removeIncomingLink(GCObject* referrer) {
+    assert(referrer != NULL && referrer->_node == _referrer);
+    TrackableNode* disconnected_referrer = this->_referrer;
+    this->_referrer = NULL;
+    for (auto link : *_destinationLinks) {
+        removeDestinatonFromIncomingTrack(disconnected_referrer, link._endpoint);
+    }
+}
+
 void ContractedEndpoint::removeIncomingLink(GCObject* referrer) {
-    removeDestinatonFromIncomingTrack((TrackableNode*)referrer->_node, self);
+    removeDestinatonFromIncomingTrack((TrackableNode*)referrer->_node, this);
 }
 
 
@@ -164,21 +231,32 @@ void TrackableNode::removeDestinatonFromIncomingTrack(TrackableNode* node, Contr
 }    
 
 
+/*
+가비지 객체에 의한 참조 삭제.
+*/
+void TransitNode::removeGarbageReferrer(GCObject* referrer) { 
+    assert(referrer != NULL && referrer->_node == _referrer);
+    this->_referrer = NULL;
+}
 
 void ContractedEndpoint::removeGarbageReferrer(GCObject* referrer) {}
 
 
 
-ContractedEndpoint* TR_getSourceOfIncomingTrack(TransitNode* self, ) {
-    TrackableNode* node = self->_referrer;
+bool TransitNode::isGarbage() {
+    return this->_refCount == 0 && this->_referrer == NULL;
+}
+
+ContractedEndpoint* TransitNode::getSourceOfIncomingTrack() {
+    TrackableNode* node = this->_referrer;
     for (TransitNode* transit; (transit = asTransit(node)) != NULL; ) {
         node = transit->_referrer;
     }
     return (ContractedEndpoint*)node;
 }
 
-CircuitNode* TR_getCircuitContainer(TransitNode* self, ) {
-    auto originNode = self->getSourceOfIncomingTrack();
+CircuitNode* TransitNode::getCircuitContainer() {
+    auto originNode = this->getSourceOfIncomingTrack();
     if (originNode != NULL && originNode->_parentCircuit != NULL) {
         for (auto link : *_destinationLinks) {
             if (link._endpoint->_parentCircuit == originNode->_parentCircuit) {
@@ -189,13 +267,13 @@ CircuitNode* TR_getCircuitContainer(TransitNode* self, ) {
     return NULL;
 }
 
-void TR_detectCircuitInDestinationlessPath(TransitNode* self, ) {
+void TransitNode::detectCircuitInDestinationlessPath() {
     if (!_destinationLinks->empty()) return;
-    auto node = self->_referrer;
+    auto node = this->_referrer;
     for (TransitNode* transit; (transit = asTransit(node)) != NULL; ) {
         if (!transit->_destinationLinks->empty()) break; 
         node = transit->_referrer;
-        if (transit == self) {
+        if (transit == this) {
             auto destination = ContractedEndpoint::transform(transit);            
             addDestinatonToIncomingTrack((TrackableNode*)node, destination);
             return;
@@ -213,7 +291,7 @@ ContractedEndpoint* ContractedEndpoint::transform(TransitNode* transit) {
 
 void ContractedEndpoint::addIncomingTrack(ContractedEndpoint* source, int linkCount) {
     if (source == NULL) {
-        if (self->_refCount ++ > 0) return;
+        if (this->_refCount ++ > 0) return;
     } else {
         for (auto link : *_incomingLinks) {
             if (link._endpoint == source) {
@@ -221,18 +299,18 @@ void ContractedEndpoint::addIncomingTrack(ContractedEndpoint* source, int linkCo
                 return;
             }
         }
-        self->_incomingLinks->push_back(ContractedLink(source, linkCount));
+        this->_incomingLinks->push_back(ContractedLink(source, linkCount));
         GarbageCollector::detectCircuit(source);
     }
 
-    if (ENABLE_RT_CIRCULAR_GARBAGE_DETECTION && self->_parentCircuit != NULL && source != NULL && source->_parentCircuit != self->_parentCircuit) {
-        self->_parentCircuit->_refCount ++;
+    if (ENABLE_RT_CIRCULAR_GARBAGE_DETECTION && this->_parentCircuit != NULL && source != NULL && source->_parentCircuit != this->_parentCircuit) {
+        this->_parentCircuit->_refCount ++;
     }                
 }
 
 void ContractedEndpoint::removeIncomingTrack(ContractedEndpoint* source) {
     if (source == NULL) {
-        if (--self->_refCount > 0) return;
+        if (--this->_refCount > 0) return;
     }
     else {
         for (int idx = _incomingLinks->size(); --idx >= 0; ) {
@@ -257,8 +335,8 @@ void ContractedEndpoint::removeIncomingTrack(ContractedEndpoint* source) {
 void ContractedEndpoint::decreaseOutgoingLinkCountInCircuit() {
     if (--_outgoingLinkCountInCircuit > 0) return;
     
-    auto circuit = self->_parentCircuit;
-    self->_parentCircuit = NULL;
+    auto circuit = this->_parentCircuit;
+    this->_parentCircuit = NULL;
     for (auto link : *_incomingLinks) {
         if (link._endpoint->_parentCircuit == circuit) {
             link._endpoint->decreaseOutgoingLinkCountInCircuit();
@@ -266,10 +344,10 @@ void ContractedEndpoint::decreaseOutgoingLinkCountInCircuit() {
     }
 }
 
-BOOL ContractedEndpoint::isGarbage() {
-    if (self->_refCount > 0) return false;
-    if (self->_incomingLinks->size() == 0) return true;
-    return self->_parentCircuit != NULL && self->_parentCircuit->_refCount == 0;
+bool ContractedEndpoint::isGarbage() {
+    if (this->_refCount > 0) return false;
+    if (this->_incomingLinks->size() == 0) return true;
+    return this->_parentCircuit != NULL && this->_parentCircuit->_refCount == 0;
 }
 
 class CircuitDetector {
@@ -316,7 +394,7 @@ public:
         endpoint->_outgoingLinkCountInCircuit = 0;
         int externalLinkCount = 0;
         for (auto link : *endpoint->_incomingLinks) {
-            self->checkCyclic(link._endpoint);
+            this->checkCyclic(link._endpoint);
             auto circuit = link._endpoint->_parentCircuit;
             if (circuit != NULL && circuit == endpoint->_parentCircuit) {
                 link._endpoint->_outgoingLinkCountInCircuit ++;
@@ -370,94 +448,5 @@ void GarbageCollector::collectGarbage(GCNode* node) {
             collectGarbage(node);
         }
     }
-}
-
-#endif
-
-void TR_increaseGroundRefCount(TransitNode* self) {
-    if (self->_refCount++ == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
-        FOR_EACH_DESTINATION_LINKS(self->_destinationLinks) {
-            EP_increaseGroundRefCount(link->_endpoint);
-        }
-    }
-}
-
-void TR_decreaseGroundRefCount(TransitNode* self) {
-    if (--self->_refCount == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
-        FOR_EACH_DESTINATION_LINKS(self->_destinationLinks) {
-            EP_decreaseGroundRefCount(link->_endpoint, 1);
-        }
-    }
-}
-
-/*
- 참조 연결 생성 삭제 처리.
- 두 객체 간의 참조 연결이 생성되거나 삭제된 경우, 해당 객체가 속한 GCNode 의 타입에 따라 처리 방식이 달라진다.
- AcyclicNode 는 기존의 참조수 처리 방식을 사용하다.
- 경유점 노드의 경우, 자신의 객체 참조수 또는 참조자 수가 시스템이 정한 숫자보다 작으면 목표점을 추가하고,
- 그 보다 큰 경우에는 해당 경유점 노드를 축약 연결점 노드로 변경한다.
- 아래의 예시는 경유점 노드의 최대 객체 참조수를 1로 설정한 경우를 처리하는 예시이다. 단일 연결만으로 허용하므로,
- 참조 연결수(_objLinkCount) 대신에 _referrer 필드만을 사용하여 축약 연결점 생성 조건을 판별한다.
-*/
-
-
-void TR_addIncomingLink(TransitNode* self, GCObject* newReferrer) {
-    auto oldReferrer = self->_referrer;
-    if (oldReferrer == NULL) {
-        self->_referrer = (TrackableNode*)RT_getGCNode(newReferrer);
-        if (self->_destinationLinks != NULL) {
-            ContractedEndpoint* oldSource = TR_getSourceOfIncomingTrack(self);
-            FOR_EACH_DESTINATION_LINKS(self->_destinationLinks) {
-                EP_removeIncomingTrack(link->_endpoint, oldSource);
-                TR_addDestinatonToIncomingTrack(self->_referrer, link->_endpoint);
-            }
-        } else {
-            TR_detectCircuitInDestinationlessPath(self);
-        }
-    } else {
-        auto oldDestinations = self->_destinationLinks;
-        auto stopover = EP_transform(self);
-        FOR_EACH_DESTINATION_LINKS(oldDestinations) {
-            TR_removeDestinatonFromIncomingTrack(oldReferrer, link->_endpoint);
-        }
-        addDestinatonToIncomingTrack(oldReferrer, stopover);
-        FOR_EACH_DESTINATION_LINKS(oldDestinations) {
-            if (ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
-                // TX_addDestinatonToIncomingTrack(newReferrer) 전에 decreaseGroundRefCount 처리
-                // 현재 stopover->_refCount 는 stopover의 진입 경로 상에 위치한 TransitNode 중
-                // RefCount 가 0 이상인 노드의 개수이다. 이를 Destination EndPoint 의 groundRefCount 에서 
-                // 빼줘야 한다.
-                EP_decreaseGroundRefCount(link->_endpoint, stopover->_refCount);
-            }
-            EP_addIncomingTrack(link->_endpoint, stopover, link->_linkCount);
-        }
-        TX_addDestinatonToIncomingTrack((TrackableNode*)RT_getGCNode(newReferrer), stopover);
-        LinkArray_delete(oldDestinations);
-    }
-}
-
-/*
-경유점 노드와 한 참조자 객체와의 참조 연결이 삭제되면, 참조자를 종착점으로 하는 진입 트랙에 속한 객체 들에
-상기 경유점 노드를 경유하는 축약 경로 목표점들을 삭제한다.
-*/
-void TR_removeIncomingLink(TransitNode* self, GCObject* referrer) {
-    assert(referrer != NULL && RT_getGCNode(referrer) == self->_referrer);
-    self->_referrer = NULL;
-    for (auto link : *_destinationLinks) {
-        removeDestinatonFromIncomingTrack(_referrer, link._endpoint);
-    }
-}
-
-
-/*
-가비지 객체에 의한 참조 삭제.
-*/
-void TR_removeGarbageReferrer(TransitNode* self, GCObject* referrer) { 
-    assert(referrer != NULL && referrer->_node == _referrer);
-    self->_referrer = NULL;
-}
-
-BOOL TR_isGarbage(TransitNode* self, ) {
-    return self->_refCount == 0 && self->_referrer == NULL;
 }
 
