@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-enum GCNodeType { Acyclic, Transit, Endpoint, Circuit };
+enum GCNodeType { Acyclic, Transit, Endpoint, Circuit, Destroyed = -1 };
 
 typedef struct _object GCObject;
 typedef struct _GCNode GCNode;
@@ -54,9 +54,12 @@ extern const struct _RT_Methods _rt_vtables[5];
     _rt_vtables[self->_nodeType].method(self, __VA_ARGS__)
 
 
-inline GCNode* RT_getGCNode(GCObject* obj) { return (GCNode*)obj; }
+inline GCNode* RT_getGCNode(GCObject* obj)  { return (GCNode*)obj; }
+inline GCObject* RT_getObject(GCNode* node) { return (GCObject*)node; }
+
 void RT_detectCircuit(ContractedEndpoint* endpoint);
 void RT_collectGarbage(GCNode* node, void* dealloc);
+inline void RT_markDestroyed(GCNode* node) { node->_nodeType = Destroyed; }
 
 inline void RT_increaseGroundRefCount(GCObject* assigned) {
     GCNode* node = RT_getGCNode(assigned);
@@ -77,17 +80,17 @@ inline void RT_decreaseGroundRefCountEx(GCObject* erased, void* dealloc) {
     }
 }
 
-inline void RT_onFieldAssigned(GCObject* owner, GCObject* assigned) {
-    if (assigned != NULL && assigned != owner) {
+inline void RT_onFieldAssigned(GCObject* referrer, GCObject* assigned) {
+    if (assigned != NULL && assigned != referrer) {
         GCNode* node = RT_getGCNode(assigned);
-        RT_INVOKE(addIncomingLink, node, owner);
+        RT_INVOKE(addIncomingLink, node, referrer);
     }
 }
 
-inline void RT_onFieldErased(GCObject* owner, GCObject* erased) {
-    if (erased != NULL && erased != owner) {
+inline void RT_onFieldErased(GCObject* referrer, GCObject* erased) {
+    if (erased != NULL && erased != referrer) {
         GCNode* node = RT_getGCNode(erased);
-        if (RT_INVOKE(removeIncomingLink, node, owner)) {
+        if (RT_INVOKE(removeIncomingLink, node, referrer)) {
             RT_collectGarbage(node, NULL);
         }
     }
@@ -117,6 +120,8 @@ typedef struct {
 } ContractedLinkSet;
 
 
+inline void TR_checkType(TransitNode* self) { assert(asTransit((GCNode*)self) != NULL); }
+inline void EP_checkType(TransitNode* self) { assert(asEndpoint((GCNode*)self) != NULL); }
 
 inline TransitNode* asTransit(GCNode* n) { 
     return (n != NULL && n->_nodeType == Transit) ? (TransitNode*)n : NULL; 
@@ -149,12 +154,14 @@ void TX_removeDestinatonFromIncomingTrack(TrackableNode* node, ContractedEndpoin
 ContractedEndpoint
 */
 typedef struct _ContractedEndpoint {
-    ContractedLinkSet* _incomingLinks;
+    RTNode_Header()
+    LinkArray* _incomingLinks;
     CircuitNode* _parentCircuit;
     int _outgoingLinkCountInCircuit;
 } ContractedEndpoint;
 
 typedef struct _CircuitNode {
+    int _refCount;
     int _cid;
 } CircuitNode;
 
