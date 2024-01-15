@@ -42,7 +42,7 @@ LinkArray* LinkArray_allocate(GCNode* node) {
 }
 
 int LinkArray_size(LinkArray* array) {
-    return array->_size;
+    return array == NULL ? 0 : array->_size;
 }
 
 BOOL LinkArray_isEmpty(LinkArray* array) {

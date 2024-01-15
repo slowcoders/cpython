@@ -177,7 +177,7 @@ void TR_increaseGroundRefCount(TransitNode* self) {
     TR_checkType(self);
     if (self->_refCount++ == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
         FOR_EACH_CONTRACTED_LINK(self->_destinationLinks) {
-            EP_increaseGroundRefCount(iter._link->_endpoint);
+            EP_increaseGroundRefCount(iter._link->_endpoint, 1);
         }
     }
 }
@@ -252,61 +252,12 @@ static void _removeDestinationLinksFromIncomingPath(GCNode* referrer, LinkArray*
     done:
     // if (node != NULL) {
         FOR_EACH_CONTRACTED_LINK(newDestinationLinks) {
-            EP_removeIncomingTrack(iter._link->_endpoint, (ContractedEndpoint*)referrer, 1);
+            EP_removeIncomingTrack(iter._link->_endpoint, (ContractedEndpoint*)referrer);
         }
     // }
 }
 
-static void _replaceDestinationLinksOfIncomingPath(GCNode* referrer, LinkArray* removedLinks, LinkArray* newDestinationLinks) {
-    TransitNode* node = asTransit(referrer);
-    if (node != NULL) {
-        while (node->_destinationLinks == removedLinks) {
-            if (newDestinationLinks->_owner == NULL/*links in stack*/) {
-                newDestinationLinks = LinkArray_clone(newDestinationLinks, node);
-            }
-            node->_destinationLinks = newDestinationLinks;
-            referrer = node->_referrer;
-            node = asTransit(referrer);
-            if (node == NULL) goto done;
-        }
 
-        while (1) {
-            LinkArray* updatedLinks = node->_destinationLinks;
-            FOR_EACH_CONTRACTED_LINK(newDestinationLinks) {
-                ContractedLink* link0 = ListArray_pointOf(updatedLinks, iter._link->_endpoint);
-                if (link0 == NULL) {
-                    ListArray_push(updatedLinks, iter._link);
-                } else {
-                    link0->_linkCount += iter._link->_linkCount;
-                }
-            }
-            FOR_EACH_CONTRACTED_LINK(removedLinks) {
-                ContractedLink* link0 = ListArray_pointOf(updatedLinks, iter._link->_endpoint);
-                assert(link0 != NULL);
-                assert(link0->_linkCount >= iter._link->_linkCount);
-                if ((link0->_linkCount -= iter._link->_linkCount) == 0) {
-                    ListArray_removeFast(updatedLinks, link0);
-                }
-            }
-
-            while (1) {
-                referrer = node->_referrer;
-                node = asTransit(referrer);
-                if (node == NULL) goto done;
-                if (node->_destinationLinks != updatedLinks) break;
-            }
-        }
-    }
-    done:
-    // if (node != NULL) {
-        FOR_EACH_CONTRACTED_LINK(newDestinationLinks) {
-            EP_addIncomingTrack(iter._link->_endpoint, (ContractedEndpoint*)referrer, 1);
-        }
-        FOR_EACH_CONTRACTED_LINK(removedLinks) {
-            EP_removeIncomingTrack(iter._link->_endpoint, (ContractedEndpoint*)referrer, 1);
-        }
-    // }
-}
 /*
  참조 연결 생성 삭제 처리.
  두 객체 간의 참조 연결이 생성되거나 삭제된 경우, 해당 객체가 속한 GCNode 의 타입에 따라 처리 방식이 달라진다.
@@ -328,7 +279,7 @@ void TR_addIncomingLink(TransitNode* self, GCObject* newReferrer) {
                 _addDestinationLinksToIncomingPath(self->_referrer, self->_destinationLinks);
             } else {
                 FOR_EACH_CONTRACTED_LINK(self->_destinationLinks) {
-                    TR_addDestinatonToIncomingTrack(self->_referrer, iter._link->_endpoint);
+                    TX_addDestinatonToIncomingTrac(self->_referrer, iter._link->_endpoint);
                 }
             }
         } else {
@@ -340,7 +291,7 @@ void TR_addIncomingLink(TransitNode* self, GCObject* newReferrer) {
         FOR_EACH_CONTRACTED_LINK(oldDestinations) {
             TR_removeDestinatonFromIncomingTrack(oldReferrer, iter._link->_endpoint);
         }
-        addDestinatonToIncomingTrack(oldReferrer, stopover);
+        TX_addDestinatonToIncomingTrack(oldReferrer, stopover);
         FOR_EACH_CONTRACTED_LINK(oldDestinations) {
             if (ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
                 // TX_addDestinatonToIncomingTrack(newReferrer) 전에 decreaseGroundRefCount 처리
@@ -370,11 +321,108 @@ void TR_removeIncomingLink(TransitNode* self, GCObject* referrer) {
     }
 }
 
+static BOOL _isSameLinks(ContractedLink* linkA, ContractedLink* linkB) {
+    return linkA->_endpoint  == linkB->_endpoint
+        && linkA->_linkCount == linkB->_linkCount;
+}
+
+static void TR_replaceDestinationLinksOfIncomingPath(TransitNode* node, LinkArray* addedLinks, LinkArray* removedLinks) {
+    int cntAdded   = LinkArray_size(addedLinks);
+    int cntRemoved = LinkArray_size(removedLinks);
+    if (cntAdded == cntRemoved) {
+        if (cntAdded == 0) return;
+        if (!memcmp(addedLinks->_items, addedLinks->_items, cntAdded * sizeof(ContractedLink))) {
+            return;
+        }
+        if (cntAdded == 2
+        &&  _isSameLinks(&addedLinks->_items[0], &addedLinks->_items[1])
+        &&  _isSameLinks(&addedLinks->_items[1], &addedLinks->_items[0])) {
+            return;
+        }
+    }
+
+    GCNode* referrer;
+    int countGroundNode = 0;
+    for (int depth = 0;; depth ++) {
+        LinkArray* replacedLinks = node->_destinationLinks;
+        LinkArray* updatedLinks = updatedLinks;
+        if (depth > 0) {
+            assert(updatedLinks->_owner == node);
+        } else if (updatedLinks->_owner != node) {
+            updatedLinks = LinkArray_clone(addedLinks, node);
+        } else {
+            depth ++;
+        }
+        FOR_EACH_CONTRACTED_LINK(addedLinks) {
+            ContractedLink* link0 = ListArray_pointOf(updatedLinks, iter._link->_endpoint);
+            if (link0 == NULL) {
+                ListArray_push(updatedLinks, iter._link);
+            } else {
+                link0->_linkCount += iter._link->_linkCount;
+            }
+        }
+        FOR_EACH_CONTRACTED_LINK(removedLinks) {
+            ContractedLink* link0 = ListArray_pointOf(updatedLinks, iter._link->_endpoint);
+            assert(link0 != NULL);
+            assert(link0->_linkCount >= iter._link->_linkCount);
+            if ((link0->_linkCount -= iter._link->_linkCount) == 0) {
+                ListArray_removeFast(updatedLinks, link0);
+            }
+        }
+
+        while (1) {
+            if (node->_refCount > 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
+                countGroundNode ++;
+            }
+            referrer = node->_referrer;
+            node = asTransit(referrer);
+            if (node == NULL) goto done;
+            if (node->_destinationLinks != replacedLinks) break;
+            if (depth == 0) {
+                node->_destinationLinks = updatedLinks;
+            }
+        }
+    }
+
+    done:
+    // if (node != NULL) {
+        FOR_EACH_CONTRACTED_LINK(addedLinks) {
+            EP_addIncomingTrack(iter._link->_endpoint, (ContractedEndpoint*)referrer, 1);
+            if (countGroundNode > 0) {
+                EP_increaseGroundRefCount(iter._link->_endpoint, countGroundNode);
+            }
+        }
+        FOR_EACH_CONTRACTED_LINK(removedLinks) {
+            EP_removeIncomingTrack(iter._link->_endpoint, (ContractedEndpoint*)referrer);
+            if (countGroundNode > 0) {
+                EP_decreaseGroundRefCount(iter._link->_endpoint, countGroundNode);
+            }
+        }
+    // }
+}
+
+static LinkArray* _getDestinationLinks(GCNode* node, LinkArray* tmpArray) {
+    if (node->_nodeType == Transit) {
+        return ((TransitNode*)node)->_destinationLinks;
+    }
+    else {
+        assert(node->_nodeType == Endpoint);
+        ContractedLink* link = (ContractedLink*)(tmpArray + 1);
+        link->_endpoint = (ContractedEndpoint*)node;
+        link->_linkCount = 1;
+        tmpArray->_items = link;
+        tmpArray->_size = 1;
+        tmpArray->_owner = NULL;
+        return tmpArray;
+    }
+}
+
 void TR_onReferentChanged(TransitNode* self, GCObject* oldReferent, GCObject* newReferent) {
     TR_checkType(self);
-    LinkArray _addedLinks, _removedLinks;
-    LinkArray* addedLinks   = _getDestinationLinks(oldReferent, _removedLinks);
-    LinkArray* removedLinks = _getDestinationLinks(newReferent, _addedLinks);
+    LinkArray tmpAddedLinks[2], tmpRemovedLinks[2];
+    LinkArray* addedLinks   = _getDestinationLinks(newReferent, tmpAddedLinks);
+    LinkArray* removedLinks = _getDestinationLinks(oldReferent, tmpRemovedLinks);
+    _replaceDestinationLinksOfIncomingPath(self, addedLinks, removedLinks)
 }
 
 /*
@@ -483,18 +531,21 @@ void TX_removeDestinatonFromIncomingTrack(TrackableNode* node, ContractedEndpoin
 
 // ===== //
 
-void EP_increaseGroundRefCount(ContractedEndpoint* self) {
+void EP_increaseGroundRefCount(ContractedEndpoint* self, int count) {
     EP_checkType(self);
-    if (self->_refCount ++ == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
+    assert(count > 0);
+    if (self->_refCount == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
         if (self->_parentCircuit != NULL) {
             self->_parentCircuit->_refCount ++;
         }
     }
+    self->_refCount += count;
 }
 
-void EP_decreaseGroundRefCount(ContractedEndpoint* self, int delta) {
+void EP_decreaseGroundRefCount(ContractedEndpoint* self, int count) {
     EP_checkType(self);
-    if ((self->_refCount -= delta) == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
+    assert(count > 0);
+    if ((self->_refCount -= count) == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
         if (self->_parentCircuit != NULL) {
             self->_parentCircuit->_refCount --;
         }
@@ -509,7 +560,7 @@ void EP_decreaseGroundRefCount(ContractedEndpoint* self, int delta) {
 */
 void EP_addIncomingLink(ContractedEndpoint* self, GCObject* referrer) {
     EP_checkType(self);
-    addDestinatonToIncomingTrack((TrackableNode*)RT_getGCNode(referrer), self);
+    TX_addDestinatonToIncomingTrac((TrackableNode*)RT_getGCNode(referrer), self);
 }
 
 

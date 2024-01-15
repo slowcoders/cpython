@@ -171,9 +171,9 @@ inline CircuitNode* EP_getCircuitContainer(ContractedEndpoint* self) {
     return self->_parentCircuit;
 }
 
-void EP_increaseGroundRefCount(ContractedEndpoint* self);
+void EP_increaseGroundRefCount(ContractedEndpoint* self, int count);
 
-void EP_decreaseGroundRefCount(ContractedEndpoint* self, int delta);
+void EP_decreaseGroundRefCount(ContractedEndpoint* self, int count);
 
 void EP_addIncomingLink(ContractedEndpoint* self, GCObject* referrer);
 
