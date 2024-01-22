@@ -9,7 +9,7 @@
  * 3) Convergence		: _rootRefCount, _objRefCount, _inverseRoutes, _destination
  * 4) Divergence		: _rootRefCount, _objRefCount, _referrer, _destination | _parentCircuit.
  * 5) Cross				: _rootRefCount, _objRefCount, _inverseRoutes, _destination | _parentCircuit.
- * 7) Acyclic			: _refCount
+ * 7) Acyclic			: _linkRefCount
  */
 /*
 
@@ -21,7 +21,7 @@ GCObject {
 }
 
 AcyclicNode {
-	uint32_t	_refCount;
+	uint32_t	_linkRefCount;
 }
 
 GCNode {
@@ -81,7 +81,7 @@ void GarbageCollector::processRootVariableChange(GCObject* assigned, GCObject* e
 
 
 void TransitNode::increaseGroundRefCount() {
-    if (this->_refCount ++ == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
+    if (this->_linkRefCount ++ == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
         for (auto link : *_destinationLinks) {
             link._endpoint->increaseGroundRefCount();
         }
@@ -89,7 +89,7 @@ void TransitNode::increaseGroundRefCount() {
 }
 
 void TransitNode::decreaseGroundRefCount(int amount) {
-    if ((this->_refCount -= amount) == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
+    if ((this->_linkRefCount -= amount) == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
         for (auto link : *_destinationLinks) {
             link._endpoint->decreaseGroundRefCount(1);
         }
@@ -97,17 +97,17 @@ void TransitNode::decreaseGroundRefCount(int amount) {
 }
 
 void ContractedEndpoint::increaseGroundRefCount() {
-    if (this->_refCount ++ == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
+    if (this->_linkRefCount ++ == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
         if (this->_parentCircuit != NULL) {
-            this->_parentCircuit->_refCount ++;
+            this->_parentCircuit->_linkRefCount ++;
         }
     }
 }
 
 void ContractedEndpoint::decreaseGroundRefCount(int delta) {
-    if ((this->_refCount -= delta) == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
+    if ((this->_linkRefCount -= delta) == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
         if (this->_parentCircuit != NULL) {
-            this->_parentCircuit->_refCount --;
+            this->_parentCircuit->_linkRefCount --;
         }
     }
 }
@@ -145,7 +145,7 @@ void TransitNode::addIncomingLink(GCObject* newReferrer) {
         addDestinatonToIncomingTrack(oldReferrer, stopover);
         for (auto link : *oldDestinations) {
             // newReferrer->addDestinatonToIncomingTrack() 전에 decreaseGroundRefCount 처리->
-            link._endpoint->decreaseGroundRefCount(stopover->_refCount);
+            link._endpoint->decreaseGroundRefCount(stopover->_linkRefCount);
             link._endpoint->addIncomingTrack(stopover, link._linkCount);
         }
         addDestinatonToIncomingTrack((TrackableNode*)newReferrer->_node, stopover);
@@ -239,12 +239,10 @@ void TransitNode::removeGarbageReferrer(GCObject* referrer) {
     this->_referrer = NULL;
 }
 
-void ContractedEndpoint::removeGarbageReferrer(GCObject* referrer) {}
-
 
 
 bool TransitNode::isGarbage() {
-    return this->_refCount == 0 && this->_referrer == NULL;
+    return this->_linkRefCount == 0 && this->_referrer == NULL;
 }
 
 ContractedEndpoint* TransitNode::getSourceOfIncomingTrack() {
@@ -291,7 +289,7 @@ ContractedEndpoint* ContractedEndpoint::transform(TransitNode* transit) {
 
 void ContractedEndpoint::addIncomingTrack(ContractedEndpoint* source, int linkCount) {
     if (source == NULL) {
-        if (this->_refCount ++ > 0) return;
+        if (this->_linkRefCount ++ > 0) return;
     } else {
         for (auto link : *_incomingLinks) {
             if (link._endpoint == source) {
@@ -304,13 +302,13 @@ void ContractedEndpoint::addIncomingTrack(ContractedEndpoint* source, int linkCo
     }
 
     if (ENABLE_RT_CIRCULAR_GARBAGE_DETECTION && this->_parentCircuit != NULL && source != NULL && source->_parentCircuit != this->_parentCircuit) {
-        this->_parentCircuit->_refCount ++;
+        this->_parentCircuit->_linkRefCount ++;
     }                
 }
 
 void ContractedEndpoint::removeIncomingTrack(ContractedEndpoint* source) {
     if (source == NULL) {
-        if (--this->_refCount > 0) return;
+        if (--this->_linkRefCount > 0) return;
     }
     else {
         for (int idx = _incomingLinks->size(); --idx >= 0; ) {
@@ -327,7 +325,7 @@ void ContractedEndpoint::removeIncomingTrack(ContractedEndpoint* source) {
         if (source != NULL && source->_parentCircuit == _parentCircuit) {
             source->decreaseOutgoingLinkCountInCircuit();
         } else {
-            _parentCircuit->_refCount --;
+            _parentCircuit->_linkRefCount --;
         }
     }
 }
@@ -345,9 +343,9 @@ void ContractedEndpoint::decreaseOutgoingLinkCountInCircuit() {
 }
 
 bool ContractedEndpoint::isGarbage() {
-    if (this->_refCount > 0) return false;
+    if (this->_linkRefCount > 0) return false;
     if (this->_incomingLinks->size() == 0) return true;
-    return this->_parentCircuit != NULL && this->_parentCircuit->_refCount == 0;
+    return this->_parentCircuit != NULL && this->_parentCircuit->_linkRefCount == 0;
 }
 
 class CircuitDetector {
@@ -380,8 +378,8 @@ public:
                 auto node = _traceStack.at(i);
                 if (node->_parentCircuit == NULL) {
                     node->_parentCircuit = circuit;
-                    if (node->_refCount > 0) {
-                        circuit->_refCount ++;
+                    if (node->_linkRefCount > 0) {
+                        circuit->_linkRefCount ++;
                     }
                 }
             }
@@ -403,7 +401,7 @@ public:
             }
         }
         if (endpoint->_parentCircuit != NULL) {
-            endpoint->_parentCircuit->_refCount += externalLinkCount;
+            endpoint->_parentCircuit->_linkRefCount += externalLinkCount;
         } else {
             _traceStack.resize(stackDepth);
             _circuitInStack = NULL;

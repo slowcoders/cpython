@@ -258,6 +258,7 @@ int
 PyList_SetItem(PyObject *op, Py_ssize_t i,
                PyObject *newitem)
 {
+    // rtgc. (PyList_SetItem)
     PyObject **p;
     if (!PyList_Check(op)) {
         Py_XDECREF(newitem);

@@ -4,6 +4,18 @@
 static const BOOL true = 1;
 static const BOOL false = 0;
 static const BOOL FAST_UPDATE_DESTNATION_LINKS = true;
+static const CircuitNode* NoCircuit = (CircuitNode*)-1;
+
+inline TransitNode* asTransit(GCNode* n) { 
+    return (n != NULL && n->_nodeType == Transit) ? (TransitNode*)n : NULL; 
+}
+inline ContractedEndpoint* asEndpoint(GCNode* n) { 
+    return (n != NULL && n->_nodeType == Endpoint) ? (ContractedEndpoint*)n : NULL; 
+}
+inline void TR_checkType(TransitNode* self) { assert(asTransit((GCNode*)self) != NULL); }
+inline void EP_checkType(TransitNode* self) { assert(asEndpoint((GCNode*)self) != NULL); }
+
+static CircuitNode* TR_replaceDestinationLinksOfIncomingPath(TransitNode* node, LinkArray* addedLinks, LinkArray* erasedLinks);
 
 #if 0
 /**
@@ -14,7 +26,7 @@ static const BOOL FAST_UPDATE_DESTNATION_LINKS = true;
  * 3) Convergence		: _rootRefCount, _objRefCount, _inverseRoutes, _destination
  * 4) Divergence		: _rootRefCount, _objRefCount, _referrer, _destination | _parentCircuit.
  * 5) Cross				: _rootRefCount, _objRefCount, _inverseRoutes, _destination | _parentCircuit.
- * 7) Acyclic			: _refCount
+ * 7) Acyclic			: _linkRefCount
  */
 /*
 
@@ -26,7 +38,7 @@ GCObject {
 }
 
 AcyclicNode {
-	uint32_t	_refCount;
+	uint32_t	_linkRefCount;
 }
 
 GCNode {
@@ -115,8 +127,8 @@ public:
                 auto node = _traceStack.at(i);
                 if (node->_parentCircuit == NULL) {
                     node->_parentCircuit = circuit;
-                    if (node->_refCount > 0) {
-                        circuit->_refCount ++;
+                    if (node->_linkRefCount > 0) {
+                        circuit->_linkRefCount ++;
                     }
                 }
             }
@@ -138,7 +150,7 @@ public:
             }
         }
         if (endpoint->_parentCircuit != NULL) {
-            endpoint->_parentCircuit->_refCount += externalLinkCount;
+            endpoint->_parentCircuit->_linkRefCount += externalLinkCount;
         } else {
             _traceStack.resize(stackDepth);
             _circuitInStack = NULL;
@@ -173,9 +185,33 @@ void GarbageCollector::detectCircuit(ContractedEndpoint* endpoint) {
 
 #endif
 
+
+static void _initTempLinks(LinkArray* tmpArray, ContractedEndpoint* endpoint) {
+    ContractedLink* link = (ContractedLink*)(tmpArray + 1);
+    link->_endpoint = (ContractedEndpoint*)endpoint;
+    link->_linkCount = 1;
+    tmpArray->_items = link;
+    tmpArray->_size = 1;
+    tmpArray->_owner = NULL;
+}
+
+static LinkArray* _getDestinationLinks(GCNode* node, LinkArray* tmpArray) {
+    if (node == NULL || node->_nodeType == Acyclic) {
+        return NULL;
+    }
+    if (node->_nodeType == Transit) {
+        return ((TransitNode*)node)->_destinationLinks;
+    }
+    else {
+        assert(node->_nodeType == Endpoint);
+        _initTempLinks(tmpArray, (ContractedEndpoint*)node);
+        return tmpArray;
+    }
+}
+
 void TR_increaseGroundRefCount(TransitNode* self) {
     TR_checkType(self);
-    if (self->_refCount++ == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
+    if (self->_groundRefCount++ == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
         FOR_EACH_CONTRACTED_LINK(self->_destinationLinks) {
             EP_increaseGroundRefCount(iter._link->_endpoint, 1);
         }
@@ -184,79 +220,12 @@ void TR_increaseGroundRefCount(TransitNode* self) {
 
 void TR_decreaseGroundRefCount(TransitNode* self) {
     TR_checkType(self);
-    if (--self->_refCount == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
+    if (--self->_groundRefCount == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
         FOR_EACH_CONTRACTED_LINK(self->_destinationLinks) {
             EP_decreaseGroundRefCount(iter._link->_endpoint, 1);
         }
     }
 }
-
-static void _addDestinationLinksToIncomingPath(GCNode* referrer, LinkArray* newDestinationLinks) {
-    TransitNode* node = asTransit(referrer);
-    if (node != NULL) while (true) {
-        LinkArray* updatedLinks = node->_destinationLinks;
-        LinkArray* targetLinks = updatedLinks;
-        if (updatedLinks->_owner != node) {
-            targetLinks = LinkArray_clone(updatedLinks, node);
-            node->_destinationLinks = targetLinks;
-        }
-        FOR_EACH_CONTRACTED_LINK(newDestinationLinks) {
-            ContractedLink* link0 = ListArray_pointOf(targetLinks, iter._link->_endpoint);
-            if (link0 == NULL) {
-                ListArray_push(targetLinks, iter._link);
-            } else {
-                link0->_linkCount += iter._link->_linkCount;
-            }
-        }
-
-        while (1) {
-            referrer = node->_referrer;
-            node = asTransit(referrer);
-            if (node == NULL) goto done;
-            if (node->_destinationLinks != updatedLinks) break;
-        }
-    }
-    done:
-    // if (node != NULL) {
-        FOR_EACH_CONTRACTED_LINK(newDestinationLinks) {
-            EP_addIncomingTrack(iter._link->_endpoint, (ContractedEndpoint*)referrer, 1);
-        }
-    // }
-}
-
-static void _removeDestinationLinksFromIncomingPath(GCNode* referrer, LinkArray* removedLinks) {
-    TransitNode* node = asTransit(referrer);
-    if (node != NULL) while (true) {
-        LinkArray* updatedLinks = node->_destinationLinks;
-        LinkArray* targetLinks = updatedLinks;
-        if (updatedLinks->_owner != node) {
-            targetLinks = LinkArray_clone(updatedLinks, node);
-            node->_destinationLinks = targetLinks;
-        }
-        FOR_EACH_CONTRACTED_LINK(removedLinks) {
-            ContractedLink* link0 = ListArray_pointOf(targetLinks, iter._link->_endpoint);
-            assert(link0 != NULL);
-            assert(link0->_linkCount >= iter._link->_linkCount);
-            if ((link0->_linkCount -= iter._link->_linkCount) == 0) {
-                ListArray_removeFast(targetLinks, link0);
-            }
-        }
-
-        while (1) {
-            referrer = node->_referrer;
-            node = asTransit(referrer);
-            if (node == NULL) goto done;
-            if (node->_destinationLinks != updatedLinks) break;
-        }
-    }
-    done:
-    // if (node != NULL) {
-        FOR_EACH_CONTRACTED_LINK(newDestinationLinks) {
-            EP_removeIncomingTrack(iter._link->_endpoint, (ContractedEndpoint*)referrer);
-        }
-    // }
-}
-
 
 /*
  참조 연결 생성 삭제 처리.
@@ -269,41 +238,31 @@ static void _removeDestinationLinksFromIncomingPath(GCNode* referrer, LinkArray*
 */
 
 
-void TR_addIncomingLink(TransitNode* self, GCObject* newReferrer) {
+void TR_addIncomingLink(TransitNode* self, GCNode* newReferrer) {
     TR_checkType(self);
     auto oldReferrer = self->_referrer;
     if (oldReferrer == NULL) {
-        self->_referrer = (TrackableNode*)RT_getGCNode(newReferrer);
-        if (!LinkArray_isEmpty(self->_destinationLinks)) {
-            if (FAST_UPDATE_DESTNATION_LINKS) {
-                _addDestinationLinksToIncomingPath(self->_referrer, self->_destinationLinks);
-            } else {
-                FOR_EACH_CONTRACTED_LINK(self->_destinationLinks) {
-                    TX_addDestinatonToIncomingTrac(self->_referrer, iter._link->_endpoint);
-                }
-            }
-        } else {
-            TR_detectCircuitInDestinationlessPath(self);
-        }
+        self->_referrer = newReferrer;
+        TR_detectCircuitInDestinationlessPath(self);
     } else {
-        auto oldDestinations = self->_destinationLinks;
-        auto stopover = EP_transform(self);
-        FOR_EACH_CONTRACTED_LINK(oldDestinations) {
-            TR_removeDestinatonFromIncomingTrack(oldReferrer, iter._link->_endpoint);
+        LinkArray tmpAddedLinks[2]; 
+        LinkArray* oldDestinations = self->_destinationLinks;
+        ContractedEndpoint* stopover = EP_transform(self);
+        _initTempLinks(tmpAddedLinks, stopover);
+        // old-referrer 의 incoming-path 에서 현재 detinations 를 삭제하고 stopover(=self) 를 추가한다.
+        int orgRefCount = stopover->_linkRefCount;
+        CircuitNode* circuit = TR_replaceDestinationLinksOfIncomingPath(oldReferrer, oldDestinations, tmpAddedLinks);
+        if (circuit != NULL) {
+            stopover->_parentCircuit = circuit;
+            circuit->_linkRefCount += stopover->_linkRefCount;
         }
-        TX_addDestinatonToIncomingTrack(oldReferrer, stopover);
+        // circuit->_linkRefCount = sum of _linkRefCount of the endpoints in the circuit + groundRefCount of the nodes in circuit; 
         FOR_EACH_CONTRACTED_LINK(oldDestinations) {
-            if (ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
-                // TX_addDestinatonToIncomingTrack(newReferrer) 전에 decreaseGroundRefCount 처리
-                // 현재 stopover->_refCount 는 stopover의 진입 경로 상에 위치한 TransitNode 중
-                // RefCount 가 0 이상인 노드의 개수이다. 이를 Destination EndPoint 의 groundRefCount 에서 
-                // 빼줘야 한다.
-                EP_decreaseGroundRefCount(iter._link->_endpoint, stopover->_refCount);
-            }
             EP_addIncomingTrack(iter._link->_endpoint, stopover, iter._link->_linkCount);
         }
-        TX_addDestinatonToIncomingTrack((TrackableNode*)RT_getGCNode(newReferrer), stopover);
-        LinkArray_delete(oldDestinations);
+        if (oldDestinations != NULL && oldDestinations->_owner == self) {
+            Cll_delete(oldDestinations);
+        }
     }
 }
 
@@ -311,14 +270,10 @@ void TR_addIncomingLink(TransitNode* self, GCObject* newReferrer) {
 경유점 노드와 한 참조자 객체와의 참조 연결이 삭제되면, 참조자를 종착점으로 하는 진입 트랙에 속한 객체 들에
 상기 경유점 노드를 경유하는 축약 경로 목표점들을 삭제한다.
 */
-void TR_removeIncomingLink(TransitNode* self, GCObject* referrer) {
+void TR_removeIncomingLink(TransitNode* self, GCNode* referrer) {
     TR_checkType(self);
-    assert(referrer != NULL && RT_getGCNode(referrer) == self->_referrer);
-    TrackableNode* disconnected_referrer = self->_referrer;
+    assert(referrer == self->_referrer);
     self->_referrer = NULL;
-    FOR_EACH_CONTRACTED_LINK(self->_destinationLinks) {
-        removeDestinatonFromIncomingTrack(disconnected_referrer, iter._link->_endpoint);
-    }
 }
 
 static BOOL _isSameLinks(ContractedLink* linkA, ContractedLink* linkB) {
@@ -326,18 +281,18 @@ static BOOL _isSameLinks(ContractedLink* linkA, ContractedLink* linkB) {
         && linkA->_linkCount == linkB->_linkCount;
 }
 
-static void TR_replaceDestinationLinksOfIncomingPath(TransitNode* node, LinkArray* addedLinks, LinkArray* removedLinks) {
-    int cntAdded   = LinkArray_size(addedLinks);
-    int cntRemoved = LinkArray_size(removedLinks);
+static CircuitNode* TR_replaceDestinationLinksOfIncomingPath(TransitNode* node, LinkArray* addedLinks, LinkArray* erasedLinks) {
+    int cntAdded   = Cll_size(addedLinks);
+    int cntRemoved = Cll_size(erasedLinks);
     if (cntAdded == cntRemoved) {
-        if (cntAdded == 0) return;
-        if (!memcmp(addedLinks->_items, addedLinks->_items, cntAdded * sizeof(ContractedLink))) {
-            return;
+        if (cntAdded == 0 ||
+            !memcmp(addedLinks->_items, addedLinks->_items, cntAdded * sizeof(ContractedLink))) {
+            return NULL;
         }
         if (cntAdded == 2
         &&  _isSameLinks(&addedLinks->_items[0], &addedLinks->_items[1])
         &&  _isSameLinks(&addedLinks->_items[1], &addedLinks->_items[0])) {
-            return;
+            return NULL;
         }
     }
 
@@ -349,29 +304,29 @@ static void TR_replaceDestinationLinksOfIncomingPath(TransitNode* node, LinkArra
         if (depth > 0) {
             assert(updatedLinks->_owner == node);
         } else if (updatedLinks->_owner != node) {
-            updatedLinks = LinkArray_clone(addedLinks, node);
+            updatedLinks = Cll_clone(addedLinks, node);
         } else {
             depth ++;
         }
         FOR_EACH_CONTRACTED_LINK(addedLinks) {
-            ContractedLink* link0 = ListArray_pointOf(updatedLinks, iter._link->_endpoint);
+            ContractedLink* link0 = Cll_pointerOf(updatedLinks, iter._link->_endpoint);
             if (link0 == NULL) {
-                ListArray_push(updatedLinks, iter._link);
+                Cll_push(updatedLinks, iter._link);
             } else {
                 link0->_linkCount += iter._link->_linkCount;
             }
         }
-        FOR_EACH_CONTRACTED_LINK(removedLinks) {
-            ContractedLink* link0 = ListArray_pointOf(updatedLinks, iter._link->_endpoint);
+        FOR_EACH_CONTRACTED_LINK(erasedLinks) {
+            ContractedLink* link0 = Cll_pointerOf(updatedLinks, iter._link->_endpoint);
             assert(link0 != NULL);
             assert(link0->_linkCount >= iter._link->_linkCount);
             if ((link0->_linkCount -= iter._link->_linkCount) == 0) {
-                ListArray_removeFast(updatedLinks, link0);
+                Cll_removeFast(updatedLinks, link0);
             }
         }
 
         while (1) {
-            if (node->_refCount > 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
+            if (node->_groundRefCount > 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
                 countGroundNode ++;
             }
             referrer = node->_referrer;
@@ -385,45 +340,52 @@ static void TR_replaceDestinationLinksOfIncomingPath(TransitNode* node, LinkArra
     }
 
     done:
-    // if (node != NULL) {
+    if (referrer == NULL) return NoCircuit;
+
+    ContractedEndpoint* startPoint = (ContractedEndpoint*)referrer;
+    FOR_EACH_CONTRACTED_LINK(addedLinks) {
+        EP_addIncomingTrack(iter._link->_endpoint, startPoint, 1);
+        if (countGroundNode > 0) {
+            EP_increaseGroundRefCount(iter._link->_endpoint, countGroundNode);
+        }
+    }
+    FOR_EACH_CONTRACTED_LINK(erasedLinks) {
+        EP_removeIncomingTrack(iter._link->_endpoint, startPoint);
+        if (countGroundNode > 0) {
+            EP_decreaseGroundRefCount(iter._link->_endpoint, countGroundNode);
+        }
+    }
+    return startPoint->_parentCircuit;
+}
+
+void RT_onReferentChanged(GCNode* self, GCObject* erased, GCObject* assigned) {
+    GCNode* erasedNode   = asTransit(RT_getGCNode(erased));
+    GCNode* assignedNode = asTransit(RT_getGCNode(assigned));
+    if (erasedNode != NULL) {
+        TR_removeIncomingLink(erasedNode, self);
+    }
+    if (assignedNode != NULL) {
+        TR_addIncomingLink(assignedNode, self);
+    }    
+    LinkArray tmpAddedLinks[2], tmpErasedLinks[2];
+    LinkArray* addedLinks  = _getDestinationLinks(assignedNode, tmpAddedLinks);
+    LinkArray* erasedLinks = _getDestinationLinks(erasedNode, tmpErasedLinks);
+
+    if (self->_nodeType == Transit) {
+        TransitNode* node = (TransitNode*)self;
+        TR_replaceDestinationLinksOfIncomingPath(node, addedLinks, erasedLinks);
+    } else {
+        ContractedEndpoint* node = (ContractedEndpoint*)self;
+        EP_checkType(node);
         FOR_EACH_CONTRACTED_LINK(addedLinks) {
-            EP_addIncomingTrack(iter._link->_endpoint, (ContractedEndpoint*)referrer, 1);
-            if (countGroundNode > 0) {
-                EP_increaseGroundRefCount(iter._link->_endpoint, countGroundNode);
-            }
+            EP_addIncomingTrack(iter._link->_endpoint, node, 1);
         }
-        FOR_EACH_CONTRACTED_LINK(removedLinks) {
-            EP_removeIncomingTrack(iter._link->_endpoint, (ContractedEndpoint*)referrer);
-            if (countGroundNode > 0) {
-                EP_decreaseGroundRefCount(iter._link->_endpoint, countGroundNode);
-            }
+        FOR_EACH_CONTRACTED_LINK(erasedLinks) {
+            EP_removeIncomingTrack(iter._link->_endpoint, node);
         }
-    // }
-}
-
-static LinkArray* _getDestinationLinks(GCNode* node, LinkArray* tmpArray) {
-    if (node->_nodeType == Transit) {
-        return ((TransitNode*)node)->_destinationLinks;
-    }
-    else {
-        assert(node->_nodeType == Endpoint);
-        ContractedLink* link = (ContractedLink*)(tmpArray + 1);
-        link->_endpoint = (ContractedEndpoint*)node;
-        link->_linkCount = 1;
-        tmpArray->_items = link;
-        tmpArray->_size = 1;
-        tmpArray->_owner = NULL;
-        return tmpArray;
     }
 }
 
-void TR_onReferentChanged(TransitNode* self, GCObject* oldReferent, GCObject* newReferent) {
-    TR_checkType(self);
-    LinkArray tmpAddedLinks[2], tmpRemovedLinks[2];
-    LinkArray* addedLinks   = _getDestinationLinks(newReferent, tmpAddedLinks);
-    LinkArray* removedLinks = _getDestinationLinks(oldReferent, tmpRemovedLinks);
-    _replaceDestinationLinksOfIncomingPath(self, addedLinks, removedLinks)
-}
 
 /*
 가비지 객체에 의한 참조 삭제.
@@ -436,7 +398,7 @@ void TR_removeGarbageReferrer(TransitNode* self, GCObject* referrer) {
 
 BOOL TR_isGarbage(TransitNode* self) {
     TR_checkType(self);
-    return self->_refCount == 0 && self->_referrer == NULL;
+    return self->_linkRefCount == 0 && self->_referrer == NULL;
 }
 
 ContractedEndpoint* TR_getSourceOfIncomingTrack(TransitNode* self) {
@@ -450,7 +412,7 @@ ContractedEndpoint* TR_getSourceOfIncomingTrack(TransitNode* self) {
 
 CircuitNode* TR_getCircuitContainer(TransitNode* self) {
     TR_checkType(self);
-    auto originNode = TR_getSourceOfIncomingTrack(self);
+    ContractedEndpoint* originNode = TR_getSourceOfIncomingTrack(self);
     if (originNode != NULL && originNode->_parentCircuit != NULL) {
         FOR_EACH_CONTRACTED_LINK(self->_destinationLinks) {
             if (iter._link->_endpoint->_parentCircuit == originNode->_parentCircuit) {
@@ -463,10 +425,10 @@ CircuitNode* TR_getCircuitContainer(TransitNode* self) {
 
 void TR_detectCircuitInDestinationlessPath(TransitNode* self) {
     TR_checkType(self);
-    if (!LinkArray_isEmpty(self->_destinationLinks)) return;
+    if (!Cll_isEmpty(self->_destinationLinks)) return;
     auto node = self->_referrer;
     for (TransitNode* transit; (transit = asTransit(node)) != NULL; ) {
-        if (!LinkArray_isEmpty(transit->_destinationLinks)) return;
+        if (!Cll_isEmpty(transit->_destinationLinks)) return;
         node = transit->_referrer;
         if (transit == self) {
             auto destination = EP_transform(transit);            
@@ -500,7 +462,7 @@ void TX_addDestinatonToIncomingTrack(TrackableNode* node, ContractedEndpoint* de
             destination = endpoint;
         } else {
             ContractedLink ep = { destination, 1};
-            LinkArray_push(transit->_destinationLinks, &ep);
+            Cll_push(transit->_destinationLinks, &ep);
         }
         node = transit->_referrer;
     }
@@ -514,12 +476,11 @@ void TX_addDestinatonToIncomingTrack(TrackableNode* node, ContractedEndpoint* de
 */
 void TX_removeDestinatonFromIncomingTrack(TrackableNode* node, ContractedEndpoint* destination) {
     for (TransitNode* transit; (transit = asTransit(node)) != NULL; ) {
-        auto links = transit->_destinationLinks;
-        for (int i = links->size(); --i >= 0;) {
-            auto link = links->at(i);
-            if (link._endpoint == destination) {
-                if (--link._linkCount > 0) return;
-                links->erase(links->begin() + i);
+        LinkArray* linkArray = transit->_destinationLinks;
+        FOR_EACH_CONTRACTED_LINK(linkArray) {
+            if (iter._link->_endpoint == destination) {
+                if (--iter._link->_linkCount > 0) return;
+                Cll_removeFast(linkArray, iter._link);
             }
         }
         node = transit->_referrer;
@@ -534,56 +495,34 @@ void TX_removeDestinatonFromIncomingTrack(TrackableNode* node, ContractedEndpoin
 void EP_increaseGroundRefCount(ContractedEndpoint* self, int count) {
     EP_checkType(self);
     assert(count > 0);
-    if (self->_refCount == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
+    if (self->_groundRefCount == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
         if (self->_parentCircuit != NULL) {
-            self->_parentCircuit->_refCount ++;
+            self->_parentCircuit->_groundRefCount ++;
         }
     }
-    self->_refCount += count;
+    self->_groundRefCount += count;
 }
 
 void EP_decreaseGroundRefCount(ContractedEndpoint* self, int count) {
     EP_checkType(self);
     assert(count > 0);
-    if ((self->_refCount -= count) == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
+    if ((self->_groundRefCount -= count) == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
         if (self->_parentCircuit != NULL) {
-            self->_parentCircuit->_refCount --;
+            self->_parentCircuit->_groundRefCount --;
         }
     }
 }
-
-
-
-/*
-축약점 노드에 대한 참조 연결이 발생한 경우, 참조자를 종착점으로 하는 진입 트랙에 속한 객체 들에
-축약점 노드를 축약 경로 목표점으로 추가한다. 
-*/
-void EP_addIncomingLink(ContractedEndpoint* self, GCObject* referrer) {
-    EP_checkType(self);
-    TX_addDestinatonToIncomingTrac((TrackableNode*)RT_getGCNode(referrer), self);
-}
-
-
-void EP_removeIncomingLink(ContractedEndpoint* self, GCObject* referrer) {
-    EP_checkType(self);
-    removeDestinatonFromIncomingTrack((TrackableNode*)RT_getGCNode(referrer), self);
-}
-
-
 
 
 void EP_removeGarbageReferrer(ContractedEndpoint* self, GCObject* referrer) {
     EP_checkType(self);
 }
 
-
-
-
 ContractedEndpoint* EP_transform(TransitNode* transit) {
     ContractedEndpoint* self = (ContractedEndpoint*)transit;
     self->_nodeType = Endpoint;
     self->_parentCircuit = NULL;
-    self->_incomingLinks = LinkArray_allocate();
+    self->_incomingLinks = Cll_allocate((GCNode*)self);
     EP_checkType(self);
     return self;
 }
@@ -591,51 +530,51 @@ ContractedEndpoint* EP_transform(TransitNode* transit) {
 void EP_addIncomingTrack(ContractedEndpoint* self, ContractedEndpoint* source, int linkCount) {
     EP_checkType(self);
     EP_checkType(source);
-    if (source == NULL) {
-        if (self->_refCount ++ > 0) return;
-    } else {
-        FOR_EACH_CONTRACTED_LINK(self->_incomingLinks) {
-            if (iter._link->_endpoint == source) {
-                iter._link->_linkCount += linkCount;
-                return;
-            }
-        }
-        ContractedLink ep = {source, linkCount};
-        LinkArray_push(self->_incomingLinks, &ep);
-        RT_detectCircuit(source);
+    assert(source != NULL);
+    CircuitNode* circuit = self->_parentCircuit;
+    if (circuit != NULL && circuit == source->_parentCircuit) {
+        circuit->_linkRefCountInCircuit += linkCount;
     }
-
-    if (ENABLE_RT_CIRCULAR_GARBAGE_DETECTION && self->_parentCircuit != NULL && source != NULL && source->_parentCircuit != self->_parentCircuit) {
-        self->_parentCircuit->_refCount ++;
-    }                
+    FOR_EACH_CONTRACTED_LINK(self->_incomingLinks) {
+        if (iter._link->_endpoint == source) {
+            iter._link->_linkCount += linkCount;
+            return;
+        }
+    }
+    ContractedLink ep = {source, linkCount};
+    Cll_push(self->_incomingLinks, &ep);
+    RT_detectCircuit(source);
 }
 
 void EP_removeIncomingTrack(ContractedEndpoint* self, ContractedEndpoint* source) {
     EP_checkType(self);
     EP_checkType(source);
-    if (source == NULL) {
-        if (--self->_refCount > 0) return;
-    }
-    else {
-        auto link = LinkArray_pointerOf(self->_incomingLinks, source);
-        if (link != NULL) {
-            if (--link->_linkCount > 0) return;
-            LinkArray_removeFast(self->_incomingLinks, link);
+    assert(source != NULL);
+    CircuitNode* circuit = self->_parentCircuit;
+    if (circuit != NULL) {
+        if (circuit == source->_parentCircuit) {
+            circuit->_linkRefCountInCircuit -= 1;
+        } else {
+            circuit = NULL;
         }
+    }
+    ContractedLink* link = Cll_pointerOf(self->_incomingLinks, source);
+    if (link != NULL) {
+        if (--link->_linkCount > 0) return;
+        Cll_removeFast(self->_incomingLinks, link);
     }
 
-    if (self->_parentCircuit != NULL) {
-        if (source != NULL && source->_parentCircuit == self->_parentCircuit) {
-            EP_decreaseOutgoingLinkCountInCircuit(source);
-        } else {
-            self->_parentCircuit->_refCount --;
-        }
+    if (circuit != NULL) {
+        EP_decreaseOutgoingLinkCountInCircuit(source);
     }
 }
 
 void EP_decreaseOutgoingLinkCountInCircuit(ContractedEndpoint* self) {
     EP_checkType(self);
-    if (--self->_outgoingLinkCountInCircuit > 0) return;
+    if (--self->_outgoingLinkCountInCircuit > 0) {
+        // Circuit should be invalidated !!!
+        return;
+    }
     
     auto circuit = self->_parentCircuit;
     self->_parentCircuit = NULL;
@@ -648,13 +587,13 @@ void EP_decreaseOutgoingLinkCountInCircuit(ContractedEndpoint* self) {
 
 BOOL EP_isGarbage(ContractedEndpoint* self) {
     EP_checkType(self);
-    if (self->_refCount > 0) return 0;
+    if (self->_linkRefCount > 0) return 0;
     if (self->_incomingLinks->_size == 0) return 1;
-    return self->_parentCircuit != NULL && self->_parentCircuit->_refCount == 0;
+    return self->_parentCircuit != NULL && self->_parentCircuit->_linkRefCount == 0;
 }
 
 void RT_collectGarbage(GCNode* node, void* dealloc) {
-    assert(RT_isGarbage(node));
+    // assert(RT_isGarbage(node));
     auto obj = RT_getObject(node);
     RT_markDestroyed(node);
     // std::vector<GCObject*> referents;

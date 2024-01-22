@@ -1012,6 +1012,7 @@ PyObject_HasAttr(PyObject *v, PyObject *name)
 int
 PyObject_SetAttr(PyObject *v, PyObject *name, PyObject *value)
 {
+    // rtgc. (PyObject_SetAttr)
     PyTypeObject *tp = Py_TYPE(v);
     int err;
 

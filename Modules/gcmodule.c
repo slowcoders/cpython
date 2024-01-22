@@ -1180,6 +1180,7 @@ gc_collect_main(PyThreadState *tstate, int generation,
                 Py_ssize_t *n_collected, Py_ssize_t *n_uncollectable,
                 int nofail)
 {
+    // rtgc. garbage scanner.
     int i;
     Py_ssize_t m = 0; /* # objects collected */
     Py_ssize_t n = 0; /* # unreachable objects that couldn't be collected */
@@ -1407,6 +1408,7 @@ gc_collect_with_callback(PyThreadState *tstate, int generation)
 static Py_ssize_t
 gc_collect_generations(PyThreadState *tstate)
 {
+    // rtgc. generational garbage collector, triggered by threshold.
     GCState *gcstate = &tstate->interp->gc;
     /* Find the oldest generation (highest numbered) where the count
      * exceeds the threshold.  Objects in the that generation and
@@ -2295,6 +2297,9 @@ gc_alloc(size_t basicsize, size_t presize)
 PyObject *
 _PyObject_GC_New(PyTypeObject *tp)
 {
+    // rtgc. gc 대상 객체 생성.
+    assert(tp->tp_flags & Py_TPFLAGS_HAVE_GC); // rtgc
+    assert(tp->tp_traverse != NULL); // rtgc
     size_t presize = _PyType_PreHeaderSize(tp);
     PyObject *op = gc_alloc(_PyObject_SIZE(tp), presize);
     if (op == NULL) {
@@ -2307,6 +2312,9 @@ _PyObject_GC_New(PyTypeObject *tp)
 PyVarObject *
 _PyObject_GC_NewVar(PyTypeObject *tp, Py_ssize_t nitems)
 {
+    // rtgc. gc 대상 어레이 생성. (tp_traverse 필수)
+    assert(tp->tp_flags & Py_TPFLAGS_HAVE_GC); // rtgc
+    assert(tp->tp_traverse != NULL); // rtgc
     size_t size;
     PyVarObject *op;
 

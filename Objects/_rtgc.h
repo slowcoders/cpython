@@ -24,7 +24,8 @@ static const int MAX_DESTINATION_COUNT = 4;
 static const int ENABLE_RT_CIRCULAR_GARBAGE_DETECTION = 1;
 
 #define RTNode_Header()         \
-    int32_t _refCount;          \
+    int32_t _linkRefCount;          \
+    int32_t _groundRefCount;          \
     enum GCNodeType _nodeType;
 
 /*
@@ -38,8 +39,8 @@ struct _RT_Methods {
     BOOL (*isGarbage)(GCNode* self);
     void (*increaseGroundRefCount)(GCNode* self);
     BOOL (*decreaseGroundRefCount)(GCNode* self);
-    void (*addIncomingLink)(GCNode* self, GCObject* referrer);
-    BOOL (*removeIncomingLink)(GCNode* self, GCObject* referrer);
+    void (*addIncomingLink)(GCNode* self, GCNode* referrer);
+    BOOL (*removeIncomingLink)(GCNode* self, GCNode* referrer);
     void (*removeGarbageReferrer)(GCNode* self, GCObject* referrer);
     CircuitNode* (*getCircuitContainer)(GCNode* self);
 };
@@ -107,11 +108,6 @@ inline void reclaimObject(GCObject* obj) { printf("deleted %p\n", obj); }
 int getReferents(GCObject* obj, GCObject** referents, int max_count);
 
 
-inline void initContractedLink(ContractedLink* self, ContractedEndpoint* endpoint, int count) {
-    self->_endpoint = endpoint;
-    self->_linkCount = count;
-}
-
 
 /* 축약 연결 정보 목록 */
 typedef struct {
@@ -120,26 +116,17 @@ typedef struct {
 } ContractedLinkSet;
 
 
-inline void TR_checkType(TransitNode* self) { assert(asTransit((GCNode*)self) != NULL); }
-inline void EP_checkType(TransitNode* self) { assert(asEndpoint((GCNode*)self) != NULL); }
-
-inline TransitNode* asTransit(GCNode* n) { 
-    return (n != NULL && n->_nodeType == Transit) ? (TransitNode*)n : NULL; 
-}
-inline ContractedEndpoint* asEndpoint(GCNode* n) { 
-    return (n != NULL && n->_nodeType == Endpoint) ? (ContractedEndpoint*)n : NULL; 
-}
 
 /*
 AcyclicNode
 */
 
-BOOL AC_isGarbage(GCNode* self) { return self->_refCount == 0; }
-void AC_increaseGroundRefCount(GCNode* self) { self->_refCount ++; }
-void AC_decreaseGroundRefCount(GCNode* self, int amount) { self->_refCount -= amount; }
-void AC_addIncomingLink(GCNode* self, GCObject* referrer) { self->_refCount ++; }
-void AC_removeIncomingLink(GCNode* self, GCObject* referrer) { self->_refCount --; }
-void AC_removeGarbageReferrer(GCNode* self, GCObject* referrer) { self->_refCount --; }
+BOOL AC_isGarbage(GCNode* self) { return self->_linkRefCount == 0; }
+void AC_increaseGroundRefCount(GCNode* self) { self->_linkRefCount ++; }
+void AC_decreaseGroundRefCount(GCNode* self, int amount) { self->_linkRefCount -= amount; }
+void AC_addIncomingLink(GCNode* self, GCObject* referrer) { self->_linkRefCount ++; }
+void AC_removeIncomingLink(GCNode* self, GCObject* referrer) { self->_linkRefCount --; }
+void AC_removeGarbageReferrer(GCNode* self, GCObject* referrer) { self->_linkRefCount --; }
 CircuitNode* AC_getCircuitContainer(GCNode* self) { return NULL; }
 
 
@@ -161,7 +148,9 @@ typedef struct _ContractedEndpoint {
 } ContractedEndpoint;
 
 typedef struct _CircuitNode {
-    int _refCount;
+    int _linkRefCount;
+    int _linkRefCountInCircuit;
+    int _groundRefCount;
     int _cid;
 } CircuitNode;
 
@@ -179,7 +168,7 @@ void EP_addIncomingLink(ContractedEndpoint* self, GCObject* referrer);
 
 void EP_removeIncomingLink(ContractedEndpoint* self, GCObject* referrer);
 
-void EP_removeGarbageReferrer(ContractedEndpoint* self, GCObject* referrer) {}
+void EP_removeGarbageReferrer(ContractedEndpoint* self, GCObject* referrer);
 
 void EP_addIncomingTrack(ContractedEndpoint* self, ContractedEndpoint* source, int linkCount);
 
@@ -201,9 +190,9 @@ void TR_increaseGroundRefCount(TransitNode* self);
 
 void TR_decreaseGroundRefCount(TransitNode* self);
 
-void TR_addIncomingLink(TransitNode* self, GCObject* newReferrer);
+void TR_addIncomingLink(TransitNode* self, GCNode* newReferrer);
 
-void TR_removeIncomingLink(TransitNode* self, GCObject* referrer);
+void TR_removeIncomingLink(TransitNode* self, GCNode* referrer);
 
 void TR_removeGarbageReferrer(TransitNode* self, GCObject* referrer);
 

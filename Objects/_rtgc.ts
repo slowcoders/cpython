@@ -28,11 +28,11 @@ class ContractedLink {
 
 export abstract class RefNode {
     _obj: GCObject;
-    _refCount: number;
+    _linkRefCount: number;
     
     constructor(obj: GCObject) {
         this._obj = obj;
-        this._refCount = 0;
+        this._linkRefCount = 0;
         if (obj != null) obj._node = this;
     }
 
@@ -97,7 +97,7 @@ export class TransitNode extends RefNode {
     }
 
     increaseGroundRefCount() {
-        if (this._refCount ++ == 0) {
+        if (this._linkRefCount ++ == 0) {
             for (const link of this._signposts) {
                 link._endpoint.increaseGroundRefCount();
             }
@@ -105,7 +105,7 @@ export class TransitNode extends RefNode {
     }
 
     decreaseGroundRefCount(amount: number) {
-        if ((this._refCount -= amount) == 0) {
+        if ((this._linkRefCount -= amount) == 0) {
             for (const link of this._signposts) {
                 link._endpoint.decreaseGroundRefCount(1);
             }
@@ -133,7 +133,7 @@ export class TransitNode extends RefNode {
             ContractedGraph.addOutgoingContractedLink(oldReferrer, newNode);
             for (const link of this._signposts) {
                 // newReferrer.addOutgoingContractedLink() 전에 decreaseGroundRefCount 처리.
-                link._endpoint.decreaseGroundRefCount(newNode._refCount);
+                link._endpoint.decreaseGroundRefCount(newNode._linkRefCount);
                 link._endpoint.addIncomingContractedLink(newNode, link._count);
             }
             ContractedGraph.addOutgoingContractedLink(newReferrer, newNode);
@@ -148,7 +148,7 @@ export class TransitNode extends RefNode {
     }
 
     isGarbage() {
-        return this._refCount == 0 && this._referrer == null;
+        return this._linkRefCount == 0 && this._referrer == null;
     }
 
     getOriginOfContractedPath() {
@@ -205,17 +205,17 @@ export class ContractedNode extends RefNode {
     }
 
     increaseGroundRefCount() {
-        if (this._refCount ++ == 0) {
+        if (this._linkRefCount ++ == 0) {
             if (this._parentCircuit != null) {
-                this._parentCircuit._refCount ++;
+                this._parentCircuit._linkRefCount ++;
             }
         }
     }
 
     decreaseGroundRefCount(delta: number) {
-        if ((this._refCount -= delta) == 0) {
+        if ((this._linkRefCount -= delta) == 0) {
             if (this._parentCircuit != null) {
-                this._parentCircuit._refCount --;
+                this._parentCircuit._linkRefCount --;
             }
         }
     }
@@ -230,7 +230,7 @@ export class ContractedNode extends RefNode {
 
     addIncomingContractedLink(endpoint: ContractedNode, linkCount: number) {
         if (endpoint == null) {
-            if (this._refCount ++ > 0) return;
+            if (this._linkRefCount ++ > 0) return;
         } else {
             const conn = this._incomingLinks.find((conn) => conn._endpoint === endpoint);
             if (conn != null) {
@@ -242,13 +242,13 @@ export class ContractedNode extends RefNode {
         }
 
         if (this._parentCircuit != null && endpoint?._parentCircuit != this._parentCircuit) {
-            this._parentCircuit._refCount ++;
+            this._parentCircuit._linkRefCount ++;
         }                
     }
 
     removeContractedIncomingLink(endpoint: ContractedNode) {
         if (endpoint == null) {
-            if (--this._refCount > 0) return;
+            if (--this._linkRefCount > 0) return;
         }
         else {
             const idx = this._incomingLinks.findIndex((conn) => conn._endpoint === endpoint);
@@ -263,7 +263,7 @@ export class ContractedNode extends RefNode {
             if (endpoint?._parentCircuit == this._parentCircuit) {
                 endpoint.decreaseOutgoingLinkCountInCircuit();
             } else {
-                this._parentCircuit._refCount --;
+                this._parentCircuit._linkRefCount --;
             }
         }
     }
@@ -281,9 +281,9 @@ export class ContractedNode extends RefNode {
     }
 
     isGarbage() {
-        if (this._refCount > 0) return false;
+        if (this._linkRefCount > 0) return false;
         if (this._incomingLinks.length == 0) return true;
-        return this._parentCircuit != null && this._parentCircuit._refCount == 0;
+        return this._parentCircuit != null && this._parentCircuit._linkRefCount == 0;
     }
 }
 
@@ -312,8 +312,8 @@ class CircuitDetector {
                 const node = this.traceStack[i];
                 if (node._parentCircuit == null) {
                     node._parentCircuit = circuit;
-                    if (node._refCount > 0) {
-                        circuit._refCount ++;
+                    if (node._linkRefCount > 0) {
+                        circuit._linkRefCount ++;
                     }
                 }
             }
@@ -335,7 +335,7 @@ class CircuitDetector {
             }
         }
         if (endpoint._parentCircuit != null) {
-            endpoint._parentCircuit._refCount += externalLinkCount;
+            endpoint._parentCircuit._linkRefCount += externalLinkCount;
         } else {
             this.traceStack.length = stackDepth;
             this.circuitInStack = null;
@@ -359,7 +359,7 @@ class GarbageScanner {
                 }
             }
             else {
-                if (node._refCount > 0) {
+                if (node._linkRefCount > 0) {
                     node._referrer = null;
                 } else {
                     this.collectGarbage(node)

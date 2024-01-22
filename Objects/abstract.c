@@ -148,7 +148,7 @@ PyObject_LengthHint(PyObject *o, Py_ssize_t defaultvalue)
 PyObject *
 PyObject_GetItem(PyObject *o, PyObject *key)
 {
-    // rtgc (PyObject_GetItem)
+    // rtgc. (PyObject_GetItem)
     if (o == NULL || key == NULL) {
         return null_error();
     }
@@ -203,6 +203,7 @@ PyObject_GetItem(PyObject *o, PyObject *key)
 int
 PyObject_SetItem(PyObject *o, PyObject *key, PyObject *value)
 {
+    // rtgc. (PyObject_SetItem)
     if (o == NULL || key == NULL || value == NULL) {
         null_error();
         return -1;
@@ -623,6 +624,7 @@ PyBuffer_FromContiguous(const Py_buffer *view, const void *buf, Py_ssize_t len, 
 
 int PyObject_CopyData(PyObject *dest, PyObject *src)
 {
+    // rtgc. (PyObject_CopyData)
     Py_buffer view_dest, view_src;
     int k;
     Py_ssize_t *indices, elements;
@@ -1928,6 +1930,7 @@ PySequence_GetSlice(PyObject *s, Py_ssize_t i1, Py_ssize_t i2)
 int
 PySequence_SetItem(PyObject *s, Py_ssize_t i, PyObject *o)
 {
+    //rtgc. (PySequence_SetItem)
     if (s == NULL) {
         null_error();
         return -1;
