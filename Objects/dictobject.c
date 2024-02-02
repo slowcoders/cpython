@@ -3035,6 +3035,8 @@ dict_copy(PyDictObject *mp, PyObject *Py_UNUSED(ignored))
     return PyDict_Copy((PyObject*)mp);
 }
 
+PyAPI_FUNC(void) break_runtime(void);
+
 PyObject *
 PyDict_Copy(PyObject *o) // rtgc.dict
 {
@@ -3050,7 +3052,11 @@ PyDict_Copy(PyObject *o) // rtgc.dict
     mp = (PyDictObject *)o;
     if (RTGC_ENABLE) {
         // pure Dict 만 복사 가능.
-        assert(RT_getDictOwner(mp) == (PyObject *)mp);
+        if (RT_getDictOwner(mp) != (PyObject *)mp) {
+            printf("Unsafe Dict_Copy %p owner %p\n", mp, RT_getDictOwner(mp));
+            // break_runtime();
+            // assert(RT_getDictOwner(mp) == (PyObject *)mp);
+        }
     }
     if (mp->ma_used == 0) {
         /* The dict is empty; just return a new dict. */
@@ -3083,6 +3089,9 @@ PyDict_Copy(PyObject *o) // rtgc.dict
         }
         if (_PyObject_GC_IS_TRACKED(mp))
             _PyObject_GC_TRACK(split_copy);
+        if (RTGC_ENABLE) {
+            split_copy->owner = (PyObject *)split_copy;
+        }
         return (PyObject *)split_copy;
     }
 
@@ -3120,6 +3129,9 @@ PyDict_Copy(PyObject *o) // rtgc.dict
         if (_PyObject_GC_IS_TRACKED(mp)) {
             /* Maintain tracking. */
             _PyObject_GC_TRACK(new);
+        }
+        if (RTGC_ENABLE) {
+            assert(new->owner == (PyObject *)new);
         }
 
         return (PyObject *)new;
@@ -3810,13 +3822,21 @@ dict_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         // _PyType_AllocNoTrack() does not track the created object
         assert(!_PyObject_GC_IS_TRACKED(d));
     }
+    if (RTGC_ENABLE) {
+        RT_setDictOwner(self, self);
+    }
+
     return self;
 }
 
 static int
 dict_init(PyObject *self, PyObject *args, PyObject *kwds)
 {
-    return dict_update_common(self, args, kwds, "dict");
+    int res = dict_update_common(self, args, kwds, "dict");
+    if (RTGC_ENABLE) {
+        RT_setDictOwner(self, self);
+    }
+    return res;
 }
 
 static PyObject *

@@ -611,13 +611,25 @@ void RT_collectGarbage(GCNode* node, void* dealloc) {
 int RTGC_ENABLE = true;
 
 void RT_onPropertyChanged(PyObject *mp, PyObject *value, PyObject *old_value) {
-    printf("RT_onPropertyChanged %p %p -> %p\n", mp, old_value, value);
+    // printf("RT_onPropertyChanged %p %p -> %p\n", mp, old_value, value);
 }
 
 void RT_onDictEntryInserted(PyObject *mp, PyObject *key, PyObject *value) {
-    printf("RT_onDictEntryInserted %p[%p] = %p\n", mp, key, value);
+    // printf("RT_onDictEntryInserted %p[%p] = %p\n", mp, key, value);
 }
 
 void RT_onDictEntryRemoved(PyObject *mp, PyObject *key, PyObject *value) {
-    printf("RT_onDictEntryRemoved %p[%p] = %p\n", mp, key, value);
+    // key may be null! 
+    // printf("RT_onDictEntryRemoved %p[%p] = %p\n", mp, key, value);
+}
+
+PyAPI_FUNC(void) break_runtime(void);
+
+void break_runtime() {
+    printf("break !!!");
+    for (int i = 0; ++i < 100000; ) {
+            printf(".");
+            sleep(1000);
+    }
+    // assert(false);
 }
