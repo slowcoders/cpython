@@ -1422,8 +1422,11 @@ _PyObject_GenericSetAttrWithDict(PyObject *obj, PyObject *name,
                 goto done;
             }
             else {
-                // rtgc. [set object-dict value]
+#if INCLUDE_RTGC
+                res = _PyObjectDict_SetItem(obj, dictptr, name, value);
+#else            
                 res = _PyObjectDict_SetItem(tp, dictptr, name, value);
+#endif
             }
         }
     }

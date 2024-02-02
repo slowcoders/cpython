@@ -9,7 +9,6 @@ extern "C" {
 #  error "this header requires Py_BUILD_CORE define"
 #endif
 
-
 /* runtime lifecycle */
 
 extern void _PyDict_Fini(PyInterpreterState *interp);
@@ -68,7 +67,11 @@ extern PyObject *_PyDict_LoadGlobal(PyDictObject *, PyDictObject *, PyObject *);
 
 /* Consumes references to key and value */
 extern int _PyDict_SetItem_Take2(PyDictObject *op, PyObject *key, PyObject *value);
+#if INCLUDE_RTGC
+extern int _PyObjectDict_SetItem(PyObject *obj, PyObject **dictptr, PyObject *name, PyObject *value);
+#else
 extern int _PyObjectDict_SetItem(PyTypeObject *tp, PyObject **dictptr, PyObject *name, PyObject *value);
+#endif
 
 extern PyObject *_PyDict_Pop_KnownHash(PyObject *, PyObject *, Py_hash_t, PyObject *);
 

@@ -27,6 +27,9 @@ typedef struct {
        If ma_values is not NULL, the table is split:
        keys are stored in ma_keys and values are stored in ma_values */
     PyDictValues *ma_values;
+#if INCLUDE_RTGC
+    PyObject *owner;
+#endif    
 } PyDictObject;
 
 PyAPI_FUNC(PyObject *) _PyDict_GetItem_KnownHash(PyObject *mp, PyObject *key,

@@ -243,6 +243,18 @@ uint64_t _pydict_global_version = 0;
 
 #include "clinic/dictobject.c.h"
 
+#if INCLUDE_RTGC
+static PyObject* 
+RT_getDictOwner(PyDictObject *dict) {
+    return dict->owner;
+}
+
+static void
+RT_setDictOwner(PyObject *dict, PyObject *obj) {
+    assert(PyDict_Check(dict));
+    ((PyDictObject *)dict)->owner = obj;
+}
+#endif
 
 #if PyDict_MAXFREELIST > 0
 static struct _Py_dict_state *
@@ -748,6 +760,9 @@ new_dict(PyDictKeysObject *keys, PyDictValues *values, Py_ssize_t used, int free
     mp->ma_used = used;
     mp->ma_version_tag = DICT_NEXT_VERSION();
     ASSERT_CONSISTENT(mp);
+    if (RTGC_ENABLE) {
+        RT_setDictOwner((PyObject *)mp, (PyObject*)mp);
+    }
     return (PyObject *)mp;
 }
 
@@ -1225,7 +1240,6 @@ Consumes key and value references.
 static int
 insertdict(PyDictObject *mp, PyObject *key, Py_hash_t hash, PyObject *value)
 {
-    // rtgc. [insert dict key/value]
     PyObject *old_value;
 
     if (DK_IS_UNICODE(mp->ma_keys) && !PyUnicode_CheckExact(key)) {
@@ -1302,10 +1316,13 @@ insertdict(PyDictObject *mp, PyObject *key, Py_hash_t hash, PyObject *value)
         }
         mp->ma_version_tag = DICT_NEXT_VERSION();
     }
-    // rtgc (clear old_v of dict)
     Py_XDECREF(old_value); /* which **CAN** re-enter (see issue #22653) */
     ASSERT_CONSISTENT(mp);
     Py_DECREF(key);
+    if (RTGC_ENABLE) {
+        PyObject *owner = RT_getDictOwner(mp);
+        RT_onPropertyChanged(owner, value, old_value);
+    }
     return 0;
 
 Fail:
@@ -1352,6 +1369,10 @@ insert_to_emptydict(PyDictObject *mp, PyObject *key, Py_hash_t hash,
     mp->ma_version_tag = DICT_NEXT_VERSION();
     mp->ma_keys->dk_usable--;
     mp->ma_keys->dk_nentries++;
+    if (RTGC_ENABLE) {
+        PyObject *owner = RT_getDictOwner(mp);
+        RT_onDictEntryInserted(owner, key, value);
+    }
     return 0;
 }
 
@@ -1876,7 +1897,6 @@ _PyDict_SetItem_Take2(PyDictObject *mp, PyObject *key, PyObject *value)
     if (!PyUnicode_CheckExact(key) || (hash = unicode_get_hash(key)) == -1) {
         hash = PyObject_Hash(key);
         if (hash == -1) {
-            // rtgc (_PyDict_SetItem 에서 호출됨)
             Py_DECREF(key);
             Py_DECREF(value);
             return -1;
@@ -1904,7 +1924,6 @@ PyDict_SetItem(PyObject *op, PyObject *key, PyObject *value)
     }
     assert(key);
     assert(value);
-    // rtgc. [set dict value]
     Py_INCREF(key);
     Py_INCREF(value);
     return _PyDict_SetItem_Take2((PyDictObject *)op, key, value);
@@ -1924,7 +1943,6 @@ _PyDict_SetItem_KnownHash(PyObject *op, PyObject *key, PyObject *value,
     assert(value);
     assert(hash != -1);
     mp = (PyDictObject *)op;
-
     Py_INCREF(key);
     Py_INCREF(value);
     if (mp->ma_keys == Py_EMPTY_KEYS) {
@@ -1954,7 +1972,7 @@ static int
 delitem_common(PyDictObject *mp, Py_hash_t hash, Py_ssize_t ix,
                PyObject *old_value)
 {
-    PyObject *old_key;
+    PyObject *old_key = NULL;
 
     Py_ssize_t hashpos = lookdict_index(mp->ma_keys, hash, ix);
     assert(hashpos >= 0);
@@ -1986,6 +2004,10 @@ delitem_common(PyDictObject *mp, Py_hash_t hash, Py_ssize_t ix,
             ep->me_hash = 0;
         }
         Py_DECREF(old_key);
+    }
+    if (RTGC_ENABLE) {
+        PyObject *owner = RT_getDictOwner(mp);
+        RT_onDictEntryRemoved(owner, old_key, old_value);
     }
     Py_DECREF(old_value);
 
@@ -3014,7 +3036,7 @@ dict_copy(PyDictObject *mp, PyObject *Py_UNUSED(ignored))
 }
 
 PyObject *
-PyDict_Copy(PyObject *o)
+PyDict_Copy(PyObject *o) // rtgc.dict
 {
     PyObject *copy;
     PyDictObject *mp;
@@ -3026,6 +3048,10 @@ PyDict_Copy(PyObject *o)
     }
 
     mp = (PyDictObject *)o;
+    if (RTGC_ENABLE) {
+        // pure Dict 만 복사 가능.
+        assert(RT_getDictOwner(mp) == (PyObject *)mp);
+    }
     if (mp->ma_used == 0) {
         /* The dict is empty; just return a new dict. */
         return PyDict_New();
@@ -5398,13 +5424,16 @@ _PyObject_InitializeDict(PyObject *obj)
     if (dict == NULL) {
         return -1;
     }
+    if (RTGC_ENABLE) {
+        RT_setDictOwner(dict, obj);
+    }
     PyObject **dictptr = _PyObject_DictPointer(obj);
     *dictptr = dict;
     return 0;
 }
 
 static PyObject *
-make_dict_from_instance_attributes(PyDictKeysObject *keys, PyDictValues *values)
+make_dict_from_instance_attributes(PyDictKeysObject *keys, PyDictValues *values, PyObject* owner)
 {
     dictkeys_incref(keys);
     Py_ssize_t used = 0;
@@ -5420,6 +5449,10 @@ make_dict_from_instance_attributes(PyDictKeysObject *keys, PyDictValues *values)
     if (track && res) {
         _PyObject_GC_TRACK(res);
     }
+    if (RTGC_ENABLE && res != NULL) {
+        assert(owner != NULL);
+        RT_setDictOwner(res, owner);
+    }
     return res;
 }
 
@@ -5429,7 +5462,8 @@ _PyObject_MakeDictFromInstanceAttributes(PyObject *obj, PyDictValues *values)
     assert(Py_TYPE(obj)->tp_flags & Py_TPFLAGS_MANAGED_DICT);
     PyDictKeysObject *keys = CACHED_KEYS(Py_TYPE(obj));
     OBJECT_STAT_INC(dict_materialized_on_request);
-    return make_dict_from_instance_attributes(keys, values);
+    PyObject* dict = make_dict_from_instance_attributes(keys, values, obj);
+    return dict;
 }
 
 int
@@ -5458,7 +5492,7 @@ _PyObject_StoreInstanceAttribute(PyObject *obj, PyDictValues *values,
             OBJECT_STAT_INC(dict_materialized_str_subclass);
         }
 #endif
-        PyObject *dict = make_dict_from_instance_attributes(keys, values);
+        PyObject *dict = make_dict_from_instance_attributes(keys, values, obj);
         if (dict == NULL) {
             return -1;
         }
@@ -5474,6 +5508,9 @@ _PyObject_StoreInstanceAttribute(PyObject *obj, PyDictValues *values,
     PyObject *old_value = values->values[ix];
     Py_XINCREF(value);
     values->values[ix] = value;
+    if (RTGC_ENABLE) {
+        RT_onPropertyChanged(obj, value, old_value);
+    }
     if (old_value == NULL) {
         if (value == NULL) {
             PyErr_Format(PyExc_AttributeError,
@@ -5600,13 +5637,16 @@ PyObject_GenericGetDict(PyObject *obj, void *context)
         if (*values_ptr) {
             assert(*dictptr == NULL);
             OBJECT_STAT_INC(dict_materialized_on_request);
-            *dictptr = dict = make_dict_from_instance_attributes(CACHED_KEYS(tp), *values_ptr);
+            *dictptr = dict = make_dict_from_instance_attributes(CACHED_KEYS(tp), *values_ptr, obj);
             if (dict != NULL) {
                 *values_ptr = NULL;
             }
         }
         else if (*dictptr == NULL) {
             *dictptr = dict = PyDict_New();
+            if (RTGC_ENABLE) {
+                RT_setDictOwner(dict, obj);
+            }
         }
         else {
             dict = *dictptr;
@@ -5629,20 +5669,32 @@ PyObject_GenericGetDict(PyObject *obj, void *context)
             else {
                 *dictptr = dict = PyDict_New();
             }
+            if (RTGC_ENABLE && dict != NULL) {
+                RT_setDictOwner(dict, obj);
+            }
         }
     }
     Py_XINCREF(dict);
     return dict;
 }
 
+#if INCLUDE_RTGC
+int
+_PyObjectDict_SetItem(PyObject *obj, PyObject **dictptr,
+                      PyObject *key, PyObject *value)
+#else
 int
 _PyObjectDict_SetItem(PyTypeObject *tp, PyObject **dictptr,
                       PyObject *key, PyObject *value)
+#endif
 {
     PyObject *dict;
     int res;
     PyDictKeysObject *cached;
 
+#if INCLUDE_RTGC
+    PyTypeObject *tp = Py_TYPE(obj);
+#endif
     assert(dictptr != NULL);
     if ((tp->tp_flags & Py_TPFLAGS_HEAPTYPE) && (cached = CACHED_KEYS(tp))) {
         assert(dictptr != NULL);
@@ -5653,6 +5705,9 @@ _PyObjectDict_SetItem(PyTypeObject *tp, PyObject **dictptr,
             if (dict == NULL)
                 return -1;
             *dictptr = dict;
+            if (RTGC_ENABLE) {
+                RT_setDictOwner(dict, obj);
+            }
         }
         if (value == NULL) {
             res = PyDict_DelItem(dict, key);

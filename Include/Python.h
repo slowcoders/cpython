@@ -35,6 +35,9 @@
 #include <assert.h>               // assert()
 #include <wchar.h>                // wchar_t
 
+// use rtgc flags
+#define INCLUDE_RTGC               1
+
 #include "pyport.h"
 #include "pymacro.h"
 #include "pymath.h"
@@ -55,6 +58,9 @@
 #include "floatobject.h"
 #include "complexobject.h"
 #include "rangeobject.h"
+#if INCLUDE_RTGC
+#include "rtgc/rtgc-core.h"
+#endif
 #include "memoryobject.h"
 #include "tupleobject.h"
 #include "listobject.h"

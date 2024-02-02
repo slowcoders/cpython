@@ -453,7 +453,7 @@ void TX_addDestinatonToIncomingTrack(TrackableNode* node, ContractedEndpoint* de
         }
 
         if (transit->_destinationLinks->_size >= MAX_DESTINATION_COUNT) {
-            auto endpoint = EP_transform(transit);
+            ContractedEndpoint* endpoint = EP_transform(transit);
             EP_addIncomingTrack(destination, endpoint, 1);
             FOR_EACH_CONTRACTED_LINK(transit->_destinationLinks) {
                 TX_removeDestinatonFromIncomingTrack(transit->_referrer, iter._link->_endpoint);
@@ -606,4 +606,18 @@ void RT_collectGarbage(GCNode* node, void* dealloc) {
     //         collectGarbage(node);
     //     }
     // }
+}
+
+int RTGC_ENABLE = true;
+
+void RT_onPropertyChanged(PyObject *mp, PyObject *value, PyObject *old_value) {
+    printf("RT_onPropertyChanged %p %p -> %p\n", mp, old_value, value);
+}
+
+void RT_onDictEntryInserted(PyObject *mp, PyObject *key, PyObject *value) {
+    printf("RT_onDictEntryInserted %p[%p] = %p\n", mp, key, value);
+}
+
+void RT_onDictEntryRemoved(PyObject *mp, PyObject *key, PyObject *value) {
+    printf("RT_onDictEntryRemoved %p[%p] = %p\n", mp, key, value);
 }
