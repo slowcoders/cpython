@@ -33,7 +33,6 @@ Invariants for frozensets:
 
 */
 
-// rtgc (struct PySetObject)
 typedef struct {
     PyObject_HEAD
 

@@ -3199,7 +3199,6 @@ handle_eval_breaker:
         }
 
         TARGET(STORE_DEREF) {
-            // rtgc-pass (cell: multi scope variable??)
             PyObject *v = POP();
             PyObject *cell = GETLOCAL(oparg);
             PyObject *oldobj = PyCell_GET(cell);

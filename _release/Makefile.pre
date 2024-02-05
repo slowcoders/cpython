@@ -555,7 +555,6 @@ PYTHON_OBJS=	\
 RTGC_OBJS=  \
 		Objects/_rtgc.o
 
-##########################################################################
 # Objects
 OBJECT_OBJS= $(RTGC_OBJS) \
 		Objects/abstract.o \

@@ -1111,6 +1111,7 @@ _PyObject_GetDictPtr(PyObject *obj)
         return NULL;
     }
     *values_ptr = NULL;
+    // rtgc.dict assign obj.dict_ptr
     *dict_ptr = dict;
     return dict_ptr;
 }
@@ -1492,6 +1493,8 @@ PyObject_GenericSetDict(PyObject *obj, PyObject *value, void *context)
         return -1;
     }
     Py_INCREF(value);
+    // rtgc.dict : replace AbstractDict data
+    RT_onPropertyChanged(obj, *dictptr, value);
     Py_XSETREF(*dictptr, value);
     return 0;
 }

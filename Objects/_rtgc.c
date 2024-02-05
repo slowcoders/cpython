@@ -1,21 +1,24 @@
 #include "_rtgc.h"
 #include "_rtgc_util.h"
+#include <execinfo.h>
+#include <stdlib.h>
 
 static const BOOL true = 1;
 static const BOOL false = 0;
 static const BOOL FAST_UPDATE_DESTNATION_LINKS = true;
 static const CircuitNode* NoCircuit = (CircuitNode*)-1;
 
-inline TransitNode* asTransit(GCNode* n) { 
+static inline TransitNode* asTransit(GCNode* n) { 
     return (n != NULL && n->_nodeType == Transit) ? (TransitNode*)n : NULL; 
 }
-inline ContractedEndpoint* asEndpoint(GCNode* n) { 
+static inline ContractedEndpoint* asEndpoint(GCNode* n) { 
     return (n != NULL && n->_nodeType == Endpoint) ? (ContractedEndpoint*)n : NULL; 
 }
-inline void TR_checkType(TransitNode* self) { assert(asTransit((GCNode*)self) != NULL); }
-inline void EP_checkType(TransitNode* self) { assert(asEndpoint((GCNode*)self) != NULL); }
+static inline void TR_checkType(TransitNode* self) { assert(asTransit((GCNode*)self) != NULL); }
+static inline void EP_checkType(TransitNode* self) { assert(asEndpoint((GCNode*)self) != NULL); }
 
 static CircuitNode* TR_replaceDestinationLinksOfIncomingPath(TransitNode* node, LinkArray* addedLinks, LinkArray* erasedLinks);
+
 
 #if 0
 /**
@@ -546,6 +549,10 @@ void EP_addIncomingTrack(ContractedEndpoint* self, ContractedEndpoint* source, i
     RT_detectCircuit(source);
 }
 
+void RT_detectCircuit(ContractedEndpoint* endpoint) {
+    rt_assert(false, "not impl");
+}
+
 void EP_removeIncomingTrack(ContractedEndpoint* self, ContractedEndpoint* source) {
     EP_checkType(self);
     EP_checkType(source);
@@ -610,7 +617,7 @@ void RT_collectGarbage(GCNode* node, void* dealloc) {
 
 int RTGC_ENABLE = true;
 
-void RT_onPropertyChanged(PyObject *mp, PyObject *value, PyObject *old_value) {
+void RT_onPropertyChanged(PyObject *mp, PyObject *old_value, PyObject *value) {
     // printf("RT_onPropertyChanged %p %p -> %p\n", mp, old_value, value);
 }
 
@@ -623,13 +630,45 @@ void RT_onDictEntryRemoved(PyObject *mp, PyObject *key, PyObject *value) {
     // printf("RT_onDictEntryRemoved %p[%p] = %p\n", mp, key, value);
 }
 
-PyAPI_FUNC(void) break_runtime(void);
-
-void break_runtime() {
-    printf("break !!!");
-    for (int i = 0; ++i < 100000; ) {
-            printf(".");
-            sleep(1000);
-    }
-    // assert(false);
+void RT_replaceReferrer(PyObject *obj, PyObject *old_referrer, PyObject *referrer) {
+    
 }
+
+void
+print_trace (void)
+{
+  void *array[50];
+  char **strings;
+  int size, i;
+
+  size = backtrace (array, 50);
+  strings = backtrace_symbols (array, size);
+  if (strings != NULL)
+  {
+
+    printf ("Obtained %d stack frames.\n", size);
+    for (i = 0; i < size; i++)
+      printf ("%s\n", strings[i]);
+  }
+
+  free (strings);
+}
+
+static int cnt_break = 0;
+Py_NO_INLINE PyAPI_FUNC(void) break_rt(int stop) {
+    if (stop) {
+        print_trace();
+        // PyErr_BadInternalCall();
+    }
+}
+
+#ifdef Py_REF_DEBUG
+#else
+void
+_Py_NegativeRefcount(const char *filename, int lineno, PyObject *op)
+{
+    _PyObject_AssertFailed(op, NULL, "object has negative ref count",
+                           filename, lineno, __func__);
+}
+Py_ssize_t _Py_RefTotal;
+#endif

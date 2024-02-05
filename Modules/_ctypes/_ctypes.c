@@ -3280,7 +3280,6 @@ PyCFuncPtr_set_restype(PyCFuncPtrObject *self, PyObject *ob, void *Py_UNUSED(ign
         oldchecker = self->checker;
         self->checker = NULL;
         Py_CLEAR(self->restype);
-        // rtgc-pass. (function object)
         Py_XDECREF(oldchecker);
         return 0;
     }
@@ -4821,7 +4820,6 @@ static PyMappingMethods Array_as_mapping = {
     Array_ass_subscript,
 };
 
-// rtgc (PyCArray_Type is cyclic??)
 PyTypeObject PyCArray_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "_ctypes.Array",
@@ -5423,7 +5421,6 @@ static PyNumberMethods Pointer_as_number = {
     (inquiry)Pointer_bool, /* nb_bool */
 };
 
-// rtgc (PyCPointer_Type is cyclic??)
 PyTypeObject PyCPointer_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "_ctypes._Pointer",

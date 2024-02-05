@@ -5,7 +5,7 @@ struct _ContractedLink {
     int _linkCount;
 };
 
-inline void initContractedLink(ContractedLink* self, ContractedEndpoint* endpoint, int count) {
+static inline void initContractedLink(ContractedLink* self, ContractedEndpoint* endpoint, int count) {
     self->_endpoint = endpoint;
     self->_linkCount = count;
 }
@@ -30,7 +30,7 @@ typedef struct {
     for ( LinkIterator iter={links->_items, links->_items + links->_size}; iter._link < iter._end; iter._link++)
 
 
-inline void Cll_allocItems(LinkArray* array, int size) {
+static inline void Cll_allocItems(LinkArray* array, int size) {
     int mask = MIN_CAPACITY - 1;
     int capacity = (size + mask) & ~mask; 
     int memsize = sizeof(_Item) * capacity;

@@ -440,19 +440,10 @@ PYTHON_OBJS=	\
 
 
 ##########################################################################
-$(srcdir)/_rtgc/c_gen/rtgc.c:
-	$(CC) -c $(LIBMPDEC_CFLAGS) -o $(srcdir)/_rtgc/bc_gen/rtgc.bc -emit-llvm	
-	$(CC) -march=c $(srcdir)/_rtgc/bc_gen/rtgc.bc -o $(srcdir)/_rtgc/c_gen/rtgc.c 
-
-Objects/_rtgc.o: $(srcdir)/_rtgc/c_gen/rtgc.c $(PYTHON_HEADERS)
-	$(MAINCC) -c $(PY_CORE_CFLAGS) -o $@ $(srcdir)/_rtgc/c_gen/rtgc.c
-
 # RTGC Objects
 RTGC_OBJS=  \
 		Objects/_rtgc.o
-		rtgc/util.o
-
-##########################################################################
+		
 # Objects
 OBJECT_OBJS= $(RTGC_OBJS) \
 		Objects/abstract.o \

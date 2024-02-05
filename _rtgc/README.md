@@ -1,3 +1,6 @@
+### version
+3.11.7 2023/12/05
+
 ### build distrbution version of Mac
 see https://github.com/python/cpython/blob/main/Mac/README.rst [How do I create a binary distribution?]
 
@@ -6,12 +9,12 @@ for Debug
 ```sh
 mkdir _debug
 cd _debug
-../configure --with-pydebug --with-lto
+../configure --with-pydebug 
 make
 make test
 ```
 
-for Release
+for Release (--with-lto: link time optimization)
 ```sh
 mkdir _release
 cd _release

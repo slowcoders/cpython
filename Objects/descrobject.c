@@ -428,6 +428,7 @@ method_vectorcall_FASTCALL_KEYWORDS(
     return result;
 }
 
+volatile PyCFunction debug_meth = NULL;
 static PyObject *
 method_vectorcall_NOARGS(
     PyObject *func, PyObject *const *args, size_t nargsf, PyObject *kwnames)
@@ -452,6 +453,9 @@ method_vectorcall_NOARGS(
     }
     PyObject *result = _PyCFunction_TrampolineCall(meth, args[0], NULL);
     _Py_LeaveRecursiveCallTstate(tstate);
+    if (RTGC_ENABLE && meth == debug_meth) {
+        printf("debug_meth called");
+    }
     return result;
 }
 

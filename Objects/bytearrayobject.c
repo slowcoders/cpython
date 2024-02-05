@@ -2291,7 +2291,6 @@ Construct a mutable bytearray object from:\n\
 
 static PyObject *bytearray_iter(PyObject *seq);
 
-// rtgc (PyByteArray_Type is cyclic??? tp_as_mapping)
 PyTypeObject PyByteArray_Type = {
     PyVarObject_HEAD_INIT(&PyType_Type, 0)
     "bytearray",

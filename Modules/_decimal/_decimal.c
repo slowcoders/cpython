@@ -701,7 +701,7 @@ static PyMethodDef signaldict_methods[] = {
     {NULL, NULL}
 };
 
-// rtgc (PyDecSignalDictMixin_Type is cyclic??)
+
 static PyTypeObject PyDecSignalDictMixin_Type =
 {
     PyVarObject_HEAD_INIT(0, 0)

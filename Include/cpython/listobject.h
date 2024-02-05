@@ -2,7 +2,6 @@
 #  error "this header file must not be included directly"
 #endif
 
-// rtgc (struct PyListObject)
 typedef struct {
     PyObject_VAR_HEAD
     /* Vector of pointers to list elements.  list[0] is ob_item[0], etc. */

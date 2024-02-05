@@ -1426,6 +1426,9 @@ subtype_dealloc(PyObject *self)
         PyObject **dictptr = _PyObject_ManagedDictPointer(self);
         if (*dictptr != NULL) {
             assert(*_PyObject_ValuesPointer(self) == NULL);
+            if (RTGC_ENABLE) { // rtgc.dict dealloc internal dict.
+                RT_onPropertyChanged(self, *dictptr, NULL);
+            }
             Py_DECREF(*dictptr);
             *dictptr = NULL;
         }
@@ -2365,6 +2368,9 @@ subtype_setdict(PyObject *obj, PyObject *value, void *context)
         return -1;
     }
     Py_XINCREF(value);
+    if (RTGC_ENABLE) {// rtgc.dict replace AbstractDict data
+        RT_onPropertyChanged(obj, *dictptr, value);
+    }
     Py_XSETREF(*dictptr, value);
     return 0;
 }
@@ -2542,6 +2548,7 @@ type_new_visit_slots(type_new_ctx *ctx)
         }
         assert(PyUnicode_Check(name));
         if (_PyUnicode_Equal(name, &_Py_ID(__dict__))) {
+            // rtgc.dict field 명 __dict__ 는 예약어이다.
             if (!ctx->may_add_dict || ctx->add_dict != 0) {
                 PyErr_SetString(PyExc_TypeError,
                     "__dict__ slot disallowed: "
@@ -2987,7 +2994,9 @@ type_new_descriptors(const type_new_ctx *ctx, PyTypeObject *type)
         type->tp_weaklistoffset = slotoffset;
         slotoffset += sizeof(PyObject *);
     }
+    // rtgc.dict add_dict = tp_dictoffset == 0 && (has_slot(__dict__) || __slots__ == null)
     if (ctx->add_dict && ctx->base->tp_itemsize == 0) {
+        // rtgc.dict 어레이(tp_itemsize > 0) 가 아닌 경우, dict 추가한다.
         assert((type->tp_flags & Py_TPFLAGS_MANAGED_DICT) == 0);
         type->tp_flags |= Py_TPFLAGS_MANAGED_DICT;
         type->tp_dictoffset = -slotoffset - sizeof(PyObject *)*3;
@@ -5552,7 +5561,7 @@ object___dir___impl(PyObject *self)
     }
     else {
         /* Copy __dict__ to avoid mutating it. */
-        PyObject *temp = PyDict_Copy(dict);
+        PyObject *temp = _PyDict_Copy(dict, false);
         Py_DECREF(dict);
         dict = temp;
     }
@@ -8564,7 +8573,7 @@ update_all_slots(PyTypeObject* type)
 static int
 type_new_set_names(PyTypeObject *type)
 {
-    PyObject *names_to_set = PyDict_Copy(type->tp_dict);
+    PyObject *names_to_set = _PyDict_Copy(type->tp_dict, false);
     if (names_to_set == NULL) {
         return -1;
     }

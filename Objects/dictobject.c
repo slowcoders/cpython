@@ -243,18 +243,6 @@ uint64_t _pydict_global_version = 0;
 
 #include "clinic/dictobject.c.h"
 
-#if INCLUDE_RTGC
-static PyObject* 
-RT_getDictOwner(PyDictObject *dict) {
-    return dict->owner;
-}
-
-static void
-RT_setDictOwner(PyObject *dict, PyObject *obj) {
-    assert(PyDict_Check(dict));
-    ((PyDictObject *)dict)->owner = obj;
-}
-#endif
 
 #if PyDict_MAXFREELIST > 0
 static struct _Py_dict_state *
@@ -760,9 +748,6 @@ new_dict(PyDictKeysObject *keys, PyDictValues *values, Py_ssize_t used, int free
     mp->ma_used = used;
     mp->ma_version_tag = DICT_NEXT_VERSION();
     ASSERT_CONSISTENT(mp);
-    if (RTGC_ENABLE) {
-        RT_setDictOwner((PyObject *)mp, (PyObject*)mp);
-    }
     return (PyObject *)mp;
 }
 
@@ -1320,8 +1305,7 @@ insertdict(PyDictObject *mp, PyObject *key, Py_hash_t hash, PyObject *value)
     ASSERT_CONSISTENT(mp);
     Py_DECREF(key);
     if (RTGC_ENABLE) {
-        PyObject *owner = RT_getDictOwner(mp);
-        RT_onPropertyChanged(owner, value, old_value);
+        RT_onPropertyChanged(mp, old_value, value);
     }
     return 0;
 
@@ -1370,8 +1354,7 @@ insert_to_emptydict(PyDictObject *mp, PyObject *key, Py_hash_t hash,
     mp->ma_keys->dk_usable--;
     mp->ma_keys->dk_nentries++;
     if (RTGC_ENABLE) {
-        PyObject *owner = RT_getDictOwner(mp);
-        RT_onDictEntryInserted(owner, key, value);
+        RT_onDictEntryInserted(mp, key, value);
     }
     return 0;
 }
@@ -2006,8 +1989,7 @@ delitem_common(PyDictObject *mp, Py_hash_t hash, Py_ssize_t ix,
         Py_DECREF(old_key);
     }
     if (RTGC_ENABLE) {
-        PyObject *owner = RT_getDictOwner(mp);
-        RT_onDictEntryRemoved(owner, old_key, old_value);
+        RT_onDictEntryRemoved(mp, old_key, old_value);
     }
     Py_DECREF(old_value);
 
@@ -3035,10 +3017,15 @@ dict_copy(PyDictObject *mp, PyObject *Py_UNUSED(ignored))
     return PyDict_Copy((PyObject*)mp);
 }
 
-PyAPI_FUNC(void) break_runtime(void);
+PyAPI_FUNC(void) break_rt(int stop);
 
 PyObject *
-PyDict_Copy(PyObject *o) // rtgc.dict
+PyDict_Copy(PyObject *o) {
+    return _PyDict_Copy(o, true);
+}
+
+PyObject *
+_PyDict_Copy(PyObject *o, int copyValues) // rtgc.dict
 {
     PyObject *copy;
     PyDictObject *mp;
@@ -3050,14 +3037,6 @@ PyDict_Copy(PyObject *o) // rtgc.dict
     }
 
     mp = (PyDictObject *)o;
-    if (RTGC_ENABLE) {
-        // pure Dict 만 복사 가능.
-        if (RT_getDictOwner(mp) != (PyObject *)mp) {
-            printf("Unsafe Dict_Copy %p owner %p\n", mp, RT_getDictOwner(mp));
-            // break_runtime();
-            // assert(RT_getDictOwner(mp) == (PyObject *)mp);
-        }
-    }
     if (mp->ma_used == 0) {
         /* The dict is empty; just return a new dict. */
         return PyDict_New();
@@ -3085,13 +3064,13 @@ PyDict_Copy(PyObject *o) // rtgc.dict
         for (i = 0, n = size; i < n; i++) {
             PyObject *value = mp->ma_values->values[i];
             Py_XINCREF(value);
+            if (RTGC_ENABLE && copyValues && value != NULL) {
+                RT_onPropertyChanged(split_copy, NULL, value);
+            }
             split_copy->ma_values->values[i] = value;
         }
         if (_PyObject_GC_IS_TRACKED(mp))
             _PyObject_GC_TRACK(split_copy);
-        if (RTGC_ENABLE) {
-            split_copy->owner = (PyObject *)split_copy;
-        }
         return (PyObject *)split_copy;
     }
 
@@ -3130,10 +3109,6 @@ PyDict_Copy(PyObject *o) // rtgc.dict
             /* Maintain tracking. */
             _PyObject_GC_TRACK(new);
         }
-        if (RTGC_ENABLE) {
-            assert(new->owner == (PyObject *)new);
-        }
-
         return (PyObject *)new;
     }
 
@@ -3822,10 +3797,6 @@ dict_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         // _PyType_AllocNoTrack() does not track the created object
         assert(!_PyObject_GC_IS_TRACKED(d));
     }
-    if (RTGC_ENABLE) {
-        RT_setDictOwner(self, self);
-    }
-
     return self;
 }
 
@@ -3833,9 +3804,6 @@ static int
 dict_init(PyObject *self, PyObject *args, PyObject *kwds)
 {
     int res = dict_update_common(self, args, kwds, "dict");
-    if (RTGC_ENABLE) {
-        RT_setDictOwner(self, self);
-    }
     return res;
 }
 
@@ -5445,8 +5413,9 @@ _PyObject_InitializeDict(PyObject *obj)
         return -1;
     }
     if (RTGC_ENABLE) {
-        RT_setDictOwner(dict, obj);
+        RT_onPropertyChanged(obj, NULL, dict);
     }
+    // rtgc.dict = assign AbstractDict data
     PyObject **dictptr = _PyObject_DictPointer(obj);
     *dictptr = dict;
     return 0;
@@ -5458,7 +5427,8 @@ make_dict_from_instance_attributes(PyDictKeysObject *keys, PyDictValues *values,
     dictkeys_incref(keys);
     Py_ssize_t used = 0;
     Py_ssize_t track = 0;
-    for (Py_ssize_t i = 0; i < shared_keys_usable_size(keys); i++) {
+    Py_ssize_t cntKeys = shared_keys_usable_size(keys);
+    for (Py_ssize_t i = 0; i < cntKeys; i++) {
         PyObject *val = values->values[i];
         if (val != NULL) {
             used += 1;
@@ -5471,7 +5441,13 @@ make_dict_from_instance_attributes(PyDictKeysObject *keys, PyDictValues *values,
     }
     if (RTGC_ENABLE && res != NULL) {
         assert(owner != NULL);
-        RT_setDictOwner(res, owner);
+        for (Py_ssize_t i = 0; i < cntKeys; i++) {
+            PyObject *val = values->values[i];
+            if (val != NULL) {
+                RT_replaceReferrer(val, owner, res);
+            }
+        }
+        RT_onPropertyChanged(owner, NULL, res);
     }
     return res;
 }
@@ -5517,6 +5493,7 @@ _PyObject_StoreInstanceAttribute(PyObject *obj, PyDictValues *values,
             return -1;
         }
         *_PyObject_ValuesPointer(obj) = NULL;
+        // rtgc.dict assign obj.dictptr
         *_PyObject_ManagedDictPointer(obj) = dict;
         if (value == NULL) {
             return PyDict_DelItem(dict, name);
@@ -5529,7 +5506,7 @@ _PyObject_StoreInstanceAttribute(PyObject *obj, PyDictValues *values,
     Py_XINCREF(value);
     values->values[ix] = value;
     if (RTGC_ENABLE) {
-        RT_onPropertyChanged(obj, value, old_value);
+        RT_onPropertyChanged(obj, old_value, value);
     }
     if (old_value == NULL) {
         if (value == NULL) {
@@ -5657,15 +5634,17 @@ PyObject_GenericGetDict(PyObject *obj, void *context)
         if (*values_ptr) {
             assert(*dictptr == NULL);
             OBJECT_STAT_INC(dict_materialized_on_request);
+            // rtgc.dict assign obj.dictptr
             *dictptr = dict = make_dict_from_instance_attributes(CACHED_KEYS(tp), *values_ptr, obj);
             if (dict != NULL) {
                 *values_ptr = NULL;
             }
         }
         else if (*dictptr == NULL) {
+            // rtgc.dict assign obj.dictptr
             *dictptr = dict = PyDict_New();
             if (RTGC_ENABLE) {
-                RT_setDictOwner(dict, obj);
+                RT_onPropertyChanged(obj, NULL, dict);
             }
         }
         else {
@@ -5690,7 +5669,7 @@ PyObject_GenericGetDict(PyObject *obj, void *context)
                 *dictptr = dict = PyDict_New();
             }
             if (RTGC_ENABLE && dict != NULL) {
-                RT_setDictOwner(dict, obj);
+                RT_onPropertyChanged(obj, NULL, dict);
             }
         }
     }
@@ -5726,7 +5705,7 @@ _PyObjectDict_SetItem(PyTypeObject *tp, PyObject **dictptr,
                 return -1;
             *dictptr = dict;
             if (RTGC_ENABLE) {
-                RT_setDictOwner(dict, obj);
+                RT_onPropertyChanged(obj, NULL, dict);
             }
         }
         if (value == NULL) {
@@ -5742,6 +5721,9 @@ _PyObjectDict_SetItem(PyTypeObject *tp, PyObject **dictptr,
             if (dict == NULL)
                 return -1;
             *dictptr = dict;
+            if (RTGC_ENABLE) {
+                RT_onPropertyChanged(obj, NULL, dict);
+            }
         }
         if (value == NULL) {
             res = PyDict_DelItem(dict, key);

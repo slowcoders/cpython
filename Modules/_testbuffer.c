@@ -2640,7 +2640,6 @@ static PyMethodDef ndarray_methods [] =
     {NULL}
 };
 
-// rtgc (???)
 static PyTypeObject NDArray_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "ndarray",                   /* Name of this type */

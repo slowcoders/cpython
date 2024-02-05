@@ -55,40 +55,40 @@ extern const struct _RT_Methods _rt_vtables[5];
     _rt_vtables[self->_nodeType].method(self, __VA_ARGS__)
 
 
-inline GCNode* RT_getGCNode(GCObject* obj)  { return (GCNode*)obj; }
-inline GCObject* RT_getObject(GCNode* node) { return (GCObject*)node; }
+static inline GCNode* RT_getGCNode(GCObject* obj)  { return (GCNode*)obj; }
+static inline GCObject* RT_getObject(GCNode* node) { return (GCObject*)node; }
 
 void RT_detectCircuit(ContractedEndpoint* endpoint);
 void RT_collectGarbage(GCNode* node, void* dealloc);
-inline void RT_markDestroyed(GCNode* node) { node->_nodeType = Destroyed; }
+static inline void RT_markDestroyed(GCNode* node) { node->_nodeType = Destroyed; }
 
-inline void RT_increaseGroundRefCount(GCObject* assigned) {
+static inline void RT_increaseGroundRefCount(GCObject* assigned) {
     GCNode* node = RT_getGCNode(assigned);
     RT_INVOKE_V(increaseGroundRefCount, node);
 }
 
-inline void RT_decreaseGroundRefCount(GCObject* erased) {
+static inline void RT_decreaseGroundRefCount(GCObject* erased) {
     GCNode* node = RT_getGCNode(erased);
     if (RT_INVOKE_V(decreaseGroundRefCount, node)) {
         RT_collectGarbage(node, NULL);
     }
 }
 
-inline void RT_decreaseGroundRefCountEx(GCObject* erased, void* dealloc) {
+static inline void RT_decreaseGroundRefCountEx(GCObject* erased, void* dealloc) {
     GCNode* node = RT_getGCNode(erased);
     if (RT_INVOKE_V(decreaseGroundRefCount, node)) {
         RT_collectGarbage(node, dealloc);
     }
 }
 
-inline void RT_onFieldAssigned(GCObject* referrer, GCObject* assigned) {
+static inline void RT_onFieldAssigned(GCObject* referrer, GCObject* assigned) {
     if (assigned != NULL && assigned != referrer) {
         GCNode* node = RT_getGCNode(assigned);
         RT_INVOKE(addIncomingLink, node, referrer);
     }
 }
 
-inline void RT_onFieldErased(GCObject* referrer, GCObject* erased) {
+static inline void RT_onFieldErased(GCObject* referrer, GCObject* erased) {
     if (erased != NULL && erased != referrer) {
         GCNode* node = RT_getGCNode(erased);
         if (RT_INVOKE(removeIncomingLink, node, referrer)) {
@@ -101,9 +101,9 @@ inline void RT_onFieldErased(GCObject* referrer, GCObject* erased) {
 GCObject
 */
 
-inline BOOL isAcyclic(GCObject* obj) { return RT_getGCNode(obj)->_nodeType == Acyclic; }
+static inline BOOL isAcyclic(GCObject* obj) { return RT_getGCNode(obj)->_nodeType == Acyclic; }
 
-inline void reclaimObject(GCObject* obj) { printf("deleted %p\n", obj); }
+static inline void reclaimObject(GCObject* obj) { printf("deleted %p\n", obj); }
 
 int getReferents(GCObject* obj, GCObject** referents, int max_count);
 
@@ -156,7 +156,7 @@ typedef struct _CircuitNode {
 
 ContractedEndpoint* EP_transform(TransitNode* transit);
 
-inline CircuitNode* EP_getCircuitContainer(ContractedEndpoint* self) {
+static inline CircuitNode* EP_getCircuitContainer(ContractedEndpoint* self) {
     return self->_parentCircuit;
 }
 

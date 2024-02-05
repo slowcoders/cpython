@@ -21,9 +21,9 @@ do {                                                        \
 
 extern int RTGC_ENABLE;
 
-void RT_onPropertyChanged(PyObject *mp, PyObject *value, PyObject *old_value);
-void RT_onDictEntryInserted(PyObject *mp, PyObject *key, PyObject *value);
-void RT_onDictEntryRemoved(PyObject *mp, PyObject *key, PyObject *value);
-
+void RT_onPropertyChanged(PyObject *obj, PyObject *old_value, PyObject *value);
+void RT_onDictEntryInserted(PyObject *obj, PyObject *key, PyObject *value);
+void RT_onDictEntryRemoved(PyObject *obj, PyObject *key, PyObject *value);
+void RT_replaceReferrer(PyObject *obj, PyObject *old_referrer, PyObject *referrer);
 
 #endif  // RTGC_CORE_H_
