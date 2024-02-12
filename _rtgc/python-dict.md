@@ -10,3 +10,7 @@
 static PyGetSetDef func_getsetlist[] = {<br>
     {"__dict__", PyObject_GenericGetDict, PyObject_GenericSetDict},<br>
 };
+
+
+- tp_dictoffset != 0;
+offsetof.*tp_dictoffset 
