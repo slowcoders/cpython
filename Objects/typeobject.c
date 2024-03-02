@@ -2996,7 +2996,7 @@ type_new_descriptors(const type_new_ctx *ctx, PyTypeObject *type)
     }
     // rtgc.dict add_dict = tp_dictoffset == 0 && (has_slot(__dict__) || __slots__ == null)
     if (ctx->add_dict && ctx->base->tp_itemsize == 0) {
-        // rtgc.dict 어레이(tp_itemsize > 0) 가 아닌 경우, dict 추가한다.
+        // rtgc.dict 어레이(tp_itemsize > 0) 가 아닌 경우, Py_TPFLAGS_MANAGED_DICT flag 추가한다.
         assert((type->tp_flags & Py_TPFLAGS_MANAGED_DICT) == 0);
         type->tp_flags |= Py_TPFLAGS_MANAGED_DICT;
         type->tp_dictoffset = -slotoffset - sizeof(PyObject *)*3;

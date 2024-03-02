@@ -5,7 +5,7 @@
 
 ### (tp_flags & Py_TPFLAGS_MANAGED_DICT) != 0
 - obj.__dict__ 로 접근할 수 있는 AbstractDict 타입.
-- tp_dictoffset > 0 이다.
+- tp_dictoffset < 0 이다.
 
 static PyGetSetDef func_getsetlist[] = {<br>
     {"__dict__", PyObject_GenericGetDict, PyObject_GenericSetDict},<br>

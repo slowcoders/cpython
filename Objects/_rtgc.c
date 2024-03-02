@@ -634,8 +634,19 @@ void RT_replaceReferrer(PyObject *obj, PyObject *old_referrer, PyObject *referre
     
 }
 
+void RT_increaseGRefCount(PyObject *obj) {
+    rt_assert(obj != NULL);
+    rt_assert((Py_TYPE(obj)->tp_flags & (3UL << 15)) == 0);
+}
+
+void RT_decreaseGRefCount(PyObject *obj) {
+    rt_assert(obj != NULL);
+    rt_assert((Py_TYPE(obj)->tp_flags & (3UL << 15)) == 0);
+}
+
+static int exit_on_break = true;
 void
-print_trace (void)
+RT_break (void)
 {
   void *array[50];
   char **strings;
@@ -650,14 +661,14 @@ print_trace (void)
     for (i = 0; i < size; i++)
       printf ("%s\n", strings[i]);
   }
-
   free (strings);
+  assert(!exit_on_break);
 }
 
 static int cnt_break = 0;
 Py_NO_INLINE PyAPI_FUNC(void) break_rt(int stop) {
     if (stop) {
-        print_trace();
+        RT_break();
         // PyErr_BadInternalCall();
     }
 }

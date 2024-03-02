@@ -55,6 +55,9 @@ _Py_DECREF_NO_DEALLOC(PyObject *op)
 #ifdef Py_REF_DEBUG
     _Py_RefTotal--;
 #endif
+#if INCLUDE_RTGC
+    RT_decreaseGRefCount(op);
+#endif
 #if USE_RTGC
     RT_decreaseGroundRefCountEx(op, unexpected_garbaged_dected_fn);
 #else

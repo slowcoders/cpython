@@ -63,6 +63,7 @@
 #define Py_DECREF(arg) \
     do { \
         PyObject *op = _PyObject_CAST(arg); \
+        RT_decreaseGRefCount(op); \
         if (--op->ob_refcnt == 0) { \
             destructor dealloc = Py_TYPE(op)->tp_dealloc; \
             (*dealloc)(op); \

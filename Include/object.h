@@ -1,5 +1,13 @@
 #ifndef Py_OBJECT_H
 #define Py_OBJECT_H
+
+// use rtgc flags
+#define INCLUDE_RTGC               1
+
+#if INCLUDE_RTGC
+#include "rtgc/rtgc-core.h"
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -500,8 +508,11 @@ static inline void Py_INCREF(PyObject *op)
 #ifdef Py_REF_DEBUG
     _Py_RefTotal++;
 #endif
+#if INCLUDE_RTGC
+    RT_increaseGRefCount(op);
+#endif
 #if USE_RTGC // debug && release.
-    RT_increaseGroundRefCount(op);
+    RT_increaseGRefCount(op);
 #else
     op->ob_refcnt++;
 #endif
@@ -523,8 +534,11 @@ static inline void Py_DECREF(PyObject *op) {
 static inline void Py_DECREF(const char *filename, int lineno, PyObject *op)
 {
     _Py_RefTotal--;
+#if INCLUDE_RTGC
+    RT_decreaseGRefCount(op)
+#endif
 #if USE_RTGC
-    RT_decreaseGroundRefCount(op)
+    RT_decreaseGRefCount(op)
 #else
     if (--op->ob_refcnt != 0) {
         if (op->ob_refcnt < 0) {
@@ -543,8 +557,11 @@ static inline void Py_DECREF(PyObject *op)
 {
     // Non-limited C API and limited C API for Python 3.9 and older access
     // directly PyObject.ob_refcnt.
+#if INCLUDE_RTGC
+    RT_decreaseGRefCount(op);
+#endif
 #if USE_RTGC
-    RT_decreaseGroundRefCount(op)
+    RT_decreaseGRefCount(op);
 #else
     if (--op->ob_refcnt == 0) {
         _Py_Dealloc(op);
