@@ -81,21 +81,21 @@ static inline void RT_decreaseGroundRefCountEx(GCObject* erased, void* dealloc) 
     }
 }
 
-static inline void RT_onFieldAssigned(GCObject* referrer, GCObject* assigned) {
-    if (assigned != NULL && assigned != referrer) {
-        GCNode* node = RT_getGCNode(assigned);
-        RT_INVOKE(addIncomingLink, node, referrer);
-    }
-}
+// static inline void RT_onFieldAssigned(GCObject* referrer, GCObject* assigned) {
+//     if (assigned != NULL && assigned != referrer) {
+//         GCNode* node = RT_getGCNode(assigned);
+//         RT_INVOKE(addIncomingLink, node, referrer);
+//     }
+// }
 
-static inline void RT_onFieldErased(GCObject* referrer, GCObject* erased) {
-    if (erased != NULL && erased != referrer) {
-        GCNode* node = RT_getGCNode(erased);
-        if (RT_INVOKE(removeIncomingLink, node, referrer)) {
-            RT_collectGarbage(node, NULL);
-        }
-    }
-}
+// static inline void RT_onFieldErased(GCObject* referrer, GCObject* erased) {
+//     if (erased != NULL && erased != referrer) {
+//         GCNode* node = RT_getGCNode(erased);
+//         if (RT_INVOKE(removeIncomingLink, node, referrer)) {
+//             RT_collectGarbage(node, NULL);
+//         }
+//     }
+// }
 
 /*
 GCObject

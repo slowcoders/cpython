@@ -212,20 +212,20 @@ static LinkArray* _getDestinationLinks(GCNode* node, LinkArray* tmpArray) {
     }
 }
 
-void TR_increaseGroundRefCount(TransitNode* self) {
-    TR_checkType(self);
-    if (self->_groundRefCount++ == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
-        FOR_EACH_CONTRACTED_LINK(self->_destinationLinks) {
-            EP_increaseGroundRefCount(iter._link->_endpoint, 1);
+void TR_increaseGroundRefCount(TransitNode* node) {
+    // TR_checkType(self);
+    while (node->_groundRefCount++ == 0) {
+        FOR_EACH_CONTRACTED_LINK(node->_destinationLinks) {
+            TR_increaseGroundRefCount(iter._link->_endpoint);
         }
     }
 }
 
-void TR_decreaseGroundRefCount(TransitNode* self) {
-    TR_checkType(self);
-    if (--self->_groundRefCount == 0 && ENABLE_RT_CIRCULAR_GARBAGE_DETECTION) {
-        FOR_EACH_CONTRACTED_LINK(self->_destinationLinks) {
-            EP_decreaseGroundRefCount(iter._link->_endpoint, 1);
+void TR_decreaseGroundRefCount(TransitNode* node) {
+    // TR_checkType(self);
+    while (--node->_groundRefCount == 0) {
+        FOR_EACH_CONTRACTED_LINK(node->_destinationLinks) {
+            TR_decreaseGroundRefCount(iter._link->_endpoint);
         }
     }
 }
@@ -243,13 +243,13 @@ void TR_decreaseGroundRefCount(TransitNode* self) {
 
 void TR_addIncomingLink(TransitNode* self, GCNode* newReferrer) {
     TR_checkType(self);
+    LinkArray* oldDestinations = self->_destinationLinks;
     auto oldReferrer = self->_referrer;
-    if (oldReferrer == NULL) {
-        self->_referrer = newReferrer;
-        TR_detectCircuitInDestinationlessPath(self);
+    if (Cll_size(oldDestinations) == 0) {
+        Cll_push(oldDestinations, newReferrer);
+        TR_detectCircuitInDestinationlessPath(self); /***/
     } else {
         LinkArray tmpAddedLinks[2]; 
-        LinkArray* oldDestinations = self->_destinationLinks;
         ContractedEndpoint* stopover = EP_transform(self);
         _initTempLinks(tmpAddedLinks, stopover);
         // old-referrer 의 incoming-path 에서 현재 detinations 를 삭제하고 stopover(=self) 를 추가한다.
@@ -616,31 +616,36 @@ void RT_collectGarbage(GCNode* node, void* dealloc) {
 }
 
 int RTGC_ENABLE = true;
+BOOL RTGC_DEBUG_VERBOSE = true;
 
 void RT_onPropertyChanged(PyObject *mp, PyObject *old_value, PyObject *value) {
-    // printf("RT_onPropertyChanged %p %p -> %p\n", mp, old_value, value);
+    // if (RTGC_DEBUG_VERBOSE) printf("RT_onPropertyChanged %p %p -> %p\n", mp, old_value, value);
 }
 
 void RT_onDictEntryInserted(PyObject *mp, PyObject *key, PyObject *value) {
-    // printf("RT_onDictEntryInserted %p[%p] = %p\n", mp, key, value);
+    // if (RTGC_DEBUG_VERBOSE) printf("RT_onDictEntryInserted %p[%p] = %p\n", mp, key, value);
 }
 
 void RT_onDictEntryRemoved(PyObject *mp, PyObject *key, PyObject *value) {
     // key may be null! 
-    // printf("RT_onDictEntryRemoved %p[%p] = %p\n", mp, key, value);
+    // if (RTGC_DEBUG_VERBOSE) printf("RT_onDictEntryRemoved %p[%p] = %p\n", mp, key, value);
 }
 
 void RT_replaceReferrer(PyObject *obj, PyObject *old_referrer, PyObject *referrer) {
-    
+    // if (RTGC_DEBUG_VERBOSE) printf("RT_replaceReferrer %p (%p => %p)\n", obj, old_referrer, referrer);
 }
 
 void RT_increaseGRefCount(PyObject *obj) {
     rt_assert(obj != NULL);
+    // if (RTGC_DEBUG_VERBOSE) printf("RT_increaseGRefCount %p\n", obj);
+    // (3UL << 15) = Py_TPFLAGS_HAVE_STACKLESS_EXTENSION 으로 예약됨. RTGC Flag 로 사용
     rt_assert((Py_TYPE(obj)->tp_flags & (3UL << 15)) == 0);
 }
 
 void RT_decreaseGRefCount(PyObject *obj) {
     rt_assert(obj != NULL);
+    // if (RTGC_DEBUG_VERBOSE) printf("RT_decreaseGRefCount %p\n", obj);
+    // (3UL << 15) = Py_TPFLAGS_HAVE_STACKLESS_EXTENSION 으로 예약됨. RTGC Flag 로 사용
     rt_assert((Py_TYPE(obj)->tp_flags & (3UL << 15)) == 0);
 }
 
