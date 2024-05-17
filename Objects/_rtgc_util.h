@@ -1,11 +1,11 @@
 static const int MIN_CAPACITY = 8;
 /* 축약 연결 정보 */
 struct _ContractedLink {
-    struct _ContractedEndpoint* _endpoint;
+    GCNode* _endpoint;
     int _linkCount;
 };
 
-static inline void initContractedLink(ContractedLink* self, ContractedEndpoint* endpoint, int count) {
+static inline void initContractedLink(ContractedLink* self, GCNode* endpoint, int count) {
     self->_endpoint = endpoint;
     self->_linkCount = count;
 }
@@ -56,7 +56,7 @@ BOOL Cll_isEmpty(LinkArray* array) {
     return array == NULL || array->_size == 0;
 }
 
-_Item* Cll_pointerOf(LinkArray* array, ContractedEndpoint* ep) {
+_Item* Cll_pointerOf(LinkArray* array, GCNode* ep) {
     int idx = Cll_size(array);
     for (_Item* pItem = array->_items; --idx >= 0; pItem++) {
         if (pItem->_endpoint == ep) return pItem;
