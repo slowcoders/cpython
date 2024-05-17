@@ -77,8 +77,29 @@ void _addAnchorToOutgoingPaths(GCNode* self, GCNode* anchor) {
     }
 }
 
+void _levelUpNode(GCNode* self, int level) {
+    self->_level = level;
+    FOR_EACH_CONTRACTED_LINK(self->_anchors) {
+        if (iter._link->_endpoint->_level < level) {
+            Cll_removeFast(self->_anchors, self);
+            _addDestinationToIncomingPaths(iter._link->_endpoint, self);
+        }
+    }
+    FOR_EACH_CONTRACTED_LINK(self->_destinations) {
+        if (iter._link->_endpoint->_level <= level) {
+            Cll_removeFast(self->_destinations, self);
+            _addAnchorToOutgoingPaths(iter._link->_endpoint, self);
+        }
+    }
+}
+
+static const MAX_ANCHORS = 1;
 void TR_addIncomingLink(GCNode* self, GCNode* anchor) {
-    if (anchor->_level <= self->_level) {
+    int anchor_level = anchor->_level;
+    if (anchor_level >= self->_level && Cll_size(self->_anchors) >= MAX_ANCHORS) {
+        _levelUpNode(self, anchor_level + 1);
+    }
+    if (anchor_level < self->_level) {
         _addDestinationToIncomingPaths(anchor, self);
     } else {
         _addAnchorToOutgoingPaths(self, anchor);
@@ -110,7 +131,7 @@ void _removeAnchorFromOutgoingPaths(GCNode* self, GCNode* anchor) {
 }
 
 void TR_removeIncomingLink(GCNode* self, GCNode* anchor) {
-    if (anchor->_level <= self->_level) {
+    if (anchor->_level < self->_level) {
         _removeDestinationFromIncomingPaths(anchor, self);
     } else {
         _removeAnchorFromOutgoingPaths(self, anchor);
