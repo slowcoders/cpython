@@ -72,7 +72,42 @@ void Cll_push(LinkArray* array, _Item* item) {
     array->_items[array->_size ++] = *item;
 }
 
+void Cll_add(LinkArray* array, GCNode* rookie, int count) {
+    _Item* item = Cll_pointerOf(array, rookie);
+    if (item != NULL) {
+        item->_linkCount += count;
+        return;
+    }
+    _Item new_item;
+    new_item._endpoint = rookie;
+    new_item._linkCount = count;
+    Cll_push(array, &item);   
+}
+
+void Cll_remove(LinkArray* array, GCNode* retiree, int count) {
+    _Item* item = Cll_pointerOf(array, retiree);
+    assert(item != NULL);
+    assert(item->_linkCount >= count);
+    if ((item->_linkCount -= count) == 0) {
+        Cll_removeFast(array, item);
+    }
+}
+
 void Cll_removeFast(LinkArray* array, _Item* pItem) {
+    assert(pItem >= array->_items && pItem < array->_items + array->_capacity);
+    int newSize = --array->_size;
+    assert(newSize >= 0);
+    *pItem = array->_items[newSize];
+    if (newSize < (array->_capacity - MIN_CAPACITY) / 2) {
+        Cll_allocItems(array, newSize);
+    }
+}
+
+void Cll_removeFastMutil(LinkArray* array, LinkArray* retires) {
+    FOR_EACH_CONTRACTED_LINK(retires) {
+
+    }
+
     assert(pItem >= array->_items && pItem < array->_items + array->_capacity);
     int newSize = --array->_size;
     assert(newSize >= 0);
