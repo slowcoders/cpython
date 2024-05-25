@@ -29,6 +29,8 @@ typedef struct {
 #define FOR_EACH_CONTRACTED_LINK(links)    \
     for ( LinkIterator iter={links->_items, links->_items + links->_size}; iter._link < iter._end; iter._link++)
 
+#define LINK_ARRAY_OF(destination, tmpArray) \
+    destination
 
 static inline void Cll_allocItems(LinkArray* array, int size) {
     int mask = MIN_CAPACITY - 1;
@@ -64,7 +66,7 @@ _Item* Cll_pointerOf(LinkArray* array, GCNode* ep) {
     return NULL;
 }
 
-void Cll_push(LinkArray* array, _Item* item) {
+void Cll_pushFast(LinkArray* array, _Item* item) {
     int size = array->_size;
     if (size >= array->_capacity) {
         Cll_allocItems(array, size + 1); 
@@ -73,8 +75,11 @@ void Cll_push(LinkArray* array, _Item* item) {
 }
 
 void Cll_add(LinkArray* array, GCNode* rookie, int count) {
+    assert(count > 0);
+
     _Item* item = Cll_pointerOf(array, rookie);
     if (item != NULL) {
+        assert(item->_linkCount > 0);
         item->_linkCount += count;
         return;
     }

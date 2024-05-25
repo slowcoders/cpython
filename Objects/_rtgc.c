@@ -55,72 +55,143 @@ void TR_decreaseGroundRefCount(GCNode* node) {
     }
 }
 
-void _addDestinationToIncomingPaths(GCNode* self, GCNode* dest, int count) {
-    // 중복 처리 회피 필요!!
-    if (self->_level < dest->_level) {
+typedef void (*AddAnchor_FN)(GCNode* anchor, int count);
+typedef struct {
+    GCNode* _node; 
+    AddAnchor_FN addAnchor;
+    int _cntMarked;
+    int _cntNewAnchors;
+    GCNode* _marked[2048];
+} TrackContext;
+
+BOOL _isMarked(GCNode* node) { 
+    return false; 
+}
+void _addMarked(TrackContext* ctx, GCNode* node) { 
+    assert(!_isMarked(node));
+    ctx->_marked[ctx->_cntMarked ++] = node;    
+}
+
+void _clearMarked(TrackContext* ctx) { 
+    GCNode** pMarked = ctx->_marked;
+    for (int i = ctx->_cntMarked; --i >= 0; ) {
+        GCNode* node = *pMarked++;
+        assert(_isMarked(node));
+    }
+}
+
+
+void _addDestinationToIncomingPaths(GCNode* self, int count, TrackContext* ctx) {
+    _addMarked(ctx, self);
+    GCNode* dest = ctx->_node;    
+    if (self->_level <= dest->_level) {
+        if (self == dest) {
+            // 순환 참조!!!
+            dest->_level ++;
+        }
         Cll_add(self->_destinations, dest, count);
         FOR_EACH_CONTRACTED_LINK(self->_anchors) {
             assert(iter._link->_endpoint->_level >= self->_level);
-            _addDestinationToIncomingPaths(iter._link->_endpoint, dest, count);
+            if (!_isMarked(iter._link->_endpoint)) {
+                _addDestinationToIncomingPaths(iter._link->_endpoint, iter._link->_linkCount, ctx);
+            }
         }
     } else {
         Cll_add(dest->_anchors, self, count);
     }
 }
 
-void _addAnchorToOutgoingPaths(GCNode* self, GCNode* anchor, int count) {
-    // 중복 처리 회피 필요!!
-    if (self->_level <= anchor->_level) {
-        Cll_add(self->_anchors, anchor, count);
-        FOR_EACH_CONTRACTED_LINK(self->_destinations) {
-            _addAnchorToOutgoingPaths(iter._link->_endpoint, anchor, count);
-        }
-    } else {
-        Cll_add(anchor->_destinations, self, count);
-    }
-}
+void _addAnchorToOutgoingPaths(GCNode* self, int count, TrackContext* ctx) {
+    GCNode* anchor = ctx->_node;    
+    assert (anchor->_level >= self->_level);
 
-void _remove_anchor_from_destinations(GCNode* self, GCNode* anchor, int count) {
+    _addMarked(ctx, self);
+    Cll_add(self->_anchors, anchor, count);
     FOR_EACH_CONTRACTED_LINK(self->_destinations) {
-        GCNode* dest = iter._link->_endpoint;
-        if (anchor->_level <= dest->_level) {
-            Cll_remove(dest->_anchors, anchor, count);
+        GCNode* endpoint = iter._link->_endpoint;
+        if (anchor->_level >= endpoint->_level) {
+            _addAnchorToOutgoingPaths(endpoint, count, ctx);
         } else {
-            _remove_anchor_from_destinations(dest, anchor, count);
+            _addDestinationToIncomingPaths(anchor, endpoint, ctx);
         }
     }
 }
 
-void _levelUpNode(GCNode* self, int level) {
-    int old_level = self->_level;
-    self->_level = level;
+typedef struct {
+    _Item* _linkItems;
+    int _count;
+    int _maxLevel;
+} RemoveAnchorSet;
+
+
+void _replaceAnchorToOutgoingPaths(GCNode* self, GCNode* anchor, int linkCount) {  
     FOR_EACH_CONTRACTED_LINK(self->_anchors) {
         GCNode* anchor = iter._link->_endpoint;
-        if (anchor->_level < level) {
-            int count = iter._link->_linkCount;
-            Cll_removeFast(self->_anchors, &iter._link);
-            _addDestinationToIncomingPaths(anchor, self, count);
-            if (anchor->_level > old_level) {
-                _remove_anchor_from_destinations(self, anchor, count);
-            }
+        FOR_EACH_CONTRACTED_LINK(anchor->_anchors) {
+            GCNode* endpoint = iter._link->_endpoint;
+            if (endpoint == anchor) {
+                Cll_remove(self->_anchors, anchor, iter._link->_linkCount);
+            } 
         }
     }
+    Cll_add(self->_anchors, anchor, linkCount);
     FOR_EACH_CONTRACTED_LINK(self->_destinations) {
         GCNode* dest = iter._link->_endpoint;
-        if (dest->_level <= level) {
-            int count = iter._link->_linkCount;
-            Cll_removeFast(self->_destinations, &iter._link);
-
-            FOR_EACH_CONTRACTED_LINK(self->_anchors) {
-                // FIX BUG: 새로 추가된 anchor 에 한해 처리해야함.
-                GCNode* my_anchor = iter._link->_endpoint;
-                if (my_anchor->_level >= dest->_level) {
-                    Cll_remove(dest->_anchors, my_anchor, iter._link->_linkCount);
-                }
-            }
-            _addAnchorToOutgoingPaths(dest, self, count);
+        if (dest->_level <= anchor->_level) {
+            _replaceAnchorToOutgoingPaths(dest, anchor, 1);
         }
     }
+}
+
+
+void _levelUpNode(GCNode* self, int newLevel) {
+    int oldLevel = self->_level;
+    TrackContext context;
+    context._node = self;
+    context._cntMarked = 0;
+
+    self->_level = newLevel;
+    do {
+        newLevel = self->_level;
+        FOR_EACH_CONTRACTED_LINK(self->_anchors) {
+            int count = iter._link->_linkCount;
+            if (count == 0) continue;
+
+            GCNode* anchor = iter._link->_endpoint;
+            int level = anchor->_level;
+            if (level < self->_level) {
+                if (level < oldLevel) {
+                    Cll_removeFast(self->_anchors, iter._link);
+                } else {
+                    iter._link->_linkCount = 0;
+                }
+                _addDestinationToIncomingPaths(anchor, count, &context);
+            }
+        }
+    } while(self->_level > newLevel); // 순환참조 발생 확인.
+
+    _clearMarked(&context);
+
+    LinkArray tmpArray;
+    LinkArray* anchors = LINK_ARRAY_OF(self->_anchors, tmpArray);
+    FOR_EACH_CONTRACTED_LINK(self->_destinations) {
+        GCNode* dest = iter._link->_endpoint;
+        // self->_level 보다 높은 destination 정리할 필요가 없다.
+        if (dest->_level <= newLevel) {
+            _replaceAnchorToOutgoingPaths(dest, self, iter._link->_linkCount);
+            Cll_removeFast(self->_destinations, iter._link);
+        }
+    }
+    context._cntMarked = 0;
+
+    FOR_EACH_CONTRACTED_LINK(self->_anchors) {
+        if (iter._link->_linkCount) {
+            Cll_removeFast(self->_anchors, iter._link);
+        } else {
+            assert(iter._link->_endpoint->_level >= newLevel);
+        }
+    }
+
 }
 
 static const MAX_ANCHORS = 1;
@@ -129,11 +200,16 @@ void TR_addIncomingLink(GCNode* self, GCNode* anchor) {
     if (anchor_level >= self->_level && Cll_size(self->_anchors) >= MAX_ANCHORS) {
         _levelUpNode(self, anchor_level + 1);
     }
+
+    TrackContext context;
+    context._node = self;
+    context._cntMarked = 0;
     if (anchor_level < self->_level) {
-        _addDestinationToIncomingPaths(anchor, self, 1);
+        _addDestinationToIncomingPaths(anchor, 1, &context);
     } else {
-        _addAnchorToOutgoingPaths(self, anchor, 1);
+        _addAnchorToOutgoingPaths(self, 1, &context);
     }
+    _clearMarked(&context);
 }
 
 void _removeDestinationFromIncomingPaths(GCNode* self, GCNode* dest) {
