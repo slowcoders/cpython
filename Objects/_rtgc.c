@@ -59,6 +59,7 @@ typedef void (*AddAnchor_FN)(GCNode* anchor, int count);
 typedef struct {
     GCNode* _node; 
     AddAnchor_FN addAnchor;
+    BOOL _inProgressLevelUp;
     int _cntMarked;
     int _cntNewAnchors;
     GCNode* _marked[2048];
@@ -164,6 +165,7 @@ void _levelUpNode(GCNode* self, int newLevel) {
     TrackContext context;
     context._node = self;
     context._cntMarked = 0;
+    context._inProgressLevelUp = true;
 
     self->_level = newLevel;
     do {
@@ -209,25 +211,37 @@ void _levelUpNode(GCNode* self, int newLevel) {
 
 }
 
-void _getSourceNodesForDestination(GCNode* node, GCNode* dest, LinkArray* links, TrackContext* context, BOOL addDest) {
+void _getSourceNodesForDestination(GCNode* node, LinkArray* destinations, LinkArray* sources, TrackContext* context, BOOL addDest) {
     int level = node->_level;
     if (addDest) {
-        Cll_add(node->_destinations, dest, 1);
+        FOR_EACH_CONTRACTED_LINK(destinations) {
+            Cll_add(node->_destinations, iter._link->_endpoint, iter._link->_linkCount);
+        }
     } else {
-        Cll_remove(node->_destinations, dest, 1);
+        FOR_EACH_CONTRACTED_LINK(destinations) {
+            Cll_remove(node->_destinations, iter._link->_endpoint, iter._link->_linkCount);
+        }
     }
 
     FOR_EACH_CONTRACTED_LINK(node->_anchors) {
         GCNode* anchor = iter._link->_endpoint;
         if (anchor->_level > level) {
-            Cll_add(links, anchor, 1);            
+            Cll_add(sources, anchor, 1);            
         }
         else {
-            // 동일 레벨의 분기+합류는 발생하지 않는다.(???)
-            assert(!_isMarked(anchor));
+            assert(!_isMarked(anchor)); // => 동일 레벨의 분기+합류는 발생하지 않는다.(???)
             assert(anchor->_level == level);
+            if (addDest && anchor == context->_node) {
+                // 순환 참조!!!
+                if (context->_inProgressLevelUp) {
+                    anchor->_level ++;
+                } else {
+                    // clearMark 필요!!!
+                    _levelUpNode(anchor, level + 1);
+                }
+            }
             _addMarked(context, node);
-            _getSourceNodesForDestination(anchor, dest, links, context, addDest);
+            _getSourceNodesForDestination(anchor, destinations, sources, context, addDest);
         }
     }
 }
@@ -235,9 +249,25 @@ void _getSourceNodesForDestination(GCNode* node, GCNode* dest, LinkArray* links,
 
 void _connectPaths(GCNode* from, GCNode* to, TrackContext* context) {
     int diff = to->_level - from->_level;
-    if (diff <= 0) {
+    if (diff == 0) {
         Cll_add(to->_anchors, from, 1);
-        if (diff != 0) {
+        if (!Cll_isEmpty(to->_destinations)) {
+            LinkArray sources; 
+            sources._size = sources._capacity = 0;
+            _getSourceNodesForDestination(from, to->_destinations, &sources, context, true);
+            if (!Cll_isEmpty(&sources)) {
+                FOR_EACH_CONTRACTED_LINK((&sources)) {
+                    GCNode* anchor = iter._link->_endpoint;
+                    FOR_EACH_CONTRACTED_LINK(to->_destinations) {
+                        _connectPaths(anchor, iter._link->_endpoint, context);
+                    }
+                }
+            }
+        }
+    }
+    else if (diff < 0) {
+        Cll_add(to->_anchors, from, 1);
+        if (!Cll_isEmpty(to->_destinations)) {
             FOR_EACH_CONTRACTED_LINK(to->_destinations) {
                 _connectPaths(from, iter._link->_endpoint, context);
             }
@@ -255,9 +285,25 @@ void _connectPaths(GCNode* from, GCNode* to, TrackContext* context) {
 
 void _disconnectPaths(GCNode* from, GCNode* to, TrackContext* context) {
     int diff = to->_level - from->_level;
-    if (diff <= 0) {
+    if (diff == 0) {
         Cll_remove(to->_anchors, from, 1);
-        if (diff != 0) {
+        if (!Cll_isEmpty(to->_destinations)) {
+            LinkArray sources; 
+            sources._size = sources._capacity = 0;
+            _getSourceNodesForDestination(from, to->_destinations, &sources, context, true);
+            if (!Cll_isEmpty(&sources)) {
+                FOR_EACH_CONTRACTED_LINK((&sources)) {
+                    GCNode* anchor = iter._link->_endpoint;
+                    FOR_EACH_CONTRACTED_LINK(to->_destinations) {
+                        _disconnectPaths(anchor, iter._link->_endpoint, context);
+                    }
+                }
+            }
+        }
+    }
+    else if (diff < 0) {
+        Cll_remove(to->_anchors, from, 1);
+        if (!Cll_isEmpty(to->_destinations)) {
             FOR_EACH_CONTRACTED_LINK(to->_destinations) {
                 _disconnectPaths(from, iter._link->_endpoint, context);
             }
@@ -265,7 +311,7 @@ void _disconnectPaths(GCNode* from, GCNode* to, TrackContext* context) {
     } else {
         LinkArray sources; 
         sources._size = sources._capacity = 0;
-        _getSourceNodesForDestination(from, to, &sources, context, false);
+        _getSourceNodesForDestination(from, to, &sources, context, true);
         FOR_EACH_CONTRACTED_LINK((&sources)) {
             _disconnectPaths(iter._link->_endpoint, to, context);
         }
@@ -307,20 +353,20 @@ void TR_removeIncomingLink(GCNode* self, GCNode* anchor) {
 
 static const MAX_ANCHORS = 1;
 void RT_onReferentChanged(GCNode* self, GCNode* erased, GCNode* assigned) {
-    TrackContext context;
-    context._node = self;
-    context._cntMarked = 0;
     if (erased != NULL) {
+        TrackContext context = { ._node = self, ._cntMarked = 0, ._inProgressLevelUp = false };
         _disconnectPaths(self, erased, &context);
+        _clearMarked(&context);
     }
 
     if (assigned != NULL) {
         if (self->_level <= assigned->_level && Cll_size(self->_anchors) >= MAX_ANCHORS) {
             _levelUpNode(self, assigned->_level + 1);
         }
+        TrackContext context = { ._node = self, ._cntMarked = 0, ._inProgressLevelUp = false };
         _connectPaths(self, assigned, &context);
+        _clearMarked(&context);
     }    
-    _clearMarked(&context);
 }
 
 
