@@ -26,12 +26,15 @@ static const int ENABLE_RT_CIRCULAR_GARBAGE_DETECTION = 1;
     int32_t _groundRefCount;        \
     enum GCNodeType _nodeType;      \
 
+static const int IS_DIRTY_ANCHOR = 1;
+static const int HAS_DIRTY_ANCHOR = 2;
 /*
 GarbageCollector
 */
 struct _GCNode {
     int32_t _groundRefCount;
     int8_t  _level;
+    int8_t  _flags;
     enum GCNodeType _nodeType;
     LinkArray* _anchors;
     LinkArray* _destinations;

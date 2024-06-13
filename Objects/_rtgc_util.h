@@ -27,7 +27,7 @@ typedef struct {
 } LinkIterator;
 
 #define FOR_EACH_CONTRACTED_LINK(links)    \
-    for ( LinkIterator iter={links->_items, links->_items + links->_size}; iter._link < iter._end; iter._link++)
+    for ( LinkIterator iter={(links)->_items, (links)->_items + (links)->_size}; iter._link < iter._end; iter._link++)
 
 #define LINK_ARRAY_OF(destination, tmpArray) \
     destination
@@ -89,13 +89,24 @@ void Cll_add(LinkArray* array, GCNode* rookie, int count) {
     Cll_push(array, &item);   
 }
 
-void Cll_remove(LinkArray* array, GCNode* retiree, int count) {
+BOOL Cll_tryRemove(LinkArray* array, GCNode* retiree, int count) {
+    _Item* item = Cll_pointerOf(array, retiree);
+    if (item == NULL) return false;
+    assert(item->_linkCount >= count);
+    if ((item->_linkCount -= count) == 0) {
+        Cll_removeFast(array, item);
+    }
+    return true;
+}
+
+BOOL Cll_remove(LinkArray* array, GCNode* retiree, int count) {
     _Item* item = Cll_pointerOf(array, retiree);
     assert(item != NULL);
     assert(item->_linkCount >= count);
     if ((item->_linkCount -= count) == 0) {
         Cll_removeFast(array, item);
     }
+    return true;
 }
 
 void Cll_removeFast(LinkArray* array, _Item* pItem) {

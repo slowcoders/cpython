@@ -55,11 +55,16 @@ void TR_decreaseGroundRefCount(GCNode* node) {
     }
 }
 
-typedef void (*AddAnchor_FN)(GCNode* anchor, int count);
+typedef void (*UpdateAnchorConnection_FN)(GCNode* anchor, GCNode* node, int count);
+typedef BOOL (*UpdateDestinationConnections_FN)(GCNode* node, GCNode* target, LinkArray* destinations);
+typedef void (*OnFoundSourceNode_FN)(GCNode* anchor, TrackContext* context);
+
 typedef struct {
     GCNode* _node; 
-    AddAnchor_FN addAnchor;
+    UpdateAnchorConnection_FN _updateAnchorConnection;
+    UpdateDestinationConnections_FN _updateDestinationConnections;
     BOOL _inProgressLevelUp;
+    OnFoundSourceNode_FN _onFoundSourceNode;
     int _cntMarked;
     int _cntNewAnchors;
     GCNode* _marked[2048];
@@ -208,114 +213,90 @@ void _levelUpNode(GCNode* self, int newLevel) {
             assert(iter._link->_endpoint->_level >= newLevel);
         }
     }
-
 }
 
-void _getSourceNodesForDestination(GCNode* node, LinkArray* destinations, LinkArray* sources, TrackContext* context, BOOL addDest) {
-    int level = node->_level;
-    if (addDest) {
-        FOR_EACH_CONTRACTED_LINK(destinations) {
-            Cll_add(node->_destinations, iter._link->_endpoint, iter._link->_linkCount);
+
+void _addAnchorToNode(GCNode* anchor, GCNode* node, int count) {
+    Cll_add(node->_anchors, anchor, count);
+}
+
+void _removeAnchorFromNode(GCNode* anchor, GCNode* node, int count) {
+    Cll_remove(node->_anchors, anchor, count);
+}
+
+void _addDestinationsToNode(GCNode* node, LinkArray* destinations) {
+    FOR_EACH_CONTRACTED_LINK(destinations) {
+        Cll_add(node->_destinations, iter._link->_endpoint, iter._link->_linkCount);
+    }
+}
+
+BOOL _removeDestinationsFromNode(GCNode* node, GCNode* target, LinkArray* destinations) {
+    if (node->_flags & IS_DIRTY_ANCHOR) {
+        // destinations 가 추가되지 않은 상태이다.
+        Cll_remove(target->_anchors, node, 1);
+        if (Py_DebugFlag) {
+            FOR_EACH_CONTRACTED_LINK(destinations) {
+                _Item* link = Cll_pointerOf(node->_destinations, iter._link->_endpoint);
+                assert(link == NULL || link->_linkCount > iter._link->_linkCount);
+            }
         }
+        return false;
     } else {
         FOR_EACH_CONTRACTED_LINK(destinations) {
             Cll_remove(node->_destinations, iter._link->_endpoint, iter._link->_linkCount);
         }
+        return true;
     }
+}
+
+void _updateDestinationsAndGetSourceNodes(GCNode* node, GCNode* target, LinkArray* destinations, TrackContext* context) {
+    // context._updateAnchorConnection = _removeAnchorFromNode;
+    // context._updateDestinationConnections = _removeDestinationsFromNode;
+    int level = node->_level;
+    if (!context->_updateDestinationConnections(node, target, destinations)) return;
 
     FOR_EACH_CONTRACTED_LINK(node->_anchors) {
         GCNode* anchor = iter._link->_endpoint;
         if (anchor->_level > level) {
-            Cll_add(sources, anchor, 1);            
+            FOR_EACH_CONTRACTED_LINK(destinations) {
+                _updateConnections(anchor, iter._link->_endpoint, context);
+            }
         }
-        else {
+        else if (anchor->_level == level) {
             assert(!_isMarked(anchor)); // => 동일 레벨의 분기+합류는 발생하지 않는다.(???)
             assert(anchor->_level == level);
-            if (addDest && anchor == context->_node) {
-                // 순환 참조!!!
-                if (context->_inProgressLevelUp) {
-                    anchor->_level ++;
-                } else {
-                    // clearMark 필요!!!
-                    _levelUpNode(anchor, level + 1);
-                }
-            }
+            assert(anchor == context->_node);
             _addMarked(context, node);
-            _getSourceNodesForDestination(anchor, destinations, sources, context, addDest);
+            _updateDestinationsAndGetSourceNodes(anchor, target, destinations, context);
+        } else {
+            assert (anchor->_flags & IS_DIRTY_ANCHOR);
+            assert (node->_flags & HAS_DIRTY_ANCHOR);
         }
     }
 }
 
+void _updateConnections(GCNode* from, GCNode* to, TrackContext* context) {
+    // context._updateAnchorConnection = _removeAnchorFromNode;
+    // context._updateDestinationConnections = _removeDestinationsFromNode;
 
-void _connectPaths(GCNode* from, GCNode* to, TrackContext* context) {
-    int diff = to->_level - from->_level;
+    int diff = from->_level - to->_level;
     if (diff == 0) {
-        Cll_add(to->_anchors, from, 1);
+        context->_updateAnchorConnection(from, to, 1);
         if (!Cll_isEmpty(to->_destinations)) {
-            LinkArray sources; 
-            sources._size = sources._capacity = 0;
-            _getSourceNodesForDestination(from, to->_destinations, &sources, context, true);
-            if (!Cll_isEmpty(&sources)) {
-                FOR_EACH_CONTRACTED_LINK((&sources)) {
-                    GCNode* anchor = iter._link->_endpoint;
-                    FOR_EACH_CONTRACTED_LINK(to->_destinations) {
-                        _connectPaths(anchor, iter._link->_endpoint, context);
-                    }
-                }
-            }
+            _updateDestinationsAndGetSourceNodes(from, to, to->_destinations, context);
         }
     }
-    else if (diff < 0) {
-        Cll_add(to->_anchors, from, 1);
+    else if (diff > 0) {
+        context->_updateAnchorConnection(from, to, 1);
         if (!Cll_isEmpty(to->_destinations)) {
             FOR_EACH_CONTRACTED_LINK(to->_destinations) {
-                _connectPaths(from, iter._link->_endpoint, context);
+                _updateConnections(from, iter._link->_endpoint, context);
             }
         }
     } else {
-        LinkArray sources; 
-        sources._size = sources._capacity = 0;
-        _getSourceNodesForDestination(from, to, &sources, context, true);
-        FOR_EACH_CONTRACTED_LINK((&sources)) {
-            _connectPaths(iter._link->_endpoint, to, context);
-        }
-        Cll_delete(&sources);
-    }
-}
-
-void _disconnectPaths(GCNode* from, GCNode* to, TrackContext* context) {
-    int diff = to->_level - from->_level;
-    if (diff == 0) {
-        Cll_remove(to->_anchors, from, 1);
-        if (!Cll_isEmpty(to->_destinations)) {
-            LinkArray sources; 
-            sources._size = sources._capacity = 0;
-            _getSourceNodesForDestination(from, to->_destinations, &sources, context, true);
-            if (!Cll_isEmpty(&sources)) {
-                FOR_EACH_CONTRACTED_LINK((&sources)) {
-                    GCNode* anchor = iter._link->_endpoint;
-                    FOR_EACH_CONTRACTED_LINK(to->_destinations) {
-                        _disconnectPaths(anchor, iter._link->_endpoint, context);
-                    }
-                }
-            }
-        }
-    }
-    else if (diff < 0) {
-        Cll_remove(to->_anchors, from, 1);
-        if (!Cll_isEmpty(to->_destinations)) {
-            FOR_EACH_CONTRACTED_LINK(to->_destinations) {
-                _disconnectPaths(from, iter._link->_endpoint, context);
-            }
-        }
-    } else {
-        LinkArray sources; 
-        sources._size = sources._capacity = 0;
-        _getSourceNodesForDestination(from, to, &sources, context, true);
-        FOR_EACH_CONTRACTED_LINK((&sources)) {
-            _disconnectPaths(iter._link->_endpoint, to, context);
-        }
-        Cll_delete(&sources);
+        LinkArray tmpArray[2];
+        _initTempLinks(tmpArray, to);
+        _updateDestinationsAndGetSourceNodes(from, to, tmpArray, context);
     }
 }
 
@@ -352,21 +333,63 @@ void TR_removeIncomingLink(GCNode* self, GCNode* anchor) {
 }
 
 static const MAX_ANCHORS = 1;
+static void _connectAnchorFast(GCNode* anchor, GCNode* target) {
+    /**
+     * performance overhead ~= destination node 탐색 회수
+     */
+    Cll_add(target->_anchors, anchor, 1);
+    if (anchor->_level < target->_level) {
+        anchor->_flags |= IS_DIRTY_ANCHOR;
+        if (target->_flags & HAS_DIRTY_ANCHOR) {
+            return;
+        }
+        target->_flags |= HAS_DIRTY_ANCHOR;
+        anchor = target;
+    } else {
+        // 정상적인 anchor 이다. 즉, target 을 기점으로 역방향 탐색이 가능하다.
+    }
+    FOR_EACH_CONTRACTED_LINK(target->_destinations) {
+        _connectAnchorFast(iter._link->_endpoint, anchor);
+    }
+}
+
+void _disconnectAnchorFast(GCNode* anchor, GCNode* target) {
+    /**
+     * performance overhead ~= anchor node 탐색 회수
+     */
+    int diff = anchor->_level < target->_level;
+    if (anchor->_level < target->_level) {
+        if (anchor->_flags & IS_DIRTY_ANCHOR) {
+            assert(target->_flags & HAS_DIRTY_ANCHOR);
+            Cll_remove(target->_anchors, anchor, 1);
+        }
+        return;
+    } else {
+        // 정상적인 anchor
+    }
+    
+    Cll_remove(target->_anchors, anchor, 1);
+    FOR_EACH_CONTRACTED_LINK(target->_destinations) {
+        _disconnectAnchorFast(iter._link->_endpoint, anchor);
+    }
+}
+
 void RT_onReferentChanged(GCNode* self, GCNode* erased, GCNode* assigned) {
+    if (assigned == erased) return;
+
+    if (assigned != NULL) {        
+        _connectAnchorFast(self, assigned);
+    }    
+
     if (erased != NULL) {
+        // _disconnectAnchorFast(self, erased);
+
         TrackContext context = { ._node = self, ._cntMarked = 0, ._inProgressLevelUp = false };
-        _disconnectPaths(self, erased, &context);
+        context._updateAnchorConnection = _removeAnchorFromNode;
+        context._updateDestinationConnections = _removeDestinationsFromNode;
+        _updateConnections(self, erased, &context);
         _clearMarked(&context);
     }
-
-    if (assigned != NULL) {
-        if (self->_level <= assigned->_level && Cll_size(self->_anchors) >= MAX_ANCHORS) {
-            _levelUpNode(self, assigned->_level + 1);
-        }
-        TrackContext context = { ._node = self, ._cntMarked = 0, ._inProgressLevelUp = false };
-        _connectPaths(self, assigned, &context);
-        _clearMarked(&context);
-    }    
 }
 
 
