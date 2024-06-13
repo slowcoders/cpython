@@ -250,7 +250,7 @@ BOOL _removeDestinationsFromNode(GCNode* node, GCNode* target, LinkArray* destin
 }
 
 void _updateDestinationsAndGetSourceNodes(GCNode* node, GCNode* target, LinkArray* destinations, TrackContext* context) {
-    // context._updateAnchorConnection = _removeAnchorFromNode;
+    // context._updateAnchorConnection = _removeAnchorFromNode = Cll_remove;
     // context._updateDestinationConnections = _removeDestinationsFromNode;
     int level = node->_level;
     if (!context->_updateDestinationConnections(node, target, destinations)) return;
@@ -276,13 +276,14 @@ void _updateDestinationsAndGetSourceNodes(GCNode* node, GCNode* target, LinkArra
 }
 
 void _updateConnections(GCNode* from, GCNode* to, TrackContext* context) {
-    // context._updateAnchorConnection = _removeAnchorFromNode;
+    // context._updateAnchorConnection = _removeAnchorFromNode = Cll_remove;
     // context._updateDestinationConnections = _removeDestinationsFromNode;
 
     int diff = from->_level - to->_level;
     if (diff == 0) {
         context->_updateAnchorConnection(from, to, 1);
         if (!Cll_isEmpty(to->_destinations)) {
+            // DIRTY_ANCHOR 에 대한 처리는 _updateDestinationsAndGetSourceNodes 에서.
             _updateDestinationsAndGetSourceNodes(from, to, to->_destinations, context);
         }
     }
@@ -346,14 +347,18 @@ static void _connectAnchorFast(GCNode* anchor, GCNode* target) {
         target->_flags |= HAS_DIRTY_ANCHOR;
         anchor = target;
     } else {
-        // 정상적인 anchor 이다. 즉, target 을 기점으로 역방향 탐색이 가능하다.
+        /**
+         * @brief 정상적인 anchor 이다. 즉, target 을 기점으로 역방향 탐색이 가능하다.
+         * 단, anchor 와 target 의 level 이 동일하고, target->_destinations 의 수가 0보다 큰 경우,
+         * anchor->_destinations 는 target->_destinations 정보가 누락된 상태가 된다.
+         */
     }
     FOR_EACH_CONTRACTED_LINK(target->_destinations) {
         _connectAnchorFast(iter._link->_endpoint, anchor);
     }
 }
 
-void _disconnectAnchorFast(GCNode* anchor, GCNode* target) {
+void _disconnectAnchorFast_obsolete(GCNode* anchor, GCNode* target) {
     /**
      * performance overhead ~= anchor node 탐색 회수
      */
@@ -382,8 +387,6 @@ void RT_onReferentChanged(GCNode* self, GCNode* erased, GCNode* assigned) {
     }    
 
     if (erased != NULL) {
-        // _disconnectAnchorFast(self, erased);
-
         TrackContext context = { ._node = self, ._cntMarked = 0, ._inProgressLevelUp = false };
         context._updateAnchorConnection = _removeAnchorFromNode;
         context._updateDestinationConnections = _removeDestinationsFromNode;
