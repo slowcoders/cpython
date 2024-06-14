@@ -27,7 +27,7 @@ static const int ENABLE_RT_CIRCULAR_GARBAGE_DETECTION = 1;
     enum GCNodeType _nodeType;      \
 
 static const int IS_DIRTY_ANCHOR = 1;
-static const int HAS_DIRTY_ANCHOR = 2;
+static const int HAS_DIRTY_ANCHORS = 2;
 /*
 GarbageCollector
 */

@@ -56,7 +56,7 @@ void TR_decreaseGroundRefCount(GCNode* node) {
 }
 
 typedef void (*UpdateAnchorConnection_FN)(GCNode* anchor, GCNode* node, int count);
-typedef BOOL (*UpdateDestinationConnections_FN)(GCNode* node, GCNode* target, LinkArray* destinations);
+typedef BOOL (*UpdateDestinationConnections_FN)(GCNode* node, LinkArray* destinations);
 typedef void (*OnFoundSourceNode_FN)(GCNode* anchor, TrackContext* context);
 
 typedef struct {
@@ -230,18 +230,52 @@ void _addDestinationsToNode(GCNode* node, LinkArray* destinations) {
     }
 }
 
-BOOL _removeDestinationsFromNode(GCNode* node, GCNode* target, LinkArray* destinations) {
-    if (node->_flags & IS_DIRTY_ANCHOR) {
-        // destinations 가 추가되지 않은 상태이다.
-        Cll_remove(target->_anchors, node, 1);
-        if (Py_DebugFlag) {
-            FOR_EACH_CONTRACTED_LINK(destinations) {
-                _Item* link = Cll_pointerOf(node->_destinations, iter._link->_endpoint);
-                assert(link == NULL || link->_linkCount > iter._link->_linkCount);
+BOOL _tryRemoveDirtyAnchor(GCNode* anchor, GCNode* destination) {
+    if (!(destination->_flags & HAS_DIRTY_ANCHORS)) return false;
+
+    assert(anchor->_flags & IS_DIRTY_ANCHOR);
+    _Item* found = NULL;
+    int dest_level = destination->_level;
+    FOR_EACH_CONTRACTED_LINK(destination->_anchors) {
+        GCNode* node = iter._link->_endpoint;
+        if (node == anchor) {
+            assert(iter._link->_linkCount == 1);
+            found = iter._link;
+            if (dest_level < 0) break;
+        } else if (node->_level < dest_level) {
+            dest_level = -1;
+            if (found) break;
+        }
+    }
+    if (found) {
+        Cll_removeFast(destination->_anchors, found);
+        if (dest_level >= 0) {
+            destination->_flags &= ~HAS_DIRTY_ANCHORS;
+        }
+        return true;
+    } 
+    assert(dest_level < 0);
+    return false;
+}
+
+
+BOOL _removeDestinationsFromNode(GCNode* node, LinkArray* destinations) {
+    BOOL isDirtyAnchor = (node->_flags & IS_DIRTY_ANCHOR);
+    if (isDirtyAnchor) {
+        BOOL isFirst = true;
+        FOR_EACH_CONTRACTED_LINK(destinations) {
+            GCNode* destination = iter._link->_endpoint;
+            BOOL removed = _tryRemoveDirtyAnchor(node, destination);
+            if (isFirst) {
+                if (!removed) goto remove_destinations;
+                isFirst = false;
             }
+            assert(removed);
         }
         return false;
-    } else {
+    } 
+
+    remove_destinations: {
         FOR_EACH_CONTRACTED_LINK(destinations) {
             Cll_remove(node->_destinations, iter._link->_endpoint, iter._link->_linkCount);
         }
@@ -249,11 +283,11 @@ BOOL _removeDestinationsFromNode(GCNode* node, GCNode* target, LinkArray* destin
     }
 }
 
-void _updateDestinationsAndGetSourceNodes(GCNode* node, GCNode* target, LinkArray* destinations, TrackContext* context) {
+void _updateDestinationsAndGetSourceNodes(GCNode* node, LinkArray* destinations, TrackContext* context) {
     // context._updateAnchorConnection = _removeAnchorFromNode = Cll_remove;
     // context._updateDestinationConnections = _removeDestinationsFromNode;
     int level = node->_level;
-    if (!context->_updateDestinationConnections(node, target, destinations)) return;
+    if (!context->_updateDestinationConnections(node, destinations)) return;
 
     FOR_EACH_CONTRACTED_LINK(node->_anchors) {
         GCNode* anchor = iter._link->_endpoint;
@@ -267,10 +301,10 @@ void _updateDestinationsAndGetSourceNodes(GCNode* node, GCNode* target, LinkArra
             assert(anchor->_level == level);
             assert(anchor == context->_node);
             _addMarked(context, node);
-            _updateDestinationsAndGetSourceNodes(anchor, target, destinations, context);
+            _updateDestinationsAndGetSourceNodes(anchor, destinations, context);
         } else {
             assert (anchor->_flags & IS_DIRTY_ANCHOR);
-            assert (node->_flags & HAS_DIRTY_ANCHOR);
+            assert (node->_flags & HAS_DIRTY_ANCHORS);
         }
     }
 }
@@ -284,7 +318,7 @@ void _updateConnections(GCNode* from, GCNode* to, TrackContext* context) {
         context->_updateAnchorConnection(from, to, 1);
         if (!Cll_isEmpty(to->_destinations)) {
             // DIRTY_ANCHOR 에 대한 처리는 _updateDestinationsAndGetSourceNodes 에서.
-            _updateDestinationsAndGetSourceNodes(from, to, to->_destinations, context);
+            _updateDestinationsAndGetSourceNodes(from, to->_destinations, context);
         }
     }
     else if (diff > 0) {
@@ -297,7 +331,7 @@ void _updateConnections(GCNode* from, GCNode* to, TrackContext* context) {
     } else {
         LinkArray tmpArray[2];
         _initTempLinks(tmpArray, to);
-        _updateDestinationsAndGetSourceNodes(from, to, tmpArray, context);
+        _updateDestinationsAndGetSourceNodes(from, tmpArray, context);
     }
 }
 
@@ -341,10 +375,10 @@ static void _connectAnchorFast(GCNode* anchor, GCNode* target) {
     Cll_add(target->_anchors, anchor, 1);
     if (anchor->_level < target->_level) {
         anchor->_flags |= IS_DIRTY_ANCHOR;
-        if (target->_flags & HAS_DIRTY_ANCHOR) {
+        if (target->_flags & HAS_DIRTY_ANCHORS) {
             return;
         }
-        target->_flags |= HAS_DIRTY_ANCHOR;
+        target->_flags |= HAS_DIRTY_ANCHORS;
         anchor = target;
     } else {
         /**
@@ -365,7 +399,7 @@ void _disconnectAnchorFast_obsolete(GCNode* anchor, GCNode* target) {
     int diff = anchor->_level < target->_level;
     if (anchor->_level < target->_level) {
         if (anchor->_flags & IS_DIRTY_ANCHOR) {
-            assert(target->_flags & HAS_DIRTY_ANCHOR);
+            assert(target->_flags & HAS_DIRTY_ANCHORS);
             Cll_remove(target->_anchors, anchor, 1);
         }
         return;
