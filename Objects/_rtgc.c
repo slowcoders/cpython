@@ -6,6 +6,7 @@
 static const BOOL true = 1;
 static const BOOL false = 0;
 static const BOOL FAST_UPDATE_DESTNATION_LINKS = true;
+static const BOOL FULL_MANAGED_REF_COUNT = true;
 static const CircuitNode* NoCircuit = (CircuitNode*)-1;
 
 static CircuitNode* TR_replaceDestinationLinksOfIncomingPath(GCNode* node, LinkArray* addedLinks, LinkArray* erasedLinks);
@@ -400,19 +401,67 @@ static void _connectAnchorFast(GCNode* anchor, GCNode* target, BOOL addDestinati
     }
 }
 
+RCircuit* _allocateCircuit() {
+    RCircuit* circuit = malloc(sizeof(RCircuit));
+    return circuit;
+}
+
 void RT_onReferentChanged(GCNode* self, GCNode* erased, GCNode* assigned) {
     if (assigned == erased) return;
 
-    if (assigned != NULL) {        
-        _connectAnchorFast(self, assigned, true);
+    RCircuit* circuit = self->_circuit;
+    GCNode* referrer = self->_anchor;
+    if (assigned != NULL) {
+        assigned->_anchor = self;
+        if (FULL_MANAGED_REF_COUNT) assigned->_refcnt ++;
+
+        if (referrer != NULL) {
+            if (referrer == assigned) {
+                if (circuit != NULL) {
+                    RCircuit* target_circuit = assigned->_circuit;
+                    if (target_circuit == NULL) {
+                        assigned->_circuit = circuit;
+                    } 
+                    else if (target_circuit == circuit) {
+                        circuit->_refcnt ++;    
+                    }
+                    else {
+                        RCircuit* newCircuit = _allocateCircuit();
+                        circuit->_circuit = target_circuit->_circuit = newCircuit;
+                        newCircuit->_refcnt = 2;
+                        assigned->_circuit = circuit;
+
+                        // 두개의 circuit 을 연결하는 two-way 링크.
+                    }
+                } else if (assigned->_circuit != NULL) {
+                    self->_circuit = assigned->_circuit;
+                    circuit->_refcnt ++;    
+                } else {
+                    RCircuit* newCircuit = _allocateCircuit();
+                    assigned->_circuit = self->_circuit = newCircuit;
+                    newCircuit->_refcnt = 2;
+                }
+            } 
+            else if (referrer->_anchor == assigned) {
+                if (circuit != NULL) {
+                    assigned->_circuit = circuit;
+                    circuit->_refcnt ++;
+                    // if (assigned->_circuit == ci)
+                } else if (assigned->_circuit != NULL) {
+                    self->_circuit = assigned->_circuit;
+                    circuit->_refcnt ++;    
+                } else {
+                    assigned->_circuit = self->_circuit = _allocateCircuit(2);
+                }
+            }
     }    
 
     if (erased != NULL) {
-        TrackContext context = { ._node = self, ._cntMarked = 0, ._inProgressLevelUp = false };
-        context._updateAnchorConnection = _removeAnchorFromNode;
-        context._updateDestinationConnections = _removeDestinationsFromNode;
-        _updateConnections(self, erased, &context);
-        _clearMarked(&context);
+        if (circuit != NULL && circuit == erased->_circuit) {
+            circuit->_refcnt --;
+        }
+        erased->_anchor = NULL;
+        if (FULL_MANAGED_REF_COUNT) erased->_refcnt --;
     }
 }
 

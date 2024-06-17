@@ -16,6 +16,7 @@ typedef struct _CircuitNode CircuitNode;
 typedef struct _ContractedLink ContractedLink;
 typedef struct _LinkArray LinkArray;
 typedef struct _CircuitNode CircuitNode;
+typedef struct _GCNode RCircuit;
 
 typedef int BOOL;
 
@@ -36,9 +37,9 @@ struct _GCNode {
     int32_t _groundRefCount;
     int8_t  _level;
     int8_t  _flags;
-    enum GCNodeType _nodeType;
-    LinkArray* _anchors;
-    LinkArray* _destinations;
+    GCNode* _anchor;
+    RCircuit* _circuit;
+    Py_ssize_t _refcnt; // => ob_refcnt;
 };
 
 #define NUM_ARGS(...)  (sizeof((int[]){0, ##__VA_ARGS__})/sizeof(int)-1)
