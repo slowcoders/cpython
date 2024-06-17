@@ -28,6 +28,7 @@ static const int ENABLE_RT_CIRCULAR_GARBAGE_DETECTION = 1;
 
 static const int IS_DIRTY_ANCHOR = 1;
 static const int HAS_DIRTY_ANCHORS = 2;
+static const int DIRTY_ANCHOR_FLAGS = IS_DIRTY_ANCHOR | HAS_DIRTY_ANCHORS;
 /*
 GarbageCollector
 */

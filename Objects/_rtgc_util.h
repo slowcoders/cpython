@@ -58,6 +58,11 @@ BOOL Cll_isEmpty(LinkArray* array) {
     return array == NULL || array->_size == 0;
 }
 
+_Item* Cll_itemAt(LinkArray* array, int idx) {
+    assert(idx < Cll_size(array));
+    return array->_items;
+}
+
 _Item* Cll_pointerOf(LinkArray* array, GCNode* ep) {
     int idx = Cll_size(array);
     for (_Item* pItem = array->_items; --idx >= 0; pItem++) {

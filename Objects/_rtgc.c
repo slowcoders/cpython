@@ -233,7 +233,7 @@ void _addDestinationsToNode(GCNode* node, LinkArray* destinations) {
 BOOL _tryRemoveDirtyAnchor(GCNode* anchor, GCNode* destination) {
     if (!(destination->_flags & HAS_DIRTY_ANCHORS)) return false;
 
-    assert(anchor->_flags & IS_DIRTY_ANCHOR);
+    assert(anchor->_flags & DIRTY_ANCHOR_FLAGS);
     _Item* found = NULL;
     int dest_level = destination->_level;
     FOR_EACH_CONTRACTED_LINK(destination->_anchors) {
@@ -260,19 +260,22 @@ BOOL _tryRemoveDirtyAnchor(GCNode* anchor, GCNode* destination) {
 
 
 BOOL _removeDestinationsFromNode(GCNode* node, LinkArray* destinations) {
-    BOOL isDirtyAnchor = (node->_flags & IS_DIRTY_ANCHOR);
+    BOOL isDirtyAnchor = (node->_flags & DIRTY_ANCHOR_FLAGS);
     if (isDirtyAnchor) {
+        /*
+         * dirty-anchor->_destinations 에서 destination 을 삭제하기 전에
+         * dirty-anchor->_destinations[]->_anchors 에 포함된 dirty-anchor 를 삭제한다.
+         */
         BOOL isFirst = true;
         FOR_EACH_CONTRACTED_LINK(destinations) {
             GCNode* destination = iter._link->_endpoint;
             BOOL removed = _tryRemoveDirtyAnchor(node, destination);
             if (isFirst) {
-                if (!removed) goto remove_destinations;
+                if (!removed) break;
                 isFirst = false;
             }
             assert(removed);
         }
-        return false;
     } 
 
     remove_destinations: {
@@ -368,13 +371,18 @@ void TR_removeIncomingLink(GCNode* self, GCNode* anchor) {
 }
 
 static const MAX_ANCHORS = 1;
-static void _connectAnchorFast(GCNode* anchor, GCNode* target) {
+static void _connectAnchorFast(GCNode* anchor, GCNode* target, BOOL addDestination) {
     /**
      * performance overhead ~= destination node 탐색 회수
      */
     Cll_add(target->_anchors, anchor, 1);
     if (anchor->_level < target->_level) {
-        anchor->_flags |= IS_DIRTY_ANCHOR;
+        if (addDestination) {
+            addDestination = false;
+            Cll_add(anchor->_destinations, target, 1);
+            anchor->_flags |= IS_DIRTY_ANCHOR;
+        }
+
         if (target->_flags & HAS_DIRTY_ANCHORS) {
             return;
         }
@@ -388,28 +396,7 @@ static void _connectAnchorFast(GCNode* anchor, GCNode* target) {
          */
     }
     FOR_EACH_CONTRACTED_LINK(target->_destinations) {
-        _connectAnchorFast(iter._link->_endpoint, anchor);
-    }
-}
-
-void _disconnectAnchorFast_obsolete(GCNode* anchor, GCNode* target) {
-    /**
-     * performance overhead ~= anchor node 탐색 회수
-     */
-    int diff = anchor->_level < target->_level;
-    if (anchor->_level < target->_level) {
-        if (anchor->_flags & IS_DIRTY_ANCHOR) {
-            assert(target->_flags & HAS_DIRTY_ANCHORS);
-            Cll_remove(target->_anchors, anchor, 1);
-        }
-        return;
-    } else {
-        // 정상적인 anchor
-    }
-    
-    Cll_remove(target->_anchors, anchor, 1);
-    FOR_EACH_CONTRACTED_LINK(target->_destinations) {
-        _disconnectAnchorFast(iter._link->_endpoint, anchor);
+        _connectAnchorFast(iter._link->_endpoint, anchor, addDestination);
     }
 }
 
@@ -417,7 +404,7 @@ void RT_onReferentChanged(GCNode* self, GCNode* erased, GCNode* assigned) {
     if (assigned == erased) return;
 
     if (assigned != NULL) {        
-        _connectAnchorFast(self, assigned);
+        _connectAnchorFast(self, assigned, true);
     }    
 
     if (erased != NULL) {
