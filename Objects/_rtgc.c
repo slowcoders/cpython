@@ -406,62 +406,74 @@ RCircuit* _allocateCircuit() {
     return circuit;
 }
 
+static const int MAX_CIRCLE_LEN = 4;
+RCircuit* _detectCircuit(GCNode* node, GCNode* target) {
+    RCircuit* c0 = target->_circuit;
+    for (int step = 0; step++ < MAX_CIRCLE_LEN; ) {
+        RCircuit* c2 = node->_circuit;
+        if (c2 != NULL) {
+            if (c0 == NULL) {
+                c0 = c2;
+            }
+            else if (c0 != c2) {
+                // 두개의 circuit 을 연결하는 two-way 링크. 
+                // (일단 무시. 해당 링크가 해제되지 않으면, 두 circuit 모두 GC 되지 않음)
+                return NULL;
+            }
+        } 
+        if (node == target) {
+            break;
+        }
+        if ((node = node->_anchor) == NULL) return NULL;
+    }
+
+    if (c0 == NULL) {
+        c0 = _allocateCircuit();
+    }
+    node = target;
+    do {
+        if (!node->_circuit) {
+            node->_circuit = c0;
+            c0->_refcnt ++;
+        }
+        node = node->_anchor;
+    } while (node != target);
+    return c0;
+}
+
+static const int EXTERNAL_REF_COUNT_1 = 0x10000;
+
 void RT_onReferentChanged(GCNode* self, GCNode* erased, GCNode* assigned) {
     if (assigned == erased) return;
 
-    RCircuit* circuit = self->_circuit;
-    GCNode* referrer = self->_anchor;
+    RCircuit* c0 = self->_circuit;
+
+    if (erased != NULL) {
+        if (FULL_MANAGED_REF_COUNT) erased->_refcnt --;
+        RCircuit* circuit = erased->_circuit;
+        if (circuit != NULL) {
+            if (circuit == c0) {
+                circuit->_refcnt --;
+            } else {
+                circuit->_refcnt -= EXTERNAL_REF_COUNT_1;
+            }
+        }
+        if (erased->_anchor == self) { 
+            erased->_anchor = NULL;
+        }
+    }
+
     if (assigned != NULL) {
         assigned->_anchor = self;
         if (FULL_MANAGED_REF_COUNT) assigned->_refcnt ++;
-
-        if (referrer != NULL) {
-            if (referrer == assigned) {
-                if (circuit != NULL) {
-                    RCircuit* target_circuit = assigned->_circuit;
-                    if (target_circuit == NULL) {
-                        assigned->_circuit = circuit;
-                    } 
-                    else if (target_circuit == circuit) {
-                        circuit->_refcnt ++;    
-                    }
-                    else {
-                        RCircuit* newCircuit = _allocateCircuit();
-                        circuit->_circuit = target_circuit->_circuit = newCircuit;
-                        newCircuit->_refcnt = 2;
-                        assigned->_circuit = circuit;
-
-                        // 두개의 circuit 을 연결하는 two-way 링크.
-                    }
-                } else if (assigned->_circuit != NULL) {
-                    self->_circuit = assigned->_circuit;
-                    circuit->_refcnt ++;    
-                } else {
-                    RCircuit* newCircuit = _allocateCircuit();
-                    assigned->_circuit = self->_circuit = newCircuit;
-                    newCircuit->_refcnt = 2;
-                }
-            } 
-            else if (referrer->_anchor == assigned) {
-                if (circuit != NULL) {
-                    assigned->_circuit = circuit;
-                    circuit->_refcnt ++;
-                    // if (assigned->_circuit == ci)
-                } else if (assigned->_circuit != NULL) {
-                    self->_circuit = assigned->_circuit;
-                    circuit->_refcnt ++;    
-                } else {
-                    assigned->_circuit = self->_circuit = _allocateCircuit(2);
-                }
+        RCircuit* circuit = _detectCircuit(self, assigned);
+        if (circuit != NULL) {
+            if (circuit == c0) {
+                circuit->_refcnt ++;
+            } else {
+                circuit->_refcnt += EXTERNAL_REF_COUNT_1;
             }
-    }    
-
-    if (erased != NULL) {
-        if (circuit != NULL && circuit == erased->_circuit) {
-            circuit->_refcnt --;
         }
-        erased->_anchor = NULL;
-        if (FULL_MANAGED_REF_COUNT) erased->_refcnt --;
     }
 }
 
