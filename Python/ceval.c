@@ -59,6 +59,7 @@
         PyObject *op = _PyObject_CAST(arg); \
         if (--op->ob_refcnt == 0 || !RT_onDecreaseRefCount(op)) { \
             destructor dealloc = Py_TYPE(op)->tp_dealloc; \
+            RT_onDestoryGarbageNode(op, Py_TYPE(op));   \
             (*dealloc)(op); \
         } \
     } while (0)

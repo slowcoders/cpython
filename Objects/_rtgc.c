@@ -3,17 +3,15 @@
 #include <execinfo.h>
 #include <stdlib.h>
 
-static const BOOL true = 1;
-static const BOOL false = 0;
-static const BOOL FAST_UPDATE_DESTNATION_LINKS = true;
+// static const BOOL FAST_UPDATE_DESTNATION_LINKS = true;
 static const BOOL FULL_MANAGED_REF_COUNT = true;
-static const CircuitNode* NoCircuit = (CircuitNode*)-1;
 
-int RTGC_ENABLE = true;
+int RTGC_ENABLE = false;
 BOOL RTGC_DEBUG_VERBOSE = true;
 
-RCircuit* _allocateCircuit() {
+RCircuit* _allocateCircuit(void) {
     RCircuit* circuit = malloc(sizeof(RCircuit));
+    circuit->_internalRefCount = circuit->ob_refcnt = 0;
     return circuit;
 }
 
@@ -45,20 +43,20 @@ RCircuit* _detectCircuit(GCNode* node, GCNode* target) {
     do {
         if (!node->_circuit) {
             node->_circuit = c0;
-            c0->_refcnt += node->_refcnt;
+            c0->ob_refcnt += node->ob_refcnt;
         }
         node = node->_anchor;
     } while (node != target);
     return c0;
 }
 
-static const int EXTERNAL_REF_COUNT_1 = 0x10000;
+// static const int EXTERNAL_REF_COUNT_1 = 0x10000;
 
 void __connect_path(GCNode* anchor, GCNode* assigned) {
     assert(anchor != assigned);
 
     assigned->_anchor = anchor;
-    if (FULL_MANAGED_REF_COUNT) assigned->_refcnt ++;
+    if (FULL_MANAGED_REF_COUNT) assigned->ob_refcnt ++;
     RCircuit* c0 = anchor->_circuit;
     RCircuit* circuit = _detectCircuit(anchor, assigned);
     if (circuit != NULL) {
@@ -71,7 +69,7 @@ void __connect_path(GCNode* anchor, GCNode* assigned) {
 void __disconnect_path(GCNode* anchor, GCNode* erased) {
     assert(anchor != erased);
 
-    if (FULL_MANAGED_REF_COUNT) erased->_refcnt --;
+    if (FULL_MANAGED_REF_COUNT) erased->ob_refcnt --;
     RCircuit* circuit = erased->_circuit;
     if (circuit != NULL) {
         RCircuit* c0 = anchor->_circuit;
@@ -87,25 +85,10 @@ void __disconnect_path(GCNode* anchor, GCNode* erased) {
 // ===== //
 
 
-
-void RT_collectGarbage(GCNode* node, void* dealloc) {
-    // assert(RT_isGarbage(node));
-    auto obj = RT_getObject(node);
-    RT_markDestroyed(node);
-    // std::vector<GCObject*> referents;
-    // obj->getReferents(obj, referents);
-    // for (auto referent : referents) {
-    //     auto node = referent->_node;
-    //     if (node->isDestroyed()) continue;
-    //     node->removeGarbageReferrer(obj);
-    //     if (node->isGarbage()) {
-    //         collectGarbage(node);
-    //     }
-    // }
-}
-
-
 void RT_onPropertyChanged(PyObject *self, PyObject *erased, PyObject *assigned) {
+    if (!RTGC_ENABLE) return;
+
+    printf("RT_onPropertyChanged %p(%s) (%p->%p)\n", self, self->ob_type->tp_name, erased, assigned);
     // if (RTGC_DEBUG_VERBOSE) printf("RT_onPropertyChanged %p %p -> %p\n", mp, old_value, value);
     if (assigned == erased) return;
 
@@ -118,20 +101,6 @@ void RT_onPropertyChanged(PyObject *self, PyObject *erased, PyObject *assigned) 
     }
 }
 
-/**
- * FRC 는 key 에 대한 circuit-dectection 을 하지 않는다.
- */
-void RT_onDictEntryInserted_obsolete(PyObject *self, PyObject *key, PyObject *value) {
-    // if (RTGC_DEBUG_VERBOSE) printf("RT_onDictEntryInserted %p[%p] = %p\n", mp, key, value);
-    assert(key != NULL);
-    if (key != self) {
-        __connect_path(RT_getGCNode(self), RT_getGCNode(key));
-    }
-    if (value != NULL && value != self) {
-        __connect_path(RT_getGCNode(self), RT_getGCNode(key));
-    }
-
-}
 
 /**
  * FRC 는 key 에 대한 circuit-dectection 을 하지 않는다.
@@ -142,7 +111,7 @@ void RT_onDictEntryRemoved_obsolete(PyObject *mp, PyObject *key, PyObject *value
 }
 
 void RT_replaceReferrer(PyObject *obj, PyObject *old_anchor, PyObject *new_anchor) {
-    // if (RTGC_DEBUG_VERBOSE) printf("RT_replaceReferrer %p (%p => %p)\n", obj, old_referrer, referrer);
+    if (RTGC_DEBUG_VERBOSE) printf("RT_replaceReferrer %p (%p => %p)\n", obj, old_anchor, new_anchor);
     if (old_anchor != NULL && old_anchor == RT_getGCNode(obj)->_anchor) {
         __disconnect_path(old_anchor, obj);
     }
@@ -153,11 +122,16 @@ void RT_replaceReferrer(PyObject *obj, PyObject *old_anchor, PyObject *new_ancho
 
 void RT_onIncreaseRefCount(PyObject *obj) {
     rt_assert(obj != NULL);
+    if (RTGC_DEBUG_VERBOSE) {
+        if (RT_getGCNode(obj)->_circuit != NULL) {
+            printf("RT_onIncreaseRefCount %p(%s) (c=%p)\n", obj, obj->ob_type->tp_name, RT_getGCNode(obj)->_circuit);
+        }
+    }
     if (RTGC_ENABLE) {
         RCircuit* circuit = RT_getGCNode(obj)->_circuit;
         if (circuit != NULL) {
             // stack-ref 와 참조-ref 를 구별할 수 없다.
-            circuit->_refcnt ++;
+            circuit->ob_refcnt ++;
         }
     }
     // if (RTGC_DEBUG_VERBOSE) printf("RT_onIncreaseRefCount %p\n", obj);
@@ -167,11 +141,19 @@ void RT_onIncreaseRefCount(PyObject *obj) {
 
 BOOL RT_onDecreaseRefCount(PyObject *obj) {
     rt_assert(obj != NULL);
+    if (RTGC_DEBUG_VERBOSE) {
+        if (RT_getGCNode(obj)->_circuit != NULL) {
+            printf("RT_onDecreaseRefCount %p(%s) (c=%p)\n", obj, obj->ob_type->tp_name, RT_getGCNode(obj)->_circuit);
+        }
+    }
     if (RTGC_ENABLE) {
         RCircuit* circuit = RT_getGCNode(obj)->_circuit;
         if (circuit != NULL) {
             // stack-ref 와 참조-ref 를 구별할 수 없다.
-            if (--circuit->_refcnt == circuit->_internalRefCount) {
+            if (--circuit->ob_refcnt == circuit->_internalRefCount) {
+                if (RTGC_DEBUG_VERBOSE) {
+                    printf("Garbage circuit detected %p(%s) (c=%p)\n", obj, obj->ob_type->tp_name, RT_getGCNode(obj)->_circuit);
+                }
                 return false;
             }
         }
@@ -181,6 +163,18 @@ BOOL RT_onDecreaseRefCount(PyObject *obj) {
     rt_assert((Py_TYPE(obj)->tp_flags & (3UL << 15)) == 0);
     return true;
 }
+
+static int deassignGarbageAnchor(PyObject* obj, void* anchor) {
+    printf("deassignGarbageAnchor");
+    RT_onPropertyChanged((PyObject*)anchor, obj, NULL);
+    return true;
+} 
+
+void RT_onDestoryGarbageNode(PyObject *obj, PyTypeObject *type) {
+    printf("RT_onDestoryGarbageNode");
+    type->tp_traverse(obj, RT_onDestoryGarbageNode, obj);
+}
+
 
 static int exit_on_break = true;
 void
@@ -205,6 +199,7 @@ RT_break (void)
 
 static int cnt_break = 0;
 Py_NO_INLINE PyAPI_FUNC(void) break_rt(int stop) {
+    cnt_break ++;
     if (stop) {
         RT_break();
         // PyErr_BadInternalCall();

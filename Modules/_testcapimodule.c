@@ -5132,6 +5132,9 @@ check_pyobject_freed_is_freed(PyObject *self, PyObject *Py_UNUSED(args))
     if (op == NULL) {
         return NULL;
     }
+#if INCLUDE_RTGC
+        RT_onDestoryGarbageNode(op, Py_TYPE(op));
+#endif
     Py_TYPE(op)->tp_dealloc(op);
     /* Reset reference count to avoid early crash in ceval or GC */
     Py_SET_REFCNT(op, 1);

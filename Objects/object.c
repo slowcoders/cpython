@@ -2272,6 +2272,9 @@ _PyTrash_thread_destroy_chain(void)
     while (tstate->trash_delete_later) {
         PyObject *op = tstate->trash_delete_later;
         destructor dealloc = Py_TYPE(op)->tp_dealloc;
+#if INCLUDE_RTGC
+        RT_onDestoryGarbageNode(op, Py_TYPE(op));
+#endif
 
         tstate->trash_delete_later =
             (PyObject*) _PyGCHead_PREV(_Py_AS_GC(op));
@@ -2378,7 +2381,6 @@ _PyObject_AssertFailed(PyObject *obj, const char *expr, const char *msg,
     Py_FatalError("_PyObject_AssertFailed");
 }
 
-
 void
 _Py_Dealloc(PyObject *op)
 {
@@ -2392,6 +2394,10 @@ _Py_Dealloc(PyObject *op)
     Py_XINCREF(old_exc_type);
     // Make sure that type->tp_name remains valid
     Py_INCREF(type);
+#endif
+
+#if INCLUDE_RTGC
+    RT_onDestoryGarbageNode(op, type);
 #endif
 
 #ifdef Py_TRACE_REFS

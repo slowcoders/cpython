@@ -5,10 +5,10 @@ struct _ContractedLink {
     int _linkCount;
 };
 
-static inline void initContractedLink(ContractedLink* self, GCNode* endpoint, int count) {
-    self->_endpoint = endpoint;
-    self->_linkCount = count;
-}
+// static inline void initContractedLink(ContractedLink* self, GCNode* endpoint, int count) {
+//     self->_endpoint = endpoint;
+//     self->_linkCount = count;
+// }
 
 
 
@@ -91,7 +91,17 @@ void Cll_add(LinkArray* array, GCNode* rookie, int count) {
     _Item new_item;
     new_item._endpoint = rookie;
     new_item._linkCount = count;
-    Cll_push(array, &item);   
+    Cll_pushFast(array, &new_item);   
+}
+
+void Cll_removeFast(LinkArray* array, _Item* pItem) {
+    assert(pItem >= array->_items && pItem < array->_items + array->_capacity);
+    int newSize = --array->_size;
+    assert(newSize >= 0);
+    *pItem = array->_items[newSize];
+    if (newSize < (array->_capacity - MIN_CAPACITY) / 2) {
+        Cll_allocItems(array, newSize);
+    }
 }
 
 BOOL Cll_tryRemove(LinkArray* array, GCNode* retiree, int count) {
@@ -114,28 +124,19 @@ BOOL Cll_remove(LinkArray* array, GCNode* retiree, int count) {
     return true;
 }
 
-void Cll_removeFast(LinkArray* array, _Item* pItem) {
-    assert(pItem >= array->_items && pItem < array->_items + array->_capacity);
-    int newSize = --array->_size;
-    assert(newSize >= 0);
-    *pItem = array->_items[newSize];
-    if (newSize < (array->_capacity - MIN_CAPACITY) / 2) {
-        Cll_allocItems(array, newSize);
-    }
-}
 
 void Cll_removeFastMutil(LinkArray* array, LinkArray* retires) {
-    FOR_EACH_CONTRACTED_LINK(retires) {
+    // FOR_EACH_CONTRACTED_LINK(retires) {
 
-    }
+    // }
 
-    assert(pItem >= array->_items && pItem < array->_items + array->_capacity);
-    int newSize = --array->_size;
-    assert(newSize >= 0);
-    *pItem = array->_items[newSize];
-    if (newSize < (array->_capacity - MIN_CAPACITY) / 2) {
-        Cll_allocItems(array, newSize);
-    }
+    // assert(pItem >= array->_items && pItem < array->_items + array->_capacity);
+    // int newSize = --array->_size;
+    // assert(newSize >= 0);
+    // *pItem = array->_items[newSize];
+    // if (newSize < (array->_capacity - MIN_CAPACITY) / 2) {
+    //     Cll_allocItems(array, newSize);
+    // }
 }
 
 void Cll_delete(LinkArray* array) {

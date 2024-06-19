@@ -70,23 +70,38 @@ whose size is determined when the object is allocated.
 
 #ifdef Py_TRACE_REFS
 /* Define pointers to support a doubly-linked list of all live heap objects. */
-#define _PyObject_HEAD_EXTRA            \
-    PyObject *_ob_next;           \
+#define _PyObject_HEAD_EXTRA_0      \
+    PyObject *_ob_next;             \
     PyObject *_ob_prev;
 
-#define _PyObject_EXTRA_INIT _Py_NULL, _Py_NULL,
+#define _PyObject_EXTRA_INIT_0      _Py_NULL, _Py_NULL,
 
 #else
-#  define _PyObject_HEAD_EXTRA
-#  define _PyObject_EXTRA_INIT
+#  define _PyObject_HEAD_EXTRA_0
+#  define _PyObject_EXTRA_INIT_0
 #endif
+
+#if INCLUDE_RTGC
+#  define _PyObject_HEAD_EXTRA  _PyObject_HEAD_EXTRA_0  RTGC_HEAD_EXTRA
+#  define _PyObject_EXTRA_INIT  _PyObject_EXTRA_INIT_0  0, 0, 
+#else
+#  define _PyObject_HEAD_EXTRA  _PyObject_HEAD_EXTRA_0
+#  define _PyObject_EXTRA_INIT  _PyObject_EXTRA_INIT_0
+#endif
+
 
 /* PyObject_HEAD defines the initial segment of every PyObject. */
 #define PyObject_HEAD                   PyObject ob_base;
 
+#if INCLUDE_RTGC
 #define PyObject_HEAD_INIT(type)        \
     { _PyObject_EXTRA_INIT              \
     1, type },
+#else
+#define PyObject_HEAD_INIT(type)        \
+    { _PyObject_EXTRA_INIT              \
+    1, type },
+#endif
 
 #define PyVarObject_HEAD_INIT(type, size)       \
     { PyObject_HEAD_INIT(type) size },

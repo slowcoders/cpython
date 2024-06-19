@@ -25,14 +25,20 @@ do {                                                        \
 #endif
 
 extern int RTGC_ENABLE;
+typedef int BOOL;
+
+#define RTGC_HEAD_EXTRA           \
+    struct _object* _anchor;      \
+    struct _RCircuit* _circuit;   
 
 void RT_onPropertyChanged(PyObject *obj, PyObject *old_value, PyObject *value);
-void RT_onDictEntryInserted(PyObject *obj, PyObject *key, PyObject *value);
-void RT_onDictEntryRemoved(PyObject *obj, PyObject *key, PyObject *value);
 void RT_replaceReferrer(PyObject *obj, PyObject *old_referrer, PyObject *referrer);
+void RT_onDestoryGarbageNode(PyObject *obj, PyTypeObject *type);
+//void RT_onDictEntryInserted(PyObject *obj, PyObject *key, PyObject *value);
+//void RT_onDictEntryRemoved(PyObject *obj, PyObject *key, PyObject *value);
 
 PyAPI_FUNC(void) RT_onIncreaseRefCount(PyObject *obj);
-PyAPI_FUNC(void) RT_onDecreaseRefCount(PyObject *obj);
+PyAPI_FUNC(BOOL) RT_onDecreaseRefCount(PyObject *obj);
 
 void RT_break(void);
 

@@ -18,6 +18,8 @@ extern "C" {
     { \
         .ob_refcnt = 999999999, \
         .ob_type = type, \
+        ._anchor = NULL, \
+        ._circuit = NULL, \
     }
 #define _PyVarObject_IMMORTAL_INIT(type, size) \
     { \
@@ -98,6 +100,10 @@ _PyObject_Init(PyObject *op, PyTypeObject *typeobj)
         Py_INCREF(typeobj);
     }
     _Py_NewReference(op);
+    #if INCLUDE_RTGC
+        op->_anchor = NULL;
+        op->_circuit = NULL;
+    #endif
 }
 
 static inline void

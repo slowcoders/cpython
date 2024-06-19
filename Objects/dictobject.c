@@ -1302,7 +1302,7 @@ insertdict(PyDictObject *mp, PyObject *key, Py_hash_t hash, PyObject *value)
         mp->ma_version_tag = DICT_NEXT_VERSION();
     }
     if (RTGC_ENABLE) {
-        RT_onPropertyChanged(mp, old_value, value);
+        RT_onPropertyChanged(_PyObject_CAST(mp), old_value, value);
     }
     Py_XDECREF(old_value); /* which **CAN** re-enter (see issue #22653) */
     ASSERT_CONSISTENT(mp);
