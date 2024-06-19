@@ -509,10 +509,10 @@ static inline void Py_INCREF(PyObject *op)
     _Py_RefTotal++;
 #endif
 #if INCLUDE_RTGC
-    RT_increaseGRefCount(op);
+    RT_onIncreaseRefCount(op);
 #endif
 #if USE_RTGC // debug && release.
-    RT_increaseGRefCount(op);
+    RT_onIncreaseRefCount(op);
 #else
     op->ob_refcnt++;
 #endif
@@ -535,12 +535,10 @@ static inline void Py_DECREF(const char *filename, int lineno, PyObject *op)
 {
     _Py_RefTotal--;
 #if INCLUDE_RTGC
-    RT_decreaseGRefCount(op)
-#endif
-#if USE_RTGC
-    RT_decreaseGRefCount(op)
+    if (--op->ob_refcnt != 0 && RT_onDecreaseRefCount(op)) {
 #else
     if (--op->ob_refcnt != 0) {
+#endif
         if (op->ob_refcnt < 0) {
             _Py_NegativeRefcount(filename, lineno, op);
         }
@@ -548,7 +546,6 @@ static inline void Py_DECREF(const char *filename, int lineno, PyObject *op)
     else {
         _Py_Dealloc(op);
     }
-#endif
 }
 #define Py_DECREF(op) Py_DECREF(__FILE__, __LINE__, _PyObject_CAST(op))
 
@@ -558,15 +555,12 @@ static inline void Py_DECREF(PyObject *op)
     // Non-limited C API and limited C API for Python 3.9 and older access
     // directly PyObject.ob_refcnt.
 #if INCLUDE_RTGC
-    RT_decreaseGRefCount(op);
-#endif
-#if USE_RTGC
-    RT_decreaseGRefCount(op);
+    if (--op->ob_refcnt == 0 || !RT_onDecreaseRefCount(op)) {
 #else
     if (--op->ob_refcnt == 0) {
+#endif
         _Py_Dealloc(op);
     }
-#endif
 }
 #define Py_DECREF(op) Py_DECREF(_PyObject_CAST(op))
 #endif

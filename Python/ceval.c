@@ -53,17 +53,19 @@
 
 // rtgc
 #undef Py_DECREF
-#if USE_RTGC
+#if INCLUDE_RTGC
 #define Py_DECREF(arg) \
     do { \
         PyObject *op = _PyObject_CAST(arg); \
-        RT_decreaseGroundRefCount(op);
+        if (--op->ob_refcnt == 0 || !RT_onDecreaseRefCount(op)) { \
+            destructor dealloc = Py_TYPE(op)->tp_dealloc; \
+            (*dealloc)(op); \
+        } \
     } while (0)
 #else
 #define Py_DECREF(arg) \
     do { \
         PyObject *op = _PyObject_CAST(arg); \
-        RT_decreaseGRefCount(op); \
         if (--op->ob_refcnt == 0) { \
             destructor dealloc = Py_TYPE(op)->tp_dealloc; \
             (*dealloc)(op); \

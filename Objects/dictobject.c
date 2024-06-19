@@ -1251,7 +1251,7 @@ insertdict(PyDictObject *mp, PyObject *key, Py_hash_t hash, PyObject *value)
 
         Py_ssize_t hashpos = find_empty_slot(mp->ma_keys, hash);
         dictkeys_set_index(mp->ma_keys, hashpos, mp->ma_keys->dk_nentries);
-
+        // FRC 에서는 key 를 무시한다!
         if (DK_IS_UNICODE(mp->ma_keys)) {
             PyDictUnicodeEntry *ep;
             ep = &DK_UNICODE_ENTRIES(mp->ma_keys)[mp->ma_keys->dk_nentries];
@@ -1354,7 +1354,8 @@ insert_to_emptydict(PyDictObject *mp, PyObject *key, Py_hash_t hash,
     mp->ma_keys->dk_usable--;
     mp->ma_keys->dk_nentries++;
     if (RTGC_ENABLE) {
-        RT_onDictEntryInserted(mp, key, value);
+        // FRC 에서는 key 를 무시한다!
+        RT_onPropertyChanged(mp, NULL, value);
     }
     return 0;
 }
@@ -1989,7 +1990,8 @@ delitem_common(PyDictObject *mp, Py_hash_t hash, Py_ssize_t ix,
         Py_DECREF(old_key);
     }
     if (RTGC_ENABLE) {
-        RT_onDictEntryRemoved(mp, old_key, old_value);
+        // FRC 에서는 Key 를 무시한다.
+        RT_replaceReferrer(old_value, mp, NULL);
     }
     Py_DECREF(old_value);
 
@@ -5455,6 +5457,7 @@ make_dict_from_instance_attributes(PyDictKeysObject *keys, PyDictValues *values,
 PyObject *
 _PyObject_MakeDictFromInstanceAttributes(PyObject *obj, PyDictValues *values)
 {
+    // @zee obj.__dict__ slot 에 넣을 dictionary 객체 생성.
     assert(Py_TYPE(obj)->tp_flags & Py_TPFLAGS_MANAGED_DICT);
     PyDictKeysObject *keys = CACHED_KEYS(Py_TYPE(obj));
     OBJECT_STAT_INC(dict_materialized_on_request);
@@ -5601,7 +5604,16 @@ _PyObject_ClearInstanceAttributes(PyObject *self)
     }
     PyDictKeysObject *keys = CACHED_KEYS(tp);
     for (Py_ssize_t i = 0; i < keys->dk_nentries; i++) {
-        Py_CLEAR((*values_ptr)->values[i]);
+        if (RTGC_ENABLE) {
+            PyObject *value = _PyObject_CAST((*values_ptr)->values[i]);
+            if (value != NULL) {
+                (*values_ptr)->values[i] = NULL;
+                RT_onPropertyChanged(self, value, NULL);
+                Py_DECREF(value);
+            }
+        } else {
+            Py_CLEAR((*values_ptr)->values[i]);
+        }
     }
 }
 
@@ -5618,7 +5630,15 @@ _PyObject_FreeInstanceAttributes(PyObject *self)
     *values_ptr = NULL;
     PyDictKeysObject *keys = CACHED_KEYS(tp);
     for (Py_ssize_t i = 0; i < keys->dk_nentries; i++) {
-        Py_XDECREF(values->values[i]);
+        if (RTGC_ENABLE) {
+            PyObject *value = _PyObject_CAST((*values_ptr)->values[i]);
+            if (value != NULL) {
+                RT_onPropertyChanged(self, value, NULL);
+                Py_DECREF(value);
+            }
+        } else {
+            Py_XDECREF(values->values[i]);
+        }
     }
     free_values(values);
 }

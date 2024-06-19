@@ -40,6 +40,7 @@ struct _GCNode {
     GCNode* _anchor;
     RCircuit* _circuit;
     Py_ssize_t _refcnt; // => ob_refcnt;
+    Py_ssize_t _internalRefCount; //
 };
 
 #define NUM_ARGS(...)  (sizeof((int[]){0, ##__VA_ARGS__})/sizeof(int)-1)
@@ -106,13 +107,6 @@ void AC_addIncomingLink(GCNode* self, GCObject* referrer) { self->_groundRefCoun
 void AC_removeIncomingLink(GCNode* self, GCObject* referrer) { self->_groundRefCount --; }
 void AC_removeGarbageReferrer(GCNode* self, GCObject* referrer) { self->_groundRefCount --; }
 
-
-/* 아래는 AcyclicNode 가 아닌 객체, 즉 순환 참조 발생이 가능한 객체를 따로 구분한 TrackableNode 이다.
-TrackableNode
- */
-
-void EP_increaseGroundRefCount(GCNode* self, int count);
-void EP_decreaseGroundRefCount(GCNode* self, int count);
 
 
 

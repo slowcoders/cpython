@@ -31,8 +31,8 @@ void RT_onDictEntryInserted(PyObject *obj, PyObject *key, PyObject *value);
 void RT_onDictEntryRemoved(PyObject *obj, PyObject *key, PyObject *value);
 void RT_replaceReferrer(PyObject *obj, PyObject *old_referrer, PyObject *referrer);
 
-PyAPI_FUNC(void) RT_increaseGRefCount(PyObject *obj);
-PyAPI_FUNC(void) RT_decreaseGRefCount(PyObject *obj);
+PyAPI_FUNC(void) RT_onIncreaseRefCount(PyObject *obj);
+PyAPI_FUNC(void) RT_onDecreaseRefCount(PyObject *obj);
 
 void RT_break(void);
 
