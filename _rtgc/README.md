@@ -5,7 +5,7 @@
 see https://github.com/python/cpython/blob/main/Mac/README.rst [How do I create a binary distribution?]
 
 ### configure and build
-for Debug
+#### for Debug
 ```sh
 mkdir _debug
 cd _debug
@@ -14,7 +14,7 @@ make
 make test
 ```
 
-for Release (--with-lto: link time optimization)
+#### for Release (--with-lto: link time optimization)
 ```sh
 mkdir _release
 cd _release
@@ -23,7 +23,9 @@ make
 make test
 ```
 
-retest
+### Makefile 변경 필요시, Makfile.pre.in 을 변경한다.
+
+### testing 
 ```hh
 make test TESTOPTS="-v test_os test_gdb"
 ```

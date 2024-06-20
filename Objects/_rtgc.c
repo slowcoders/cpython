@@ -1,8 +1,10 @@
+#if 1 // INCLUDE_RTGC
 #include "_rtgc.h"
 #include "_rtgc_util.h"
 #include <execinfo.h>
 #include <stdlib.h>
 
+#define NO_RTGC 1
 // static const BOOL FAST_UPDATE_DESTNATION_LINKS = true;
 static const BOOL FULL_MANAGED_REF_COUNT = true;
 
@@ -17,6 +19,9 @@ RCircuit* _allocateCircuit(void) {
 
 static const int MAX_CIRCLE_LEN = 4;
 RCircuit* _detectCircuit(GCNode* node, GCNode* target) {
+#if NO_RTGC
+    return NULL;
+#else    
     RCircuit* c0 = target->_circuit;
     for (int step = 0; step++ < MAX_CIRCLE_LEN; ) {
         RCircuit* c2 = node->_circuit;
@@ -48,13 +53,14 @@ RCircuit* _detectCircuit(GCNode* node, GCNode* target) {
         node = node->_anchor;
     } while (node != target);
     return c0;
+#endif
 }
 
 // static const int EXTERNAL_REF_COUNT_1 = 0x10000;
 
 void __connect_path(GCNode* anchor, GCNode* assigned) {
     assert(anchor != assigned);
-
+#if !NO_RTGC
     assigned->_anchor = anchor;
     if (FULL_MANAGED_REF_COUNT) assigned->ob_refcnt ++;
     RCircuit* c0 = anchor->_circuit;
@@ -64,10 +70,12 @@ void __connect_path(GCNode* anchor, GCNode* assigned) {
             circuit->_internalRefCount ++;
         }
     }
+#endif
 }
 
 void __disconnect_path(GCNode* anchor, GCNode* erased) {
     assert(anchor != erased);
+#if !NO_RTGC
 
     if (FULL_MANAGED_REF_COUNT) erased->ob_refcnt --;
     RCircuit* circuit = erased->_circuit;
@@ -80,6 +88,7 @@ void __disconnect_path(GCNode* anchor, GCNode* erased) {
     if (erased->_anchor == anchor) { 
         erased->_anchor = NULL;
     }
+#endif
 }
 
 // ===== //
@@ -111,6 +120,7 @@ void RT_onDictEntryRemoved_obsolete(PyObject *mp, PyObject *key, PyObject *value
 }
 
 void RT_replaceReferrer(PyObject *obj, PyObject *old_anchor, PyObject *new_anchor) {
+#if !NO_RTGC
     if (RTGC_DEBUG_VERBOSE) printf("RT_replaceReferrer %p (%p => %p)\n", obj, old_anchor, new_anchor);
     if (old_anchor != NULL && old_anchor == RT_getGCNode(obj)->_anchor) {
         __disconnect_path(old_anchor, obj);
@@ -118,10 +128,13 @@ void RT_replaceReferrer(PyObject *obj, PyObject *old_anchor, PyObject *new_ancho
     if (new_anchor != NULL && new_anchor != obj) {
         __connect_path(new_anchor, obj);
     }
+#endif
 }
 
 void RT_onIncreaseRefCount(PyObject *obj) {
+#if !NO_RTGC
     rt_assert(obj != NULL);
+
     if (RTGC_DEBUG_VERBOSE) {
         if (RT_getGCNode(obj)->_circuit != NULL) {
             printf("RT_onIncreaseRefCount %p(%s) (c=%p)\n", obj, obj->ob_type->tp_name, RT_getGCNode(obj)->_circuit);
@@ -137,10 +150,13 @@ void RT_onIncreaseRefCount(PyObject *obj) {
     // if (RTGC_DEBUG_VERBOSE) printf("RT_onIncreaseRefCount %p\n", obj);
     // (3UL << 15) = Py_TPFLAGS_HAVE_STACKLESS_EXTENSION 으로 예약됨. RTGC Flag 로 사용
     rt_assert((Py_TYPE(obj)->tp_flags & (3UL << 15)) == 0);
+#endif
 }
 
 BOOL RT_onDecreaseRefCount(PyObject *obj) {
+#if !NO_RTGC
     rt_assert(obj != NULL);
+
     if (RTGC_DEBUG_VERBOSE) {
         if (RT_getGCNode(obj)->_circuit != NULL) {
             printf("RT_onDecreaseRefCount %p(%s) (c=%p)\n", obj, obj->ob_type->tp_name, RT_getGCNode(obj)->_circuit);
@@ -161,6 +177,7 @@ BOOL RT_onDecreaseRefCount(PyObject *obj) {
     // if (RTGC_DEBUG_VERBOSE) printf("RT_onDecreaseRefCount %p\n", obj);
     // (3UL << 15) = Py_TPFLAGS_HAVE_STACKLESS_EXTENSION 으로 예약됨. RTGC Flag 로 사용
     rt_assert((Py_TYPE(obj)->tp_flags & (3UL << 15)) == 0);
+#endif
     return true;
 }
 
@@ -171,8 +188,10 @@ static int deassignGarbageAnchor(PyObject* obj, void* anchor) {
 } 
 
 void RT_onDestoryGarbageNode(PyObject *obj, PyTypeObject *type) {
+#if !NO_RTGC
     printf("RT_onDestoryGarbageNode");
     type->tp_traverse(obj, RT_onDestoryGarbageNode, obj);
+#endif
 }
 
 
@@ -215,4 +234,5 @@ _Py_NegativeRefcount(const char *filename, int lineno, PyObject *op)
                            filename, lineno, __func__);
 }
 Py_ssize_t _Py_RefTotal;
+#endif
 #endif

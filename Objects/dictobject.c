@@ -3023,12 +3023,14 @@ PyAPI_FUNC(void) break_rt(int stop);
 
 PyObject *
 PyDict_Copy(PyObject *o) {
+#if INCLUDE_RTGC
     return _PyDict_Copy(o, true);
 }
 
 PyObject *
 _PyDict_Copy(PyObject *o, int copyValues) // rtgc.dict
 {
+#endif
     PyObject *copy;
     PyDictObject *mp;
     Py_ssize_t i, n;
@@ -3066,9 +3068,11 @@ _PyDict_Copy(PyObject *o, int copyValues) // rtgc.dict
         for (i = 0, n = size; i < n; i++) {
             PyObject *value = mp->ma_values->values[i];
             Py_XINCREF(value);
-            if (RTGC_ENABLE && copyValues && value != NULL) {
-                RT_onPropertyChanged(split_copy, NULL, value);
-            }
+            #if INCLUDE_RTGC
+                if (copyValues && value != NULL) {
+                    RT_onPropertyChanged(split_copy, NULL, value);
+                }
+            #endif
             split_copy->ma_values->values[i] = value;
         }
         if (_PyObject_GC_IS_TRACKED(mp))
@@ -5724,9 +5728,9 @@ _PyObjectDict_SetItem(PyTypeObject *tp, PyObject **dictptr,
             if (dict == NULL)
                 return -1;
             *dictptr = dict;
-            if (RTGC_ENABLE) {
+            #if INCLUDE_RTGC
                 RT_onPropertyChanged(obj, NULL, dict);
-            }
+            #endif
         }
         if (value == NULL) {
             res = PyDict_DelItem(dict, key);
@@ -5741,9 +5745,9 @@ _PyObjectDict_SetItem(PyTypeObject *tp, PyObject **dictptr,
             if (dict == NULL)
                 return -1;
             *dictptr = dict;
-            if (RTGC_ENABLE) {
+            #if INCLUDE_RTGC
                 RT_onPropertyChanged(obj, NULL, dict);
-            }
+            #endif
         }
         if (value == NULL) {
             res = PyDict_DelItem(dict, key);

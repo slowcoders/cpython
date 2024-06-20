@@ -1481,7 +1481,10 @@ regen-typeslots:
 ############################################################################
 # Header files
 
-PYTHON_HEADERS= \
+RTGC_HEADERS = \
+		$(srcdir)/Include/rtgc/rtgc-core.h 
+
+PYTHON_HEADERS= $(RTGC_HEADERS) \
 		$(srcdir)/Include/Python.h \
 		$(srcdir)/Include/abstract.h \
 		$(srcdir)/Include/bltinmodule.h \

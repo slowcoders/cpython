@@ -5561,7 +5561,11 @@ object___dir___impl(PyObject *self)
     }
     else {
         /* Copy __dict__ to avoid mutating it. */
+#if INCLUDE_RTGC        
         PyObject *temp = _PyDict_Copy(dict, false);
+#else
+        PyObject *temp = PyDict_Copy(dict);
+#endif
         Py_DECREF(dict);
         dict = temp;
     }
@@ -8573,7 +8577,11 @@ update_all_slots(PyTypeObject* type)
 static int
 type_new_set_names(PyTypeObject *type)
 {
+#if INCLUDE_RTGC        
     PyObject *names_to_set = _PyDict_Copy(type->tp_dict, false);
+#else
+    PyObject *names_to_set = PyDict_Copy(type->tp_dict);
+#endif
     if (names_to_set == NULL) {
         return -1;
     }

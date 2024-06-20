@@ -2,11 +2,8 @@
 #define Py_OBJECT_H
 
 // use rtgc flags
-#define INCLUDE_RTGC               1
-
-#if INCLUDE_RTGC
+#define INCLUDE_RTGC  1
 #include "rtgc/rtgc-core.h"
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -83,7 +80,7 @@ whose size is determined when the object is allocated.
 
 #if INCLUDE_RTGC
 #  define _PyObject_HEAD_EXTRA  _PyObject_HEAD_EXTRA_0  RTGC_HEAD_EXTRA
-#  define _PyObject_EXTRA_INIT  _PyObject_EXTRA_INIT_0  0, 0, 
+#  define _PyObject_EXTRA_INIT  _PyObject_EXTRA_INIT_0  RTGC_EXTRA_INIT
 #else
 #  define _PyObject_HEAD_EXTRA  _PyObject_HEAD_EXTRA_0
 #  define _PyObject_EXTRA_INIT  _PyObject_EXTRA_INIT_0
@@ -526,11 +523,7 @@ static inline void Py_INCREF(PyObject *op)
 #if INCLUDE_RTGC
     RT_onIncreaseRefCount(op);
 #endif
-#if USE_RTGC // debug && release.
-    RT_onIncreaseRefCount(op);
-#else
     op->ob_refcnt++;
-#endif
 #endif
 }
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 < 0x030b0000

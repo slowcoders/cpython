@@ -27,9 +27,13 @@ do {                                                        \
 extern int RTGC_ENABLE;
 typedef int BOOL;
 
+// #define RTGC_HEAD_EXTRA           
+
 #define RTGC_HEAD_EXTRA           \
     struct _object* _anchor;      \
     struct _RCircuit* _circuit;   
+
+#define RTGC_EXTRA_INIT   0, 0,
 
 void RT_onPropertyChanged(PyObject *obj, PyObject *old_value, PyObject *value);
 void RT_replaceReferrer(PyObject *obj, PyObject *old_referrer, PyObject *referrer);
