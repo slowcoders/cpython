@@ -1,19 +1,19 @@
-#if 1 // INCLUDE_RTGC
 #include "_rtgc.h"
 #include "_rtgc_util.h"
 #include <execinfo.h>
 #include <stdlib.h>
 
-#define NO_RTGC 1
+#define NO_RTGC 0
 // static const BOOL FAST_UPDATE_DESTNATION_LINKS = true;
-static const BOOL FULL_MANAGED_REF_COUNT = true;
+static const BOOL FULL_MANAGED_REF_COUNT = false;
 
-int RTGC_ENABLE = false;
-BOOL RTGC_DEBUG_VERBOSE = true;
+int RTGC_ENABLE = true;
+BOOL RTGC_LOG_VERBOSE = true;
 
 RCircuit* _allocateCircuit(void) {
     RCircuit* circuit = malloc(sizeof(RCircuit));
     circuit->_internalRefCount = circuit->ob_refcnt = 0;
+    rt_log_v("_allocateCircuit %p\n", circuit);
     return circuit;
 }
 
@@ -41,6 +41,7 @@ RCircuit* _detectCircuit(GCNode* node, GCNode* target) {
         if ((node = node->_anchor) == NULL) return NULL;
     }
 
+    rt_log_v("circuit detected %p\n", c0);
     if (c0 == NULL) {
         c0 = _allocateCircuit();
     }
@@ -49,6 +50,11 @@ RCircuit* _detectCircuit(GCNode* node, GCNode* target) {
         if (!node->_circuit) {
             node->_circuit = c0;
             c0->ob_refcnt += node->ob_refcnt;
+            /**
+             * @brief circuit 생성 시 circuit 내부의 부가적인 연결이 있는 경우, FRC 는 이를 감지하지 못한다.
+             * circuit 생성시 circuit 이 단선으로 이뤄진 단순한 원인 경우에 한해서 정상 동작.
+             */
+            c0->_internalRefCount ++;
         }
         node = node->_anchor;
     } while (node != target);
@@ -98,7 +104,7 @@ void RT_onPropertyChanged(PyObject *self, PyObject *erased, PyObject *assigned) 
     if (!RTGC_ENABLE) return;
 
     printf("RT_onPropertyChanged %p(%s) (%p->%p)\n", self, self->ob_type->tp_name, erased, assigned);
-    // if (RTGC_DEBUG_VERBOSE) printf("RT_onPropertyChanged %p %p -> %p\n", mp, old_value, value);
+    // if (RTGC_LOG_VERBOSE) printf("RT_onPropertyChanged %p %p -> %p\n", mp, old_value, value);
     if (assigned == erased) return;
 
     if (erased != NULL && erased != self) {
@@ -116,12 +122,13 @@ void RT_onPropertyChanged(PyObject *self, PyObject *erased, PyObject *assigned) 
  */
 void RT_onDictEntryRemoved_obsolete(PyObject *mp, PyObject *key, PyObject *value) {
     // key may be null! 
-    // if (RTGC_DEBUG_VERBOSE) printf("RT_onDictEntryRemoved %p[%p] = %p\n", mp, key, value);
+    // if (RTGC_LOG_VERBOSE) printf("RT_onDictEntryRemoved %p[%p] = %p\n", mp, key, value);
 }
 
 void RT_replaceReferrer(PyObject *obj, PyObject *old_anchor, PyObject *new_anchor) {
 #if !NO_RTGC
-    if (RTGC_DEBUG_VERBOSE) printf("RT_replaceReferrer %p (%p => %p)\n", obj, old_anchor, new_anchor);
+    if (!RTGC_ENABLE) return;
+    if (RTGC_LOG_VERBOSE) printf("RT_replaceReferrer %p (%p => %p)\n", obj, old_anchor, new_anchor);
     if (old_anchor != NULL && old_anchor == RT_getGCNode(obj)->_anchor) {
         __disconnect_path(old_anchor, obj);
     }
@@ -135,19 +142,18 @@ void RT_onIncreaseRefCount(PyObject *obj) {
 #if !NO_RTGC
     rt_assert(obj != NULL);
 
-    if (RTGC_DEBUG_VERBOSE) {
+    if (RTGC_LOG_VERBOSE) {
         if (RT_getGCNode(obj)->_circuit != NULL) {
             printf("RT_onIncreaseRefCount %p(%s) (c=%p)\n", obj, obj->ob_type->tp_name, RT_getGCNode(obj)->_circuit);
         }
     }
-    if (RTGC_ENABLE) {
-        RCircuit* circuit = RT_getGCNode(obj)->_circuit;
-        if (circuit != NULL) {
-            // stack-ref 와 참조-ref 를 구별할 수 없다.
-            circuit->ob_refcnt ++;
-        }
+    if (!RTGC_ENABLE) return;
+    RCircuit* circuit = RT_getGCNode(obj)->_circuit;
+    if (circuit != NULL) {
+        // stack-ref 와 참조-ref 를 구별할 수 없다.
+        circuit->ob_refcnt ++;
     }
-    // if (RTGC_DEBUG_VERBOSE) printf("RT_onIncreaseRefCount %p\n", obj);
+    // if (RTGC_LOG_VERBOSE) printf("RT_onIncreaseRefCount %p\n", obj);
     // (3UL << 15) = Py_TPFLAGS_HAVE_STACKLESS_EXTENSION 으로 예약됨. RTGC Flag 로 사용
     rt_assert((Py_TYPE(obj)->tp_flags & (3UL << 15)) == 0);
 #endif
@@ -157,40 +163,44 @@ BOOL RT_onDecreaseRefCount(PyObject *obj) {
 #if !NO_RTGC
     rt_assert(obj != NULL);
 
-    if (RTGC_DEBUG_VERBOSE) {
+    if (RTGC_LOG_VERBOSE) {
         if (RT_getGCNode(obj)->_circuit != NULL) {
             printf("RT_onDecreaseRefCount %p(%s) (c=%p)\n", obj, obj->ob_type->tp_name, RT_getGCNode(obj)->_circuit);
         }
     }
-    if (RTGC_ENABLE) {
-        RCircuit* circuit = RT_getGCNode(obj)->_circuit;
-        if (circuit != NULL) {
-            // stack-ref 와 참조-ref 를 구별할 수 없다.
-            if (--circuit->ob_refcnt == circuit->_internalRefCount) {
-                if (RTGC_DEBUG_VERBOSE) {
-                    printf("Garbage circuit detected %p(%s) (c=%p)\n", obj, obj->ob_type->tp_name, RT_getGCNode(obj)->_circuit);
-                }
-                return false;
+    if (!RTGC_ENABLE) return true;
+    RCircuit* circuit = RT_getGCNode(obj)->_circuit;
+    if (circuit != NULL) {
+        // stack-ref 와 참조-ref 를 구별할 수 없다.
+        if (--circuit->ob_refcnt == circuit->_internalRefCount) {
+            if (RTGC_LOG_VERBOSE) {
+                printf("Garbage circuit detected %p(%s) (c=%p)\n", obj, obj->ob_type->tp_name, RT_getGCNode(obj)->_circuit);
             }
+            return false;
         }
     }
-    // if (RTGC_DEBUG_VERBOSE) printf("RT_onDecreaseRefCount %p\n", obj);
+    // if (RTGC_LOG_VERBOSE) printf("RT_onDecreaseRefCount %p\n", obj);
     // (3UL << 15) = Py_TPFLAGS_HAVE_STACKLESS_EXTENSION 으로 예약됨. RTGC Flag 로 사용
-    rt_assert((Py_TYPE(obj)->tp_flags & (3UL << 15)) == 0);
+    // rt_assert((Py_TYPE(obj)->tp_flags & (3UL << 15)) == 0);
 #endif
     return true;
 }
 
 static int deassignGarbageAnchor(PyObject* obj, void* anchor) {
-    printf("deassignGarbageAnchor");
+    // printf("-- deassignGarbageAnchor %p\n", anchor);
     RT_onPropertyChanged((PyObject*)anchor, obj, NULL);
-    return true;
+    return 0;
 } 
 
 void RT_onDestoryGarbageNode(PyObject *obj, PyTypeObject *type) {
 #if !NO_RTGC
-    printf("RT_onDestoryGarbageNode");
-    type->tp_traverse(obj, RT_onDestoryGarbageNode, obj);
+    // if (!RTGC_ENABLE) return;
+
+    // printf("RT_onDestoryGarbageNode %p %s\n", obj, type == NULL ? NULL : type->tp_name);
+    traverseproc traverse = type->tp_traverse;
+    if (traverse != NULL) {
+        traverse(obj, deassignGarbageAnchor, obj);
+    }
 #endif
 }
 
@@ -234,5 +244,4 @@ _Py_NegativeRefcount(const char *filename, int lineno, PyObject *op)
                            filename, lineno, __func__);
 }
 Py_ssize_t _Py_RefTotal;
-#endif
 #endif

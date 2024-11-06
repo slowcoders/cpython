@@ -14,6 +14,17 @@ do {                                                        \
   }                                                         \
 } while (0)
 
+#define RTGC_DEBUG  1
+#if RTGC_DEBUG
+#define rt_log(...)         printf(__VA_ARGS__)
+#define rt_log_v(...)       if (RTGC_LOG_VERBOSE) printf(__VA_ARGS__)
+#define rt_log_if(p, ...)   if (p) printf(__VA_ARGS__)
+#else 
+#define rt_log(...)
+#define rt_log_v(...)
+#define rt_log_if(p, ...)
+#endif
+
 #if INCLUDE_RTGC
 #define RTGC_ONLY(...)      __VA_ARGS__
 #define NOT_RTGC(...)       
@@ -25,6 +36,8 @@ do {                                                        \
 #endif
 
 extern int RTGC_ENABLE;
+extern int RTGC_LOG_VERBOSE;
+
 typedef int BOOL;
 
 // #define RTGC_HEAD_EXTRA           

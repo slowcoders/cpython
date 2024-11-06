@@ -45,6 +45,24 @@ PyList_Append(PyObject *op, PyObject *newitem) {
 - Cell 객체
 Reference ???
 
+### gcmodule.c
+PyGC_Head { _gc_next, __gc_prev };
+gc_collect_main()
+    deduce_unreachable()
+        move_unreachable()
+
+### pylifecycle.c
+_PyRuntimeState _PyRuntime;
+_PyThreadState_GET(void)
+{
+    return _PyRuntimeState_GetThreadState(&_PyRuntime);
+}
+_PyRuntimeState_GetThreadState(_PyRuntimeState *runtime)
+{
+    // 한 쓰레드가 interpreter 를 locking (gil) 하여 interpreter 를 독점.
+    return (PyThreadState*)_Py_atomic_load_relaxed(&runtime->gilstate.tstate_current);
+}
+
 ### Py_XSETREF, Py_SETREF
 변수 변경 후, Py_DECREF/Py_XDECREF 호출
 
