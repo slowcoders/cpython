@@ -424,6 +424,9 @@ static inline Py_ALWAYS_INLINE void Py_DECREF(PyObject *op)
 #define Py_DECREF(op) Py_DECREF(_PyObject_CAST(op))
 #endif
 
+#define Py_INCSTACKREF(op) Py_INCREF(op)
+#define Py_DECSTACKREF(op) Py_DECREF(op)
+
 
 /* Safely decref `op` and set `op` to NULL, especially useful in tp_clear
  * and tp_dealloc implementations.

@@ -1,5 +1,10 @@
 #ifndef Py_OBJECT_H
 #define Py_OBJECT_H
+
+// use rtgc flags
+#define INCLUDE_RTGC  1
+#include "rtgc/rtgc-core.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif

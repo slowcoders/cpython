@@ -517,8 +517,12 @@ PYTHON_OBJS=	\
 
 
 ##########################################################################
+# RTGC Objects
+RTGC_OBJS=  \
+		Objects/_rtgc.o
+		
 # Objects
-OBJECT_OBJS=	\
+OBJECT_OBJS= $(RTGC_OBJS) \
 		Objects/abstract.o \
 		Objects/boolobject.o \
 		Objects/bytes_methods.o \
@@ -1165,7 +1169,10 @@ web_example_pyrepl_jspi: $(WEBEX2)/python.mjs $(WEBEX2)/index.html $(WEBEX2)/src
 ############################################################################
 # Header files
 
-PYTHON_HEADERS= \
+RTGC_HEADERS = \
+		$(srcdir)/Include/rtgc/rtgc-core.h 
+
+PYTHON_HEADERS= $(RTGC_HEADERS) \
 		$(srcdir)/Include/Python.h \
 		$(srcdir)/Include/abstract.h \
 		$(srcdir)/Include/audit.h \

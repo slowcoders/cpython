@@ -31,6 +31,9 @@ PyAPI_FUNC(PyObject *) PyDict_Values(PyObject *mp);
 PyAPI_FUNC(PyObject *) PyDict_Items(PyObject *mp);
 PyAPI_FUNC(Py_ssize_t) PyDict_Size(PyObject *mp);
 PyAPI_FUNC(PyObject *) PyDict_Copy(PyObject *mp);
+#if INCLUDE_RTGC
+PyAPI_FUNC(PyObject *) _PyDict_Copy(PyObject *mp, int copyValues);
+#endif
 PyAPI_FUNC(int) PyDict_Contains(PyObject *mp, PyObject *key);
 
 /* PyDict_Update(mp, other) is equivalent to PyDict_Merge(mp, other, 1). */
