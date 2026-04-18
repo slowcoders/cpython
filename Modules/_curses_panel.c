@@ -520,7 +520,7 @@ _curses_panel_panel_set_userptr_impl(PyCursesPanelObject *self,
         Py_DECREF(obj);
     }
     else {
-        Py_XDECREF(oldobj);
+        Py_XDECHEAPREF(oldobj);
     }
 
     _curses_panel_state *state = PyType_GetModuleState(cls);

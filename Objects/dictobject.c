@@ -1876,7 +1876,7 @@ insert_split_value(PyInterpreterState *interp, PyDictObject *mp, PyObject *key, 
         STORE_SPLIT_VALUE(mp, ix, Py_NewRef(value));
         // old_value should be DECREFed after GC track checking is done, if not, it could raise a segmentation fault,
         // when dict only holds the strong reference to value in ep->me_value.
-        Py_DECREF(old_value);
+        Py_DECHEAPREF(old_value);
     }
     ASSERT_CONSISTENT(mp);
 }
@@ -1945,7 +1945,7 @@ insertdict(PyInterpreterState *interp, PyDictObject *mp,
             STORE_VALUE(ep, value);
         }
     }
-    Py_XDECREF(old_value); /* which **CAN** re-enter (see issue #22653) */
+    Py_XDECHEAPREF(old_value); /* which **CAN** re-enter (see issue #22653) */
     ASSERT_CONSISTENT(mp);
     Py_DECREF(key);
     return 0;
@@ -2823,9 +2823,9 @@ delitem_common(PyDictObject *mp, Py_hash_t hash, Py_ssize_t ix,
             STORE_VALUE(ep, NULL);
             STORE_HASH(ep, 0);
         }
-        Py_DECREF(old_key);
+        Py_DECHEAPREF(old_key);
     }
-    Py_DECREF(old_value);
+    Py_DECHEAPREF(old_value);
 
     ASSERT_CONSISTENT(mp);
 }
@@ -3149,7 +3149,7 @@ _PyDict_Pop_KnownHash(PyDictObject *mp, PyObject *key, Py_hash_t hash,
         *result = old_value;
     }
     else {
-        Py_DECREF(old_value);
+        Py_DECHEAPREF(old_value);
     }
     return 1;
 }
@@ -5715,8 +5715,8 @@ dictiter_iternextitem(PyObject *self)
             PyObject *oldvalue = PyTuple_GET_ITEM(result, 1);
             PyTuple_SET_ITEM(result, 0, key);
             PyTuple_SET_ITEM(result, 1, value);
-            Py_DECREF(oldkey);
-            Py_DECREF(oldvalue);
+            Py_DECHEAPREF(oldkey);
+            Py_DECHEAPREF(oldvalue);
             // bpo-42536: The GC may have untracked this result tuple. Since we're
             // recycling it, make sure it's tracked again:
             _PyTuple_Recycle(result);
@@ -5841,8 +5841,8 @@ dictreviter_iter_lock_held(PyDictObject *d, PyObject *self)
             PyTuple_SET_ITEM(result, 0, Py_NewRef(key));
             PyTuple_SET_ITEM(result, 1, Py_NewRef(value));
             Py_INCREF(result);
-            Py_DECREF(oldkey);
-            Py_DECREF(oldvalue);
+            Py_DECHEAPREF(oldkey);
+            Py_DECHEAPREF(oldvalue);
             // bpo-42536: The GC may have untracked this result tuple. Since
             // we're recycling it, make sure it's tracked again:
             _PyTuple_Recycle(result);
@@ -7025,7 +7025,7 @@ store_instance_attr_lock_held(PyObject *obj, PyDictValues *values,
                 STORE_USED(dict, dict->ma_used - 1);
             }
         }
-        Py_DECREF(old_value);
+        Py_DECHEAPREF(old_value);
     }
     return 0;
 }

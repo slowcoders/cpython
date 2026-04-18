@@ -1585,7 +1585,7 @@ _Unpickler_MemoPut(UnpicklerObject *self, size_t idx, PyObject *value)
     old_item = self->memo[idx];
     self->memo[idx] = Py_NewRef(value);
     if (old_item != NULL) {
-        Py_DECREF(old_item);
+        Py_DECHEAPREF(old_item);
     }
     else {
         self->memo_len++;

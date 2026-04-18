@@ -1785,7 +1785,7 @@ element_setitem(PyObject *op, Py_ssize_t index, PyObject* item)
             self->extra->children[i] = self->extra->children[i+1];
     }
 
-    Py_DECREF(old);
+    Py_DECHEAPREF(old);
 
     return 0;
 }

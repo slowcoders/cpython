@@ -1476,15 +1476,15 @@ bounded_lru_cache_update_lock_held(lru_cache_object *self,
            leave the cache short one link. */
         Py_DECREF(popresult);
         Py_DECREF(link);
-        Py_DECREF(oldkey);
-        Py_DECREF(oldresult);
+        Py_DECHEAPREF(oldkey);
+        Py_DECHEAPREF(oldresult);
         return NULL;
     }
     lru_cache_append_link(self, link);
     Py_INCREF(result); /* for return */
     Py_DECREF(popresult);
-    Py_DECREF(oldkey);
-    Py_DECREF(oldresult);
+    Py_DECHEAPREF(oldkey);
+    Py_DECHEAPREF(oldresult);
     return result;
 }
 

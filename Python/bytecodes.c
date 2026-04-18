@@ -1116,7 +1116,7 @@ dummy_func(
             PyStackRef_CLOSE_SPECIALIZED(sub_st, _PyLong_ExactDealloc);
             DEAD(sub_st);
             PyStackRef_CLOSE(list_st);
-            Py_DECREF(old_value);
+            Py_DECHEAPREF(old_value);
         }
 
         macro(STORE_SUBSCR_DICT) =
@@ -1882,7 +1882,7 @@ dummy_func(
                 _PyEval_FormatExcUnbound(tstate, _PyFrame_GetCode(frame), oparg);
                 ERROR_NO_POP();
             }
-            Py_DECREF(oldobj);
+            Py_DECHEAPREF(oldobj);
         }
 
         inst(LOAD_FROM_DICT_OR_DEREF, (class_dict_st -- value)) {
@@ -2572,7 +2572,7 @@ dummy_func(
             }
             UNLOCK_OBJECT(owner_o);
             PyStackRef_CLOSE(owner);
-            Py_XDECREF(old_value);
+            Py_XDECHEAPREF(old_value);
         }
 
         macro(STORE_ATTR_INSTANCE_VALUE) =
@@ -2618,7 +2618,7 @@ dummy_func(
             // when dict only holds the strong reference to value in ep->me_value.
             STAT_INC(STORE_ATTR, hit);
             PyStackRef_CLOSE(owner);
-            Py_XDECREF(old_value);
+            Py_XDECHEAPREF(old_value);
         }
 
         macro(STORE_ATTR_WITH_HINT) =
@@ -2636,7 +2636,7 @@ dummy_func(
             FT_ATOMIC_STORE_PTR_RELEASE(*(PyObject **)addr, PyStackRef_AsPyObjectSteal(value));
             UNLOCK_OBJECT(owner_o);
             PyStackRef_CLOSE(owner);
-            Py_XDECREF(old_value);
+            Py_XDECHEAPREF(old_value);
         }
 
         macro(STORE_ATTR_SLOT) =

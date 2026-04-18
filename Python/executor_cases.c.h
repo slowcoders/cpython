@@ -1691,7 +1691,7 @@
             assert(WITHIN_STACK_BOUNDS());
             _PyFrame_SetStackPointer(frame, stack_pointer);
             PyStackRef_CLOSE(list_st);
-            Py_DECREF(old_value);
+            Py_DECHEAPREF(old_value);
             stack_pointer = _PyFrame_GetStackPointer(frame);
             break;
         }
@@ -2518,7 +2518,7 @@
                 JUMP_TO_ERROR();
             }
             _PyFrame_SetStackPointer(frame, stack_pointer);
-            Py_DECREF(oldobj);
+            Py_DECHEAPREF(oldobj);
             stack_pointer = _PyFrame_GetStackPointer(frame);
             break;
         }
@@ -3551,7 +3551,7 @@
             assert(WITHIN_STACK_BOUNDS());
             _PyFrame_SetStackPointer(frame, stack_pointer);
             PyStackRef_CLOSE(owner);
-            Py_XDECREF(old_value);
+            Py_XDECHEAPREF(old_value);
             stack_pointer = _PyFrame_GetStackPointer(frame);
             break;
         }
@@ -3619,7 +3619,7 @@
             assert(WITHIN_STACK_BOUNDS());
             _PyFrame_SetStackPointer(frame, stack_pointer);
             PyStackRef_CLOSE(owner);
-            Py_XDECREF(old_value);
+            Py_XDECHEAPREF(old_value);
             stack_pointer = _PyFrame_GetStackPointer(frame);
             break;
         }
@@ -3644,7 +3644,7 @@
             assert(WITHIN_STACK_BOUNDS());
             _PyFrame_SetStackPointer(frame, stack_pointer);
             PyStackRef_CLOSE(owner);
-            Py_XDECREF(old_value);
+            Py_XDECHEAPREF(old_value);
             stack_pointer = _PyFrame_GetStackPointer(frame);
             break;
         }

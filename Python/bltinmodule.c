@@ -3194,7 +3194,7 @@ zip_next(PyObject *self)
             }
             olditem = PyTuple_GET_ITEM(result, i);
             PyTuple_SET_ITEM(result, i, item);
-            Py_DECREF(olditem);
+            Py_DECHEAPREF(olditem);
         }
         // bpo-42536: The GC may have untracked this result tuple. Since we're
         // recycling it, make sure it's tracked again:

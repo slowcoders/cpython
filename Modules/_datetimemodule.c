@@ -7501,7 +7501,7 @@ error:
     clear_state(st);
 
 finally:
-    Py_XDECREF(old_module);
+    Py_XDECHEAPREF(old_module);
     return rc;
 }
 

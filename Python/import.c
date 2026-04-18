@@ -1123,7 +1123,7 @@ restore_old_cached_def(PyModuleDef *def, PyModuleDef_Base *oldbase)
 static void
 cleanup_old_cached_def(PyModuleDef_Base *oldbase)
 {
-    Py_XDECREF(oldbase->m_copy);
+    Py_XDECHEAPREF(oldbase->m_copy);
 }
 
 static void
@@ -2787,7 +2787,7 @@ update_compiled_module(PyCodeObject *co, PyObject *newname)
     oldname = co->co_filename;
     Py_INCREF(oldname);
     update_code_filenames(co, oldname, newname);
-    Py_DECREF(oldname);
+    Py_DECHEAPREF(oldname);
 }
 
 

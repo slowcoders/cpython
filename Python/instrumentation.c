@@ -3044,7 +3044,7 @@ _PyMonitoring_RegisterCallback(int tool_id, int event_id, PyObject *obj)
         res = interp->monitoring_callables[tool_id][PY_MONITORING_EVENT_BRANCH_LEFT];
         interp->monitoring_callables[tool_id][PY_MONITORING_EVENT_BRANCH_LEFT] = left;
         _PyEval_StartTheWorld(interp);
-        Py_XDECREF(old_right);
+        Py_XDECHEAPREF(old_right);
     }
     else {
         PyInterpreterState *interp = _PyInterpreterState_GET();

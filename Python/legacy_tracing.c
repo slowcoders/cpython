@@ -552,7 +552,7 @@ _PyEval_SetProfile(PyThreadState *tstate, Py_tracefunc func, PyObject *arg)
     PyObject *old_profileobj = swap_profile_func_arg(tstate, func, arg);
     int ret = set_monitoring_profile_events(interp);
     _PyEval_StartTheWorld(interp);
-    Py_XDECREF(old_profileobj);  // needs to be decref'd outside of stop-the-world
+    Py_XDECHEAPREF(old_profileobj);  // needs to be decref'd outside of stop-the-world
     return ret;
 }
 
@@ -592,7 +592,7 @@ _PyEval_SetProfileAllThreads(PyInterpreterState *interp, Py_tracefunc func, PyOb
     HEAD_UNLOCK(&_PyRuntime);
     int ret = set_monitoring_profile_events(interp);
     _PyEval_StartTheWorld(interp);
-    Py_XDECREF(old_profileobjs);  // needs to be decref'd outside of stop-the-world
+    Py_XDECHEAPREF(old_profileobjs);  // needs to be decref'd outside of stop-the-world
     return ret;
 }
 
@@ -725,7 +725,7 @@ _PyEval_SetTrace(PyThreadState *tstate, Py_tracefunc func, PyObject *arg)
     }
 done:
     _PyEval_StartTheWorld(interp);
-    Py_XDECREF(old_traceobj);  // needs to be decref'd outside stop-the-world
+    Py_XDECHEAPREF(old_traceobj);  // needs to be decref'd outside stop-the-world
     return err;
 }
 
@@ -768,7 +768,7 @@ _PyEval_SetTraceAllThreads(PyInterpreterState *interp, Py_tracefunc func, PyObje
             if (err != 0) {
                 HEAD_UNLOCK(&_PyRuntime);
                 _PyEval_StartTheWorld(interp);
-                Py_XDECREF(old_trace_objs);
+                Py_XDECHEAPREF(old_trace_objs);
                 return -1;
             }
         }
@@ -776,6 +776,6 @@ _PyEval_SetTraceAllThreads(PyInterpreterState *interp, Py_tracefunc func, PyObje
     HEAD_UNLOCK(&_PyRuntime);
     int err = set_monitoring_trace_events(interp);
     _PyEval_StartTheWorld(interp);
-    Py_XDECREF(old_trace_objs);  // needs to be decref'd outside of stop-the-world
+    Py_XDECHEAPREF(old_trace_objs);  // needs to be decref'd outside of stop-the-world
     return err;
 }

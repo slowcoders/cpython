@@ -838,7 +838,7 @@ heapctypesubclasswithfinalizer_finalize(PyObject *self)
     }
 
 cleanup_finalize:
-    Py_XDECREF(oldtype);
+    Py_XDECHEAPREF(oldtype);
     Py_XDECREF(newtype);
     Py_XDECREF(refcnt);
 

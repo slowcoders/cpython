@@ -30,7 +30,7 @@ static inline void
 PyCell_SetTakeRef(PyCellObject *cell, PyObject *value)
 {
     PyObject *old_value = PyCell_SwapTakeRef(cell, value);
-    Py_XDECREF(old_value);
+    Py_XDECHEAPREF(old_value);
 }
 
 // Gets the cell contents. Returns a new reference.
