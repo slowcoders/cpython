@@ -886,7 +886,7 @@ set_newline(textio *self, const char *newline)
         self->writenl = NULL;
 #endif
     }
-    Py_XDECHEAPREF(old);
+    Py_XDECREF(old); // -- no-heap
     return 0;
 }
 

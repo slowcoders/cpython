@@ -405,7 +405,7 @@ set_discard_entry(PySetObject *so, PyObject *key, Py_hash_t hash)
     entry->key = dummy;
     entry->hash = -1;
     FT_ATOMIC_STORE_SSIZE_RELAXED(so->used, so->used - 1);
-    Py_DECHEAPREF(old_key);
+    Py_DECREF(old_key); // delete only
     return DISCARD_FOUND;
 }
 

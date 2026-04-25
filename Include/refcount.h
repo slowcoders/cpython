@@ -306,6 +306,66 @@ static inline Py_ALWAYS_INLINE void Py_INCREF(PyObject *op)
 #  define Py_INCREF(op) Py_INCREF(_PyObject_CAST(op))
 #endif
 
+PyAPI_FUNC(void) _Py_IncRef_HEAP(PyObject *);
+
+static inline Py_ALWAYS_INLINE void Py_INCREF_HEAP(PyObject *op)
+{
+#if defined(Py_LIMITED_API) && (Py_LIMITED_API+0 >= 0x030c0000 || defined(Py_REF_DEBUG))
+    // Stable ABI implements Py_INCREF() as a function call on limited C API
+    // version 3.12 and newer, and on Python built in debug mode. _Py_IncRef()
+    // was added to Python 3.10.0a7, use Py_IncRef() on older Python versions.
+    // Py_IncRef() accepts NULL whereas _Py_IncRef() doesn't.
+#  if Py_LIMITED_API+0 >= 0x030a00A7
+    _Py_IncRef(op);
+#  else
+    Py_IncRef(op);
+#  endif
+#else
+    // Non-limited C API and limited C API for Python 3.9 and older access
+    // directly PyObject.ob_refcnt.
+#if defined(Py_GIL_DISABLED)
+    uint32_t local = _Py_atomic_load_uint32_relaxed(&op->ob_ref_local);
+    uint32_t new_local = local + 1;
+    if (new_local == 0) {
+        _Py_INCREF_IMMORTAL_STAT_INC();
+        // local is equal to _Py_IMMORTAL_REFCNT_LOCAL: do nothing
+        return;
+    }
+    if (_Py_IsOwnedByCurrentThread(op)) {
+        _Py_atomic_store_uint32_relaxed(&op->ob_ref_local, new_local);
+    }
+    else {
+        _Py_atomic_add_ssize(&op->ob_ref_shared, (1 << _Py_REF_SHARED_SHIFT));
+    }
+#elif SIZEOF_VOID_P > 4
+    PY_UINT32_T cur_refcnt = op->ob_refcnt;
+    if (cur_refcnt >= _Py_IMMORTAL_INITIAL_REFCNT) {
+        // the object is immortal
+        _Py_INCREF_IMMORTAL_STAT_INC();
+        return;
+    }
+    op->ob_refcnt = cur_refcnt + 1;
+#else
+    if (_Py_IsImmortal(op)) {
+        _Py_INCREF_IMMORTAL_STAT_INC();
+        return;
+    }
+    op->ob_refcnt++;
+#endif
+    _Py_INCREF_STAT_INC();
+#ifdef Py_REF_DEBUG
+    // Don't count the incref if the object is immortal.
+    if (!_Py_IsImmortal(op)) {
+        _Py_INCREF_IncRefTotal();
+    }
+#endif
+#endif
+}
+#if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 < 0x030b0000
+#  define Py_INCREF_HEAP(op) Py_INCREF_HEAP(_PyObject_CAST(op))
+#endif
+
+
 
 #if !defined(Py_LIMITED_API) && defined(Py_GIL_DISABLED)
 // Implements Py_DECREF on objects not owned by the current thread.
@@ -424,8 +484,7 @@ static inline Py_ALWAYS_INLINE void Py_DECREF(PyObject *op)
 #define Py_DECREF(op) Py_DECREF(_PyObject_CAST(op))
 #endif
 
-#define Py_INCSTACKREF(op) Py_INCREF(op)
-#define Py_DECSTACKREF(op) Py_DECREF(op)
+#define Py_DECREF_HEAP(op) Py_DECREF(op)
 
 
 /* Safely decref `op` and set `op` to NULL, especially useful in tp_clear
@@ -507,9 +566,19 @@ static inline void Py_XINCREF(PyObject *op)
         Py_INCREF(op);
     }
 }
+/* Function to use in case the object pointer can be NULL: */
+static inline void Py_XINCREF_HEAP(PyObject *op)
+{
+    if (op != _Py_NULL) {
+        Py_INCREF_HEAP(op);
+    }
+}
+
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 < 0x030b0000
 #  define Py_XINCREF(op) Py_XINCREF(_PyObject_CAST(op))
+#  define Py_XINCREF_HEAP(op) Py_XINCREF_HEAP(_PyObject_CAST(op))
 #endif
+
 
 static inline void Py_XDECREF(PyObject *op)
 {
@@ -520,6 +589,8 @@ static inline void Py_XDECREF(PyObject *op)
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 < 0x030b0000
 #  define Py_XDECREF(op) Py_XDECREF(_PyObject_CAST(op))
 #endif
+
+#define Py_XDECREF_HEAP(op) Py_XDECREF(op)
 
 // Create a new strong reference to an object:
 // increment the reference count of the object and return the object.
@@ -540,15 +611,31 @@ static inline PyObject* _Py_XNewRef(PyObject *obj)
     return obj;
 }
 
+static inline PyObject* _Py_NewRef_HEAP(PyObject *obj)
+{
+    Py_INCREF_HEAP(obj);
+    return obj;
+}
+
+static inline PyObject* _Py_XNewRef_HEAP(PyObject *obj)
+{
+    Py_XINCREF_HEAP(obj);
+    return obj;
+}
+
 // Py_NewRef() and Py_XNewRef() are exported as functions for the stable ABI.
 // Names overridden with macros by static inline functions for best
 // performances.
 #if !defined(Py_LIMITED_API) || Py_LIMITED_API+0 < 0x030b0000
 #  define Py_NewRef(obj) _Py_NewRef(_PyObject_CAST(obj))
 #  define Py_XNewRef(obj) _Py_XNewRef(_PyObject_CAST(obj))
+#  define Py_NewRef_HEAP(obj) _Py_NewRef_HEAP(_PyObject_CAST(obj))
+#  define Py_XNewRef_HEAP(obj) _Py_XNewRef_HEAP(_PyObject_CAST(obj))
 #else
 #  define Py_NewRef(obj) _Py_NewRef(obj)
 #  define Py_XNewRef(obj) _Py_XNewRef(obj)
+#  define Py_NewRef_HEAP(obj) _Py_NewRef_HEAP(obj)
+#  define Py_XNewRef_HEAP(obj) _Py_XNewRef_HEAP(obj)
 #endif
 
 

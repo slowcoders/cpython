@@ -512,7 +512,7 @@ _curses_panel_panel_set_userptr_impl(PyCursesPanelObject *self,
 /*[clinic end generated code: output=db74f3db07b28080 input=e3fee2ff7b1b8e48]*/
 {
     PyCursesInitialised;
-    Py_INCREF(obj);
+    Py_INCREF_HEAP(obj);
     PyObject *oldobj = (PyObject *) panel_userptr(self->pan);
     int rc = set_panel_userptr(self->pan, (void*)obj);
     if (rc == ERR) {
@@ -520,7 +520,7 @@ _curses_panel_panel_set_userptr_impl(PyCursesPanelObject *self,
         Py_DECREF(obj);
     }
     else {
-        Py_XDECHEAPREF(oldobj);
+        Py_XDECREF_HEAP(oldobj); // heap-ref
     }
 
     _curses_panel_state *state = PyType_GetModuleState(cls);

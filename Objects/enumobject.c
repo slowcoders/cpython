@@ -217,8 +217,8 @@ enum_next_long(enumobject *en, PyObject* next_item)
         old_item = PyTuple_GET_ITEM(result, 1);
         PyTuple_SET_ITEM(result, 0, next_index);
         PyTuple_SET_ITEM(result, 1, next_item);
-        Py_DECHEAPREF(old_index);
-        Py_DECHEAPREF(old_item);
+        Py_DECREF_HEAP(old_index); // pass iteration
+        Py_DECREF_HEAP(old_item); // pass iteration
         // bpo-42536: The GC may have untracked this result tuple. Since we're
         // recycling it, make sure it's tracked again:
         _PyTuple_Recycle(result);
@@ -267,8 +267,8 @@ enum_next(PyObject *op)
         old_item = PyTuple_GET_ITEM(result, 1);
         PyTuple_SET_ITEM(result, 0, next_index);
         PyTuple_SET_ITEM(result, 1, next_item);
-        Py_DECHEAPREF(old_index);
-        Py_DECHEAPREF(old_item);
+        Py_DECREF_HEAP(old_index); // pass iteration
+        Py_DECREF_HEAP(old_item); // pass iteration
         // bpo-42536: The GC may have untracked this result tuple. Since we're
         // recycling it, make sure it's tracked again:
         _PyTuple_Recycle(result);

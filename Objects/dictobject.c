@@ -1867,16 +1867,16 @@ insert_split_value(PyInterpreterState *interp, PyDictObject *mp, PyObject *key, 
     PyObject *old_value = mp->ma_values->values[ix];
     if (old_value == NULL) {
         _PyDict_NotifyEvent(interp, PyDict_EVENT_ADDED, mp, key, value);
-        STORE_SPLIT_VALUE(mp, ix, Py_NewRef(value));
+        STORE_SPLIT_VALUE(mp, ix, Py_NewRef_HEAP(value));
         _PyDictValues_AddToInsertionOrder(mp->ma_values, ix);
         STORE_USED(mp, mp->ma_used + 1);
     }
     else {
         _PyDict_NotifyEvent(interp, PyDict_EVENT_MODIFIED, mp, key, value);
-        STORE_SPLIT_VALUE(mp, ix, Py_NewRef(value));
+        STORE_SPLIT_VALUE(mp, ix, Py_NewRef_HEAP(value));
         // old_value should be DECREFed after GC track checking is done, if not, it could raise a segmentation fault,
         // when dict only holds the strong reference to value in ep->me_value.
-        Py_DECHEAPREF(old_value);
+        Py_DECREF_HEAP(old_value); // heap-ref
     }
     ASSERT_CONSISTENT(mp);
 }
@@ -1925,6 +1925,9 @@ insertdict(PyInterpreterState *interp, PyDictObject *mp,
         }
         STORE_USED(mp, mp->ma_used + 1);
         ASSERT_CONSISTENT(mp);
+#ifdef ENABLE_RTGC
+        RTGC_decStableRef(value);
+#endif
         return 0;
     }
 
@@ -1945,9 +1948,12 @@ insertdict(PyInterpreterState *interp, PyDictObject *mp,
             STORE_VALUE(ep, value);
         }
     }
-    Py_XDECHEAPREF(old_value); /* which **CAN** re-enter (see issue #22653) */
+    Py_XDECREF_HEAP(old_value); // heap-ref /* which **CAN** re-enter (see issue #22653) */
     ASSERT_CONSISTENT(mp);
     Py_DECREF(key);
+#ifdef ENABLE_RTGC
+    RTGC_decStableRef(value);
+#endif
     return 0;
 
 Fail:
@@ -2823,9 +2829,9 @@ delitem_common(PyDictObject *mp, Py_hash_t hash, Py_ssize_t ix,
             STORE_VALUE(ep, NULL);
             STORE_HASH(ep, 0);
         }
-        Py_DECHEAPREF(old_key);
+        Py_DECREF(old_key);
     }
-    Py_DECHEAPREF(old_value);
+    Py_DECREF_HEAP(old_value);  // delete only
 
     ASSERT_CONSISTENT(mp);
 }
@@ -3149,7 +3155,7 @@ _PyDict_Pop_KnownHash(PyDictObject *mp, PyObject *key, Py_hash_t hash,
         *result = old_value;
     }
     else {
-        Py_DECHEAPREF(old_value);
+        Py_DECREF(old_value); // delete only
     }
     return 1;
 }
@@ -5715,8 +5721,8 @@ dictiter_iternextitem(PyObject *self)
             PyObject *oldvalue = PyTuple_GET_ITEM(result, 1);
             PyTuple_SET_ITEM(result, 0, key);
             PyTuple_SET_ITEM(result, 1, value);
-            Py_DECHEAPREF(oldkey);
-            Py_DECHEAPREF(oldvalue);
+            Py_DECREF_HEAP(oldkey); // pass iteration
+            Py_DECREF_HEAP(oldvalue); // pass iteration
             // bpo-42536: The GC may have untracked this result tuple. Since we're
             // recycling it, make sure it's tracked again:
             _PyTuple_Recycle(result);
@@ -5841,8 +5847,8 @@ dictreviter_iter_lock_held(PyDictObject *d, PyObject *self)
             PyTuple_SET_ITEM(result, 0, Py_NewRef(key));
             PyTuple_SET_ITEM(result, 1, Py_NewRef(value));
             Py_INCREF(result);
-            Py_DECHEAPREF(oldkey);
-            Py_DECHEAPREF(oldvalue);
+            Py_DECREF_HEAP(oldkey); // pass iteration
+            Py_DECREF_HEAP(oldvalue); // pass iteration
             // bpo-42536: The GC may have untracked this result tuple. Since
             // we're recycling it, make sure it's tracked again:
             _PyTuple_Recycle(result);
@@ -6989,6 +6995,9 @@ store_instance_attr_lock_held(PyObject *obj, PyDictValues *values,
         _Py_CRITICAL_SECTION_ASSERT_OBJECT_LOCKED(dict);
 
         res = _PyDict_SetItem_LockHeld(dict, name, value);
+#ifdef ENABLE_RTGC
+        RTGC_decStableRef(value);
+#endif
         return res;
     }
 
@@ -7025,8 +7034,12 @@ store_instance_attr_lock_held(PyObject *obj, PyDictValues *values,
                 STORE_USED(dict, dict->ma_used - 1);
             }
         }
-        Py_DECHEAPREF(old_value);
+        Py_DECREF_HEAP(old_value);  // heap-ref
     }
+#ifdef ENABLE_RTGC
+    RTGC_decStableRef(value);
+#endif
+
     return 0;
 }
 

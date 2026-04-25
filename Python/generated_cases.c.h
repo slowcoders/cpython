@@ -5269,7 +5269,7 @@
                 JUMP_TO_LABEL(error);
             }
             _PyFrame_SetStackPointer(frame, stack_pointer);
-            Py_DECHEAPREF(oldobj);
+            Py_DECREF(oldobj); // -- just delete
             stack_pointer = _PyFrame_GetStackPointer(frame);
             DISPATCH();
         }
@@ -11053,7 +11053,7 @@
                 assert(WITHIN_STACK_BOUNDS());
                 _PyFrame_SetStackPointer(frame, stack_pointer);
                 PyStackRef_CLOSE(owner);
-                Py_XDECHEAPREF(old_value);
+                Py_XDECREF_HEAP(old_value); // heap-ref
                 stack_pointer = _PyFrame_GetStackPointer(frame);
             }
             DISPATCH();
@@ -11104,7 +11104,7 @@
                 assert(WITHIN_STACK_BOUNDS());
                 _PyFrame_SetStackPointer(frame, stack_pointer);
                 PyStackRef_CLOSE(owner);
-                Py_XDECHEAPREF(old_value);
+                Py_XDECREF_HEAP(old_value); // heap-ref
                 stack_pointer = _PyFrame_GetStackPointer(frame);
             }
             DISPATCH();
@@ -11202,7 +11202,7 @@
                 assert(WITHIN_STACK_BOUNDS());
                 _PyFrame_SetStackPointer(frame, stack_pointer);
                 PyStackRef_CLOSE(owner);
-                Py_XDECHEAPREF(old_value);
+                Py_XDECREF_HEAP(old_value); // heap-ref
                 stack_pointer = _PyFrame_GetStackPointer(frame);
             }
             DISPATCH();
@@ -11633,7 +11633,7 @@
                 assert(WITHIN_STACK_BOUNDS());
                 _PyFrame_SetStackPointer(frame, stack_pointer);
                 PyStackRef_CLOSE(list_st);
-                Py_DECHEAPREF(old_value);
+                Py_DECREF_HEAP(old_value); // heap-ref
                 stack_pointer = _PyFrame_GetStackPointer(frame);
             }
             DISPATCH();

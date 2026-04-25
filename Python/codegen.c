@@ -6245,7 +6245,7 @@ codegen_pattern_or(compiler *c, pattern_ty p, pattern_context *pc)
             goto error;
         }
     }
-    Py_DECHEAPREF(old_pc.stores);
+    Py_DECREF(old_pc.stores); // no-heap
     Py_DECREF(control);
     // NOTE: Returning macros are safe again.
     // Pop the copy of the subject:
@@ -6255,7 +6255,7 @@ diff:
     _PyCompile_Error(c, LOC(p), "alternative patterns bind different names");
 error:
     PyMem_Free(old_pc.fail_pop);
-    Py_DECHEAPREF(old_pc.stores);
+    Py_DECREF(old_pc.stores); // no-heap
     Py_XDECREF(control);
     return ERROR;
 }

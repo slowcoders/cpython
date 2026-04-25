@@ -19,6 +19,10 @@ extern "C" {
 #error "this header requires Py_BUILD_CORE define"
 #endif
 
+#ifdef ENABLE_RTGC
+void RTGC_decStableRef(void* obj);
+#endif
+
 #ifdef Py_GIL_DISABLED
 #define FT_ATOMIC_LOAD_PTR(value) _Py_atomic_load_ptr(&value)
 #define FT_ATOMIC_STORE_PTR(value, new_value) _Py_atomic_store_ptr(&value, new_value)
@@ -152,8 +156,21 @@ extern "C" {
 #define FT_ATOMIC_LOAD_UINT64_ACQUIRE(value) value
 #define FT_ATOMIC_LOAD_UINT64_RELAXED(value) value
 #define FT_ATOMIC_LOAD_ULONG_RELAXED(value) value
+#ifdef ENABLE_RTGC
+#define FT_ATOMIC_STORE_PTR_RELAXED(value, new_value) \
+    RTGC_decStableRef(value = new_value)
+#else 
+    No rtgc!!!!
+
 #define FT_ATOMIC_STORE_PTR_RELAXED(value, new_value) value = new_value
+#endif
+#ifdef ENABLE_RTGC
+#define FT_ATOMIC_STORE_PTR_RELEASE(value, new_value) \
+    RTGC_decStableRef(value = new_value)
+#else 
+    No rtgc!!!!
 #define FT_ATOMIC_STORE_PTR_RELEASE(value, new_value) value = new_value
+#endif
 #define FT_ATOMIC_STORE_UINTPTR_RELEASE(value, new_value) value = new_value
 #define FT_ATOMIC_STORE_SSIZE_RELAXED(value, new_value) value = new_value
 #define FT_ATOMIC_STORE_SSIZE_RELEASE(value, new_value) value = new_value

@@ -191,6 +191,7 @@ set_current_module(PyInterpreterState *interp, PyObject *mod)
     if (dict == NULL) {
         return -1;
     }
+    // _rtgc weak ref!!
     PyObject *ref = PyWeakref_NewRef(mod, NULL);
     if (ref == NULL) {
         return -1;
@@ -7501,7 +7502,7 @@ error:
     clear_state(st);
 
 finally:
-    Py_XDECHEAPREF(old_module);
+    Py_XDECREF(old_module); // local-ref
     return rc;
 }
 

@@ -1510,7 +1510,7 @@ type_set_name(PyObject *tp, PyObject *value, void *Py_UNUSED(closure))
     PyObject *old_name = ((PyHeapTypeObject*)type)->ht_name;
     ((PyHeapTypeObject*)type)->ht_name = Py_NewRef(value);
     _PyEval_StartTheWorld(interp);
-    Py_DECHEAPREF(old_name);
+    Py_DECREF(old_name); // pass immutable!
     return 0;
 }
 
@@ -1755,7 +1755,7 @@ mro_hierarchy_for_complete_type(PyTypeObject *type, PyObject *temp)
         Py_DECREF(new_mro);
         return -1;
     }
-    Py_XDECHEAPREF(old_mro);
+    Py_XDECREF_HEAP(old_mro); // pass MRO
 
     // Avoid creating an empty list if there is no subclass
     if (_PyType_HasSubclasses(type)) {
@@ -1884,8 +1884,8 @@ type_set_bases_unlocked(PyTypeObject *type, PyObject *new_bases)
     }
 
     RARE_EVENT_INC(set_bases);
-    Py_DECHEAPREF(old_bases);
-    Py_DECHEAPREF(old_base);
+    Py_DECREF_HEAP(old_bases); // pass ??
+    Py_DECREF_HEAP(old_base); // pass ??
 
     assert(_PyType_CheckConsistency(type));
     return res;
@@ -1917,8 +1917,8 @@ type_set_bases_unlocked(PyTypeObject *type, PyObject *new_bases)
         Py_DECREF(new_base);
     }
     else {
-        Py_DECHEAPREF(old_bases);
-        Py_DECHEAPREF(old_base);
+        Py_DECREF_HEAP(old_bases); // pass ??
+        Py_DECREF_HEAP(old_base); // pass ??
     }
 
     assert(_PyType_CheckConsistency(type));
@@ -3562,7 +3562,7 @@ mro_internal_unlocked(PyTypeObject *type, int initial, PyObject **p_old_mro)
     old_mro = Py_XNewRef(lookup_tp_mro(type));
     new_mro = mro_invoke(type);  /* might cause reentrance */
     reent = (lookup_tp_mro(type) != old_mro);
-    Py_XDECHEAPREF(old_mro);
+    Py_XDECREF_HEAP(old_mro); // pass ??
     if (new_mro == NULL) {
         return -1;
     }
@@ -3592,7 +3592,7 @@ mro_internal_unlocked(PyTypeObject *type, int initial, PyObject **p_old_mro)
     if (p_old_mro != NULL)
         *p_old_mro = old_mro;  /* transfer the ownership */
     else
-        Py_XDECHEAPREF(old_mro);
+        Py_XDECREF_HEAP(old_mro); // pass ??
 
     return 1;
 }
@@ -3781,11 +3781,11 @@ _PyObject_SetDict(PyObject *obj, PyObject *value)
     }
     Py_BEGIN_CRITICAL_SECTION(obj);
     PyObject *olddict = *dictptr;
-    FT_ATOMIC_STORE_PTR_RELEASE(*dictptr, Py_NewRef(value));
+    FT_ATOMIC_STORE_PTR_RELEASE(*dictptr, Py_NewRef_HEAP(value));
 #ifdef Py_GIL_DISABLED
-    _PyObject_XDecRefDelayed(olddict);
+    _PyObject_XDecRefDelayed(olddict);  // heap-ref
 #else
-    Py_XDECHEAPREF(olddict);
+    Py_XDECREF_HEAP(olddict); // heap-ref
 #endif
     Py_END_CRITICAL_SECTION();
     return 0;
@@ -5817,7 +5817,7 @@ update_cache_gil_disabled(struct type_cache_entry *entry, PyObject *name,
     // Then update sequence to the next valid value
     _PySeqLock_UnlockWrite(&entry->sequence);
 
-    Py_DECHEAPREF(old_value);
+    Py_DECREF_HEAP(old_value);
 }
 
 #endif
@@ -5944,7 +5944,7 @@ _PyType_LookupStackRefAndVersion(PyTypeObject *type, PyObject *name, _PyStackRef
     update_cache_gil_disabled(entry, name, version_tag, res_obj);
 #else
     PyObject *old_value = update_cache(entry, name, version_tag, res_obj);
-    Py_DECHEAPREF(old_value);
+    Py_DECREF_HEAP(old_value); // pass cache
 #endif
     return version_tag;
 }
@@ -6304,7 +6304,10 @@ type_setattro(PyObject *self, PyObject *name, PyObject *value)
 done:
     Py_DECREF(name);
     Py_XDECREF(descr);
-    Py_XDECHEAPREF(old_value);
+    Py_XDECREF_HEAP(old_value); // heap-ref
+#ifdef ENABLE_RTGC
+    RTGC_decStableRef(value);
+#endif    
     return res;
 }
 
@@ -7242,7 +7245,7 @@ object_set_class(PyObject *self, PyObject *value, void *closure)
 #endif
     if (res == 0) {
         if (oldto->tp_flags & Py_TPFLAGS_HEAPTYPE) {
-            Py_DECHEAPREF(oldto);
+            Py_DECREF_HEAP(oldto); // pass class
         }
 
         RARE_EVENT_INC(set_class);

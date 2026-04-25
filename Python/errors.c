@@ -26,7 +26,7 @@ _PyErr_SetRaisedException(PyThreadState *tstate, PyObject *exc)
 {
     PyObject *old_exc = tstate->current_exception;
     tstate->current_exception = exc;
-    Py_XDECHEAPREF(old_exc);
+    Py_XDECREF_HEAP(old_exc); // pass exception chain
 }
 
 static PyObject*

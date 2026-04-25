@@ -356,7 +356,7 @@ deque_append_lock_held(dequeobject *deque, PyObject *item, Py_ssize_t maxlen)
     deque->rightblock->data[deque->rightindex] = item;
     if (NEEDS_TRIM(deque, maxlen)) {
         PyObject *olditem = deque_popleft_impl(deque);
-        Py_DECHEAPREF(olditem);
+        Py_DECREF(olditem); // deque_popleft_impl 의 반환값을 deref
     } else {
         deque->state++;
     }
@@ -403,7 +403,7 @@ deque_appendleft_lock_held(dequeobject *deque, PyObject *item,
     deque->leftblock->data[deque->leftindex] = item;
     if (NEEDS_TRIM(deque, maxlen)) {
         PyObject *olditem = deque_pop_impl(deque);
-        Py_DECHEAPREF(olditem);
+        Py_DECREF(olditem); // deque_pop_impl 의 반환값을 deref
     } else {
         deque->state++;
     }
@@ -2474,10 +2474,10 @@ defdict_init(PyObject *self, PyObject *args, PyObject *kwds)
     }
     if (newargs == NULL)
         return -1;
-    dd->default_factory = Py_XNewRef(newdefault);
+    dd->default_factory = Py_XNewRef_HEAP(newdefault);
     result = PyDict_Type.tp_init(self, newargs, kwds);
     Py_DECREF(newargs);
-    Py_XDECHEAPREF(olddefault);
+    Py_XDECREF_HEAP(olddefault); // heap-ref
     return result;
 }
 
@@ -2596,7 +2596,7 @@ _collections__count_elements_impl(PyObject *module, PyObject *mapping,
                    mutate (or even clear) the underlying dict. */
                 Py_INCREF(oldval);
                 newval = PyNumber_Add(oldval, one);
-                Py_DECHEAPREF(oldval);
+                Py_DECREF(oldval);
                 if (newval == NULL)
                     goto done;
                 if (_PyDict_SetItem_KnownHash(mapping, key, newval, hash) < 0)
@@ -2624,7 +2624,7 @@ _collections__count_elements_impl(PyObject *module, PyObject *mapping,
             } else {
                 newval = PyNumber_Add(oldval, one);
             }
-            Py_DECHEAPREF(oldval);
+            Py_DECREF(oldval);
             if (newval == NULL)
                 break;
             if (PyObject_SetItem(mapping, key, newval) < 0)

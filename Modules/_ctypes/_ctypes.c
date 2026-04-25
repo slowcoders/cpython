@@ -3603,7 +3603,7 @@ atomic_xsetref(PyObject **field, PyObject *value)
 #ifdef Py_GIL_DISABLED
     PyObject *old = *field;
     _Py_atomic_store_ptr(field, value);
-    Py_XDECHEAPREF(old);
+    Py_XDECREF_HEAP(old); // heap-ref: atomic_xsetref
 #else
     Py_XSETREF(*field, value);
 #endif

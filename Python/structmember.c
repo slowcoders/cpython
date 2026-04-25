@@ -324,7 +324,7 @@ PyMember_SetOne(char *addr, PyMemberDef *l, PyObject *v)
         oldv = *(PyObject **)addr;
         FT_ATOMIC_STORE_PTR_RELEASE(*(PyObject **)addr, Py_XNewRef(v));
         Py_END_CRITICAL_SECTION();
-        Py_XDECHEAPREF(oldv);
+        Py_XDECREF_HEAP(oldv); // heap-ref
         break;
     case Py_T_CHAR: {
         const char *string;

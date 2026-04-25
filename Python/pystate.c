@@ -2528,7 +2528,7 @@ PyThreadState_SetAsyncExc(unsigned long id, PyObject *exc)
         Py_XINCREF(exc);
         PyObject *old_exc = _Py_atomic_exchange_ptr(&tstate->async_exc, exc);
 
-        Py_XDECHEAPREF(old_exc);
+        Py_XDECREF_HEAP(old_exc); // pass async exception 
         _Py_set_eval_breaker_bit(tstate, _PY_ASYNC_EXCEPTION_BIT);
     }
 

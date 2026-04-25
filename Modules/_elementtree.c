@@ -1778,14 +1778,14 @@ element_setitem(PyObject *op, Py_ssize_t index, PyObject* item)
             raise_type_error(item);
             return -1;
         }
-        self->extra->children[index] = Py_NewRef(item);
+        self->extra->children[index] = Py_NewRef_HEAP(item);
     } else {
         self->extra->length--;
         for (i = index; i < self->extra->length; i++)
             self->extra->children[i] = self->extra->children[i+1];
     }
 
-    Py_DECHEAPREF(old);
+    Py_DECREF_HEAP(old); // heap-ref
 
     return 0;
 }

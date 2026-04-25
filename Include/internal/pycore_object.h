@@ -451,6 +451,7 @@ static inline void Py_DECREF_MORTAL(const char *filename, int lineno, PyObject *
     }
 }
 #define Py_DECREF_MORTAL(op) Py_DECREF_MORTAL(__FILE__, __LINE__, _PyObject_CAST(op))
+#define Py_DECREF_HEAP_MORTAL(op) Py_DECREF_MORTAL(op)
 
 static inline void _Py_DECREF_MORTAL_SPECIALIZED(const char *filename, int lineno, PyObject *op, destructor destruct)
 {
@@ -471,6 +472,7 @@ static inline void _Py_DECREF_MORTAL_SPECIALIZED(const char *filename, int linen
     }
 }
 #define Py_DECREF_MORTAL_SPECIALIZED(op, destruct) _Py_DECREF_MORTAL_SPECIALIZED(__FILE__, __LINE__, op, destruct)
+#define Py_DECREF_HEAP_MORTAL_SPECIALIZED(op, destruct) _Py_DECREF_MORTAL_SPECIALIZED(op, destruct)
 
 #else
 
@@ -483,6 +485,7 @@ static inline void Py_DECREF_MORTAL(PyObject *op)
     }
 }
 #define Py_DECREF_MORTAL(op) Py_DECREF_MORTAL(_PyObject_CAST(op))
+#define Py_DECREF_HEAP_MORTAL(op) Py_DECREF_MORTAL(op)
 
 static inline void Py_DECREF_MORTAL_SPECIALIZED(PyObject *op, destructor destruct)
 {
@@ -494,6 +497,7 @@ static inline void Py_DECREF_MORTAL_SPECIALIZED(PyObject *op, destructor destruc
     }
 }
 #define Py_DECREF_MORTAL_SPECIALIZED(op, destruct) Py_DECREF_MORTAL_SPECIALIZED(_PyObject_CAST(op), destruct)
+#define Py_DECREF_HEAP_MORTAL_SPECIALIZED(op, destruct) Py_DECREF_MORTAL_SPECIALIZED(op, destruct)
 
 #endif
 #endif

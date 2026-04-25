@@ -3426,7 +3426,7 @@ sys_set_flag(PyObject *flags, Py_ssize_t pos, PyObject *value)
 
     PyObject *old_value = PyStructSequence_GET_ITEM(flags, pos);
     PyStructSequence_SET_ITEM(flags, pos, Py_NewRef(value));
-    Py_XDECHEAPREF(old_value);
+    Py_XDECREF_HEAP(old_value); // heap-ref
 }
 
 

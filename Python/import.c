@@ -1117,13 +1117,13 @@ fixup_cached_def(struct extensions_cache_value *value)
 static void
 restore_old_cached_def(PyModuleDef *def, PyModuleDef_Base *oldbase)
 {
-    def->m_base = *oldbase;
+    def->m_base = *oldbase;  // Py_XINCREF_HEAP pass cache
 }
 
 static void
 cleanup_old_cached_def(PyModuleDef_Base *oldbase)
 {
-    Py_XDECHEAPREF(oldbase->m_copy);
+    Py_XDECREF_HEAP(oldbase->m_copy); // pass cache
 }
 
 static void
@@ -2787,7 +2787,7 @@ update_compiled_module(PyCodeObject *co, PyObject *newname)
     oldname = co->co_filename;
     Py_INCREF(oldname);
     update_code_filenames(co, oldname, newname);
-    Py_DECHEAPREF(oldname);
+    Py_DECREF(oldname); // no heap-ref
 }
 
 

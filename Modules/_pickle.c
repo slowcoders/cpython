@@ -1583,9 +1583,9 @@ _Unpickler_MemoPut(UnpicklerObject *self, size_t idx, PyObject *value)
         assert(idx < self->memo_size);
     }
     old_item = self->memo[idx];
-    self->memo[idx] = Py_NewRef(value);
+    self->memo[idx] = Py_NewRef_HEAP(value);
     if (old_item != NULL) {
-        Py_DECHEAPREF(old_item);
+        Py_DECREF_HEAP(old_item); // heap-ref
     }
     else {
         self->memo_len++;

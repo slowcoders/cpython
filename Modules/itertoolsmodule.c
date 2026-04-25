@@ -371,7 +371,7 @@ pairwise_next(PyObject *op)
     if (new == NULL) {
         Py_CLEAR(po->it);
         Py_CLEAR(po->old);
-        Py_DECHEAPREF(old);
+        Py_DECREF(old); // pairwise is not cyclic ?
         return NULL;
     }
 
@@ -397,7 +397,7 @@ pairwise_next(PyObject *op)
     }
 
     Py_XSETREF(po->old, new);
-    Py_DECHEAPREF(old);
+    Py_DECREF(old);  // pairwise is not cyclic ?
     return result;
 }
 
@@ -514,7 +514,7 @@ groupby_step(groupbyobject *gbo)
         return -1;
 
     if (gbo->keyfunc == Py_None) {
-        newkey = Py_NewRef(newvalue);
+        newkey = _Py_NewRef(newvalue); // groupby 는 not cyclic??
     } else {
         newkey = PyObject_CallOneArg(gbo->keyfunc, newvalue);
         if (newkey == NULL) {
@@ -526,7 +526,7 @@ groupby_step(groupbyobject *gbo)
     oldvalue = gbo->currvalue;
     gbo->currvalue = newvalue;
     Py_XSETREF(gbo->currkey, newkey);
-    Py_XDECHEAPREF(oldvalue);
+    Py_XDECREF(oldvalue);  // groupby 는 not cyclic??
     return 0;
 }
 
@@ -2139,7 +2139,7 @@ product_next(PyObject *op)
             if (result == NULL)
                 goto empty;
             lz->result = result;
-            Py_DECHEAPREF(old_result);
+            Py_DECREF_HEAP(old_result); // -- pass iterations
         }
         // bpo-42536: The GC may have untracked this result tuple. Since we're
         // recycling it, make sure it's tracked again:
@@ -2161,14 +2161,14 @@ product_next(PyObject *op)
                 Py_INCREF(elem);
                 oldelem = PyTuple_GET_ITEM(result, i);
                 PyTuple_SET_ITEM(result, i, elem);
-                Py_DECHEAPREF(oldelem);
+                Py_DECREF_HEAP(oldelem); // -- pass iterations
             } else {
                 /* No rollover. Just increment and stop here. */
                 elem = PyTuple_GET_ITEM(pool, indices[i]);
                 Py_INCREF(elem);
                 oldelem = PyTuple_GET_ITEM(result, i);
                 PyTuple_SET_ITEM(result, i, elem);
-                Py_DECHEAPREF(oldelem);
+                Py_DECREF_HEAP(oldelem); // -- pass iterations
                 break;
             }
         }
@@ -2368,7 +2368,7 @@ combinations_next(PyObject *op)
             if (result == NULL)
                 goto empty;
             co->result = result;
-            Py_DECHEAPREF(old_result);
+            Py_DECREF_HEAP(old_result); // -- pass iterations
         }
         // bpo-42536: The GC may have untracked this result tuple. Since we're
         // recycling it, make sure it's tracked again:
@@ -2407,7 +2407,7 @@ combinations_next(PyObject *op)
             Py_INCREF(elem);
             oldelem = PyTuple_GET_ITEM(result, i);
             PyTuple_SET_ITEM(result, i, elem);
-            Py_DECHEAPREF(oldelem);
+            Py_DECREF_HEAP(oldelem); // -- pass iterations
         }
     }
 
@@ -2614,7 +2614,7 @@ cwr_next(PyObject *op)
             if (result == NULL)
                 goto empty;
             co->result = result;
-            Py_DECHEAPREF(old_result);
+            Py_DECREF_HEAP(old_result); // -- pass iterations
         }
         // bpo-42536: The GC may have untracked this result tuple. Since we're
         // recycling it, make sure it's tracked again:
@@ -2645,7 +2645,7 @@ cwr_next(PyObject *op)
             Py_INCREF(elem);
             oldelem = PyTuple_GET_ITEM(result, i);
             PyTuple_SET_ITEM(result, i, elem);
-            Py_DECHEAPREF(oldelem);
+            Py_DECREF_HEAP(oldelem); // -- pass iterations
         }
     }
 
@@ -2875,7 +2875,7 @@ permutations_next(PyObject *op)
             if (result == NULL)
                 goto empty;
             po->result = result;
-            Py_DECHEAPREF(old_result);
+            Py_DECREF_HEAP(old_result); // -- pass iterations
         }
         // bpo-42536: The GC may have untracked this result tuple. Since we're
         // recycling it, make sure it's tracked again:
@@ -2909,7 +2909,7 @@ permutations_next(PyObject *op)
                     Py_INCREF(elem);
                     oldelem = PyTuple_GET_ITEM(result, k);
                     PyTuple_SET_ITEM(result, k, elem);
-                    Py_DECHEAPREF(oldelem);
+                    Py_DECREF_HEAP(oldelem); // -- pass iterations
                 }
                 break;
             }
@@ -3860,7 +3860,7 @@ zip_longest_next(PyObject *op)
             }
             olditem = PyTuple_GET_ITEM(result, i);
             PyTuple_SET_ITEM(result, i, item);
-            Py_DECHEAPREF(olditem);
+            Py_DECREF_HEAP(olditem); // -- pass iterations
         }
         // bpo-42536: The GC may have untracked this result tuple. Since we're
         // recycling it, make sure it's tracked again:

@@ -1595,7 +1595,7 @@ signal_get_set_handlers(signal_state_t *state, PyObject *mod_dict)
         // clear the strong reference to the previous function.
         PyObject* old_func = get_handler(signum);
         set_handler(signum, Py_NewRef(func));
-        Py_XDECHEAPREF(old_func);
+        Py_XDECREF_HEAP(old_func); // -- pass signal
     }
 
     // Install Python SIGINT handler which raises KeyboardInterrupt

@@ -1116,7 +1116,7 @@ dummy_func(
             PyStackRef_CLOSE_SPECIALIZED(sub_st, _PyLong_ExactDealloc);
             DEAD(sub_st);
             PyStackRef_CLOSE(list_st);
-            Py_DECHEAPREF(old_value);
+            Py_DECREF_HEAP(old_value); // heap-ref
         }
 
         macro(STORE_SUBSCR_DICT) =
@@ -1882,7 +1882,7 @@ dummy_func(
                 _PyEval_FormatExcUnbound(tstate, _PyFrame_GetCode(frame), oparg);
                 ERROR_NO_POP();
             }
-            Py_DECHEAPREF(oldobj);
+            Py_DECREF(oldobj); // stack!
         }
 
         inst(LOAD_FROM_DICT_OR_DEREF, (class_dict_st -- value)) {
@@ -2565,6 +2565,10 @@ dummy_func(
             PyObject **value_ptr = (PyObject**)(((char *)owner_o) + offset);
             PyObject *old_value = *value_ptr;
             FT_ATOMIC_STORE_PTR_RELEASE(*value_ptr, PyStackRef_AsPyObjectSteal(value));
+            #ifdef ENABNLE_RTGC
+                assert("Is it working??" == NULL);
+                RTGC_decSatableRef(value);
+            #endif
             if (old_value == NULL) {
                 PyDictValues *values = _PyObject_InlineValues(owner_o);
                 Py_ssize_t index = value_ptr - values->values;
@@ -2572,7 +2576,7 @@ dummy_func(
             }
             UNLOCK_OBJECT(owner_o);
             PyStackRef_CLOSE(owner);
-            Py_XDECHEAPREF(old_value);
+            Py_XDECREF_HEAP(old_value); // heap-ref
         }
 
         macro(STORE_ATTR_INSTANCE_VALUE) =
@@ -2618,7 +2622,7 @@ dummy_func(
             // when dict only holds the strong reference to value in ep->me_value.
             STAT_INC(STORE_ATTR, hit);
             PyStackRef_CLOSE(owner);
-            Py_XDECHEAPREF(old_value);
+            Py_XDECREF_HEAP(old_value); // heap-ref
         }
 
         macro(STORE_ATTR_WITH_HINT) =
@@ -2636,7 +2640,7 @@ dummy_func(
             FT_ATOMIC_STORE_PTR_RELEASE(*(PyObject **)addr, PyStackRef_AsPyObjectSteal(value));
             UNLOCK_OBJECT(owner_o);
             PyStackRef_CLOSE(owner);
-            Py_XDECHEAPREF(old_value);
+            Py_XDECREF_HEAP(old_value); // heap-ref
         }
 
         macro(STORE_ATTR_SLOT) =
