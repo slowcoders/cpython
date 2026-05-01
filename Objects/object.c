@@ -2635,7 +2635,12 @@ new_reference(PyObject *op)
     // Skip the immortal object check in Py_SET_REFCNT; always set refcnt to 1
 #if !defined(Py_GIL_DISABLED)
 #if SIZEOF_VOID_P > 4
+#ifdef ENABLE_RTGC
+    op->ob_refcnt_full = 1 | (2L << 32);
+    assert(op->ob_overflow == 2);
+#else
     op->ob_refcnt_full = 1;
+#endif
     assert(op->ob_refcnt == 1);
     assert(op->ob_flags == 0);
 #else
@@ -2658,6 +2663,12 @@ new_reference(PyObject *op)
 #endif
 #ifdef Py_TRACE_REFS
     _Py_AddToAllObjects(op);
+#endif
+#ifdef ENABLE_RTGC
+    if (!PyType_IS_GC(op->ob_type)) {
+        op->ob_flags |= RTGC_ACYCLIC;
+    }
+    RTGC_trace(op, "new_reference");
 #endif
     _PyReftracerTrack(op, PyRefTracer_CREATE);
 }

@@ -214,7 +214,7 @@ main(int argc, char *argv[])
     _PyImport_FrozenAliases = aliases;
 
     if (argc != 4) {
-        fprintf(stderr, "need to specify the name, input and output paths\n");
+        fprintf(stderr, "need to specify the name, input and output paths !!\n");
         return 2;
     }
     name = argv[1];

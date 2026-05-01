@@ -138,7 +138,7 @@ static inline char* PyUnicode_UTF8(PyObject *op)
 
 static inline void PyUnicode_SET_UTF8(PyObject *op, char *utf8)
 {
-    FT_ATOMIC_STORE_PTR_RELEASE(_PyCompactUnicodeObject_CAST(op)->utf8, utf8);
+    FT_ATOMIC_STORE_RAW_PTR_RELEASE(_PyCompactUnicodeObject_CAST(op)->utf8, utf8);
 }
 
 static inline Py_ssize_t PyUnicode_UTF8_LENGTH(PyObject *op)

@@ -532,12 +532,23 @@ static inline PyObject *
 PyStackRef_AsPyObjectSteal(_PyStackRef ref)
 {
     if (PyStackRef_RefcountOnObject(ref)) {
+        // printf("PyStackRef_RefcountOnObject\n");
         return BITS_TO_PTR(ref);
     }
     else {
+        // printf("!!!PyStackRef_RefcountOnObject\n");
         return Py_NewRef(BITS_TO_PTR_MASKED(ref));
     }
 }
+
+static inline PyObject *
+PyStackRef_AsPyObjectSteal_HEAP(_PyStackRef ref)
+{
+    PyObject* po = PyStackRef_AsPyObjectSteal(ref);
+    RTGC_decStableRef(po);
+    return po;
+}
+
 
 static inline _PyStackRef
 PyStackRef_FromPyObjectSteal(PyObject *obj)

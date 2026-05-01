@@ -77,6 +77,9 @@
 #ifndef Py_GIL_DISABLED
 
 #undef Py_DECREF
+#ifndef ENABLE_RTGC
+    #define     RTGC_decStableRef(op)   
+#endif
 #define Py_DECREF(arg) \
     do { \
         PyObject *op = _PyObject_CAST(arg); \
@@ -89,6 +92,8 @@
             _PyReftracerTrack(op, PyRefTracer_DESTROY); \
             destructor dealloc = Py_TYPE(op)->tp_dealloc; \
             (*dealloc)(op); \
+        } else { \
+            RTGC_decStableRef(op); \
         } \
     } while (0)
 
@@ -105,6 +110,8 @@
             _PyReftracerTrack(op, PyRefTracer_DESTROY); \
             destructor d = (destructor)(dealloc); \
             d(op); \
+        } else { \
+            RTGC_decStableRef(op); \
         } \
     } while (0)
 

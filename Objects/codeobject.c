@@ -1691,7 +1691,7 @@ PyUnstable_Code_SetExtra(PyObject *code, Py_ssize_t index, void *extra)
     // Fast path: slot already exists, update in place.
     if (index < old_ce_size) {
         old_slot_value = old_co_extra->ce_extras[index];
-        FT_ATOMIC_STORE_PTR_RELEASE(old_co_extra->ce_extras[index], extra);
+        FT_ATOMIC_STORE_RAW_PTR_RELAXED(old_co_extra->ce_extras[index], extra);
         goto done;
     }
 

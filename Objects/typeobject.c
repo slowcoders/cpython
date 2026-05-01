@@ -6306,7 +6306,7 @@ done:
     Py_XDECREF(descr);
     Py_XDECREF_HEAP(old_value); // heap-ref
 #ifdef ENABLE_RTGC
-    RTGC_decStableRef(value);
+    //  RTGC_decStableRef(value); -- attr 은 heap-ref 가 아니다???
 #endif    
     return res;
 }

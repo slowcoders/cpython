@@ -53,7 +53,7 @@ def write_frozen(outpath: str, inpath: str, name: str, marshalled: bytes) -> Non
 
 def main():
     if len(sys.argv) != 4:
-        sys.exit("need to specify the name, input and output paths\n")
+        sys.exit("need to specify the name, input and output paths ### " + sys.argv + "\n")
 
     name = sys.argv[1]
     inpath = sys.argv[2]

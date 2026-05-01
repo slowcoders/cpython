@@ -244,6 +244,9 @@ _Py_DECREF_SPECIALIZED(PyObject *op, const destructor destruct)
         assert(op->ob_refcnt > 0);
     }
     else {
+#ifdef ENABLE_RTGC 
+        RTGC_decUnStableRef(op);
+#endif
 #ifdef Py_TRACE_REFS
         _Py_ForgetReference(op);
 #endif
@@ -269,6 +272,10 @@ _Py_DECREF_NO_DEALLOC(PyObject *op)
         _Py_FatalRefcountError("Expected a positive remaining refcount");
     }
 #endif
+#ifdef ENABLE_RTGC
+    RTGC_decUnStableRef(op);
+#endif
+
 }
 
 #else
@@ -449,6 +456,11 @@ static inline void Py_DECREF_MORTAL(const char *filename, int lineno, PyObject *
     if (--op->ob_refcnt == 0) {
         _Py_Dealloc(op);
     }
+#ifdef ENABLE_RTGC 
+    else {
+        RTGC_decUnStableRef(op);
+    }
+#endif
 }
 #define Py_DECREF_MORTAL(op) Py_DECREF_MORTAL(__FILE__, __LINE__, _PyObject_CAST(op))
 #define Py_DECREF_HEAP_MORTAL(op) Py_DECREF_MORTAL(op)
@@ -470,6 +482,11 @@ static inline void _Py_DECREF_MORTAL_SPECIALIZED(const char *filename, int linen
         _PyReftracerTrack(op, PyRefTracer_DESTROY);
         destruct(op);
     }
+#ifdef ENABLE_RTGC 
+    else {
+        RTGC_decUnStableRef(op);
+    }
+#endif
 }
 #define Py_DECREF_MORTAL_SPECIALIZED(op, destruct) _Py_DECREF_MORTAL_SPECIALIZED(__FILE__, __LINE__, op, destruct)
 #define Py_DECREF_HEAP_MORTAL_SPECIALIZED(op, destruct) _Py_DECREF_MORTAL_SPECIALIZED(op, destruct)
@@ -483,6 +500,11 @@ static inline void Py_DECREF_MORTAL(PyObject *op)
     if (--op->ob_refcnt == 0) {
         _Py_Dealloc(op);
     }
+#ifdef ENABLE_RTGC 
+    else {
+        RTGC_decUnStableRef(op);
+    }
+#endif
 }
 #define Py_DECREF_MORTAL(op) Py_DECREF_MORTAL(_PyObject_CAST(op))
 #define Py_DECREF_HEAP_MORTAL(op) Py_DECREF_MORTAL(op)
@@ -495,6 +517,11 @@ static inline void Py_DECREF_MORTAL_SPECIALIZED(PyObject *op, destructor destruc
         _PyReftracerTrack(op, PyRefTracer_DESTROY);
         destruct(op);
     }
+#ifdef ENABLE_RTGC 
+    else {
+        RTGC_decUnStableRef(op);
+    }
+#endif
 }
 #define Py_DECREF_MORTAL_SPECIALIZED(op, destruct) Py_DECREF_MORTAL_SPECIALIZED(_PyObject_CAST(op), destruct)
 #define Py_DECREF_HEAP_MORTAL_SPECIALIZED(op, destruct) Py_DECREF_MORTAL_SPECIALIZED(op, destruct)
@@ -1021,6 +1048,12 @@ static inline Py_ALWAYS_INLINE void _Py_INCREF_MORTAL(PyObject *op)
 {
     assert(!_Py_IsStaticImmortal(op));
     op->ob_refcnt++;
+#ifdef ENABLE_RTGC
+    if (op->ob_overflow < MAX_RTGC_STABLE_REF_COUNT) {
+        op->ob_overflow += 2;
+    }
+    RTGC_trace(op, "_Py_INCREF_MORTAL");
+#endif
     _Py_INCREF_STAT_INC();
 #if defined(Py_REF_DEBUG) && !defined(Py_LIMITED_API)
     if (!_Py_IsImmortal(op)) {

@@ -16,6 +16,8 @@ cd _debug
 ../configure --with-pydebug 
 make
 make test
+## test 실행.
+./python.exe -m test _test_multiprocessing.py
 ```
 
 #### for Release (--with-lto: link time optimization)

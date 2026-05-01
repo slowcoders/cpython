@@ -422,7 +422,8 @@ _PyTuple_FromStackRefStealOnSuccess(const _PyStackRef *src, Py_ssize_t n)
     PyObject **dst = tuple->ob_item;
     bool track = false;
     for (Py_ssize_t i = 0; i < n; i++) {
-        PyObject *item = PyStackRef_AsPyObjectSteal(src[i]);
+        // _rtgc. bypass heap-rc changing.
+        PyObject *item = PyStackRef_AsPyObjectSteal(src[i]); 
         if (!track && maybe_tracked(item)) {
             track = true;
         }

@@ -21,7 +21,7 @@ PyCell_SwapTakeRef(PyCellObject *cell, PyObject *value)
     PyObject *old_value;
     Py_BEGIN_CRITICAL_SECTION(cell);
     old_value = cell->ob_ref;
-    FT_ATOMIC_STORE_PTR_RELEASE(cell->ob_ref, value);
+    FT_ATOMIC_STORE_RAW_PTR_RELEASE(cell->ob_ref, value); // not heap!
     Py_END_CRITICAL_SECTION();
     return old_value;
 }

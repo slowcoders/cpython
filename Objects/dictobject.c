@@ -1925,9 +1925,6 @@ insertdict(PyInterpreterState *interp, PyDictObject *mp,
         }
         STORE_USED(mp, mp->ma_used + 1);
         ASSERT_CONSISTENT(mp);
-#ifdef ENABLE_RTGC
-        RTGC_decStableRef(value);
-#endif
         return 0;
     }
 
@@ -1952,7 +1949,7 @@ insertdict(PyInterpreterState *interp, PyDictObject *mp,
     ASSERT_CONSISTENT(mp);
     Py_DECREF(key);
 #ifdef ENABLE_RTGC
-    RTGC_decStableRef(value);
+    // 위 STORE_VALUE 내에서 RTGC_decStableRef(value) 처리됨;
 #endif
     return 0;
 
@@ -2005,7 +2002,7 @@ insert_to_emptydict(PyInterpreterState *interp, PyDictObject *mp,
     // the case where we're inserting from the non-owner thread.  We don't use
     // set_keys here because the transition from empty to non-empty is safe
     // as the empty keys will never be freed.
-    FT_ATOMIC_STORE_PTR_RELEASE(mp->ma_keys, newkeys);
+    FT_ATOMIC_STORE_RAW_PTR_RELEASE(mp->ma_keys, newkeys);
     return 0;
 }
 
@@ -6889,7 +6886,7 @@ _PyObject_MaterializeManagedDict_LockHeld(PyObject *obj)
     else {
         dict = (PyDictObject *)PyDict_New();
     }
-    FT_ATOMIC_STORE_PTR_RELEASE(_PyObject_ManagedDictPointer(obj)->dict,
+    FT_ATOMIC_STORE_EX_OBJ_RELEASE(_PyObject_ManagedDictPointer(obj)->dict,
                                 dict);
     return dict;
 }
@@ -6987,7 +6984,7 @@ store_instance_attr_lock_held(PyObject *obj, PyDictValues *values,
                 return -1;
             }
 
-            FT_ATOMIC_STORE_PTR_RELEASE(_PyObject_ManagedDictPointer(obj)->dict,
+            FT_ATOMIC_STORE_EX_OBJ_RELEASE(_PyObject_ManagedDictPointer(obj)->dict,
                                         (PyDictObject *)dict);
             return 0;
         }
@@ -7037,7 +7034,7 @@ store_instance_attr_lock_held(PyObject *obj, PyDictValues *values,
         Py_DECREF_HEAP(old_value);  // heap-ref
     }
 #ifdef ENABLE_RTGC
-    RTGC_decStableRef(value);
+    // 이미 처리됨. RTGC_decStableRef(value);
 #endif
 
     return 0;
@@ -7568,7 +7565,7 @@ ensure_managed_dict(PyObject *obj)
 #endif
             dict = (PyDictObject *)new_dict_with_shared_keys(_PyInterpreterState_GET(),
                                                              CACHED_KEYS(tp));
-            FT_ATOMIC_STORE_PTR_RELEASE(_PyObject_ManagedDictPointer(obj)->dict,
+            FT_ATOMIC_STORE_EX_OBJ_RELEASE(_PyObject_ManagedDictPointer(obj)->dict,
                                         (PyDictObject *)dict);
 
 #ifdef Py_GIL_DISABLED

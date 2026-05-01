@@ -245,3 +245,39 @@ _Py_NegativeRefcount(const char *filename, int lineno, PyObject *op)
 }
 Py_ssize_t _Py_RefTotal;
 #endif
+
+PyAPI_FUNC(void) RTGC_registerUnsafe(PyObject* ptr) {
+}
+
+volatile int g_cntTrace = 0;
+volatile int g_dbgTrace = INT_MAX;
+volatile PyObject* g_dbgObj = NULL;
+
+int cnt_dump = 0;
+PyAPI_FUNC(void) RTGC_dump(PyObject* op, const char* tag) {
+    if (++cnt_dump > 1000) {
+        exit(-1);
+    }
+    printf("[%d] %s %s %p, %d/%d (%d)\n", g_cntTrace, tag, op->ob_type->tp_name, op, op->ob_overflow/2, op->ob_refcnt, PyType_IS_GC(Py_TYPE(op)));
+}
+
+PyAPI_FUNC(void) RTGC_trace(PyObject* op, const char* tag) {
+    // if (!strcmp(op->ob_type->tp_name, "str")) {
+    //     RTGC_dump(op, tag);
+    // }
+    g_cntTrace++;
+    if (g_cntTrace > g_dbgTrace) {
+        // if (op != g_dbgObj && ((int64_t)op & 0xFFF) != 0x1c0) {
+        //     return;
+        // }
+        if (0 != strcmp(op->ob_type->tp_name, "str")) {
+            return;
+        }
+    
+        RTGC_dump(op, tag);
+        if (!strcmp(tag, "RTGC_decStableRef")) {
+            tag = "RTGC_decStableRef*";
+            printf("\n");
+        }
+    }
+}

@@ -2564,7 +2564,7 @@ dummy_func(
             assert(_PyObject_GetManagedDict(owner_o) == NULL);
             PyObject **value_ptr = (PyObject**)(((char *)owner_o) + offset);
             PyObject *old_value = *value_ptr;
-            FT_ATOMIC_STORE_PTR_RELEASE(*value_ptr, PyStackRef_AsPyObjectSteal(value));
+            FT_ATOMIC_STORE_PTR_RELEASE(*value_ptr, PyStackRef_AsPyObjectSteal(value)); 
             #ifdef ENABNLE_RTGC
                 assert("Is it working??" == NULL);
                 RTGC_decSatableRef(value);
@@ -4965,7 +4965,7 @@ dummy_func(
 
         inst(SET_FUNCTION_ATTRIBUTE, (attr_st, func_in -- func_out)) {
             PyObject *func = PyStackRef_AsPyObjectBorrow(func_in);
-            PyObject *attr = PyStackRef_AsPyObjectSteal(attr_st);
+            PyObject *attr = PyStackRef_AsPyObjectSteal(attr_st); // maybe require PyStackRef_AsPyObjectSteal_HEAP
             func_out = func_in;
             DEAD(func_in);
             assert(PyFunction_Check(func));

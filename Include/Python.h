@@ -15,6 +15,7 @@
 #include "pymacconfig.h"
 
 #define ENABLE_RTGC
+#define RTGC_ACYCLIC    0x10
 
 // Include standard header files
 // When changing these files, remember to update Doc/extending/extending.rst.

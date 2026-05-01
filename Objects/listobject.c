@@ -216,7 +216,7 @@ list_preallocate_exact(PyListObject *self, Py_ssize_t size)
         return -1;
     }
 #endif
-    FT_ATOMIC_STORE_PTR_RELEASE(self->ob_item, items);
+    FT_ATOMIC_STORE_RAW_PTR_RELEASE(self->ob_item, items);
     self->allocated = size;
     return 0;
 }
@@ -495,7 +495,7 @@ ins1(PyListObject *self, Py_ssize_t where, PyObject *v)
         where = n;
     items = self->ob_item;
     for (i = n; --i >= where; )
-        FT_ATOMIC_STORE_PTR_RELAXED(items[i+1], items[i]);
+        FT_ATOMIC_STORE_RAW_PTR_RELAXED(items[i+1], items[i]); // bypass ref-counting.
     FT_ATOMIC_STORE_PTR_RELEASE(items[where], Py_NewRef(v));
     return 0;
 }
@@ -851,7 +851,7 @@ list_clear_impl(PyListObject *a, bool is_resize)
        this list, we make it empty first. */
     Py_ssize_t i = Py_SIZE(a);
     Py_SET_SIZE(a, 0);
-    FT_ATOMIC_STORE_PTR_RELEASE(a->ob_item, NULL);
+    FT_ATOMIC_STORE_RAW_PTR_RELEASE(a->ob_item, NULL);
     a->allocated = 0;
     while (--i >= 0) {
         Py_XDECREF(items[i]);
@@ -1273,7 +1273,7 @@ list_extend_iter_lock_held(PyListObject *self, PyObject *iterable)
 
         if (Py_SIZE(self) < self->allocated) {
             Py_ssize_t len = Py_SIZE(self);
-            FT_ATOMIC_STORE_PTR_RELEASE(self->ob_item[len], item);  // steals item ref
+            FT_ATOMIC_STORE_RAW_PTR_RELEASE(self->ob_item[len], item);  // steals item ref
             Py_SET_SIZE(self, len + 1);
         }
         else {
@@ -2925,7 +2925,7 @@ list_sort_impl(PyListObject *self, PyObject *keyfunc, int reverse)
     saved_ob_item = self->ob_item;
     saved_allocated = self->allocated;
     Py_SET_SIZE(self, 0);
-    FT_ATOMIC_STORE_PTR_RELEASE(self->ob_item, NULL);
+    FT_ATOMIC_STORE_RAW_PTR_RELEASE(self->ob_item, NULL);
     self->allocated = -1; /* any operation will reset it to >= 0 */
 
     if (keyfunc == NULL) {
@@ -3142,7 +3142,7 @@ keyfunc_fail:
     final_ob_item = self->ob_item;
     i = Py_SIZE(self);
     Py_SET_SIZE(self, saved_ob_size);
-    FT_ATOMIC_STORE_PTR_RELEASE(self->ob_item, saved_ob_item);
+    FT_ATOMIC_STORE_RAW_PTR_RELEASE(self->ob_item, saved_ob_item);
     FT_ATOMIC_STORE_SSIZE_RELAXED(self->allocated, saved_allocated);
     if (final_ob_item != NULL) {
         /* we cannot use list_clear() for this because it does not
@@ -3260,7 +3260,7 @@ _PyList_FromStackRefStealOnSuccess(const _PyStackRef *src, Py_ssize_t n)
 
     PyObject **dst = list->ob_item;
     for (Py_ssize_t i = 0; i < n; i++) {
-        dst[i] = PyStackRef_AsPyObjectSteal(src[i]);
+        dst[i] = PyStackRef_AsPyObjectSteal_HEAP(src[i]);
     }
 
     return (PyObject *)list;

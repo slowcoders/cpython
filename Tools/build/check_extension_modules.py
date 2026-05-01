@@ -129,6 +129,7 @@ class ModuleState(enum.Enum):
     # disabled by Setup / makesetup rule
     DISABLED_SETUP = "disabled_setup"
 
+
     def __bool__(self) -> bool:
         return self.value in {"builtin", "shared"}
 
@@ -164,6 +165,7 @@ class ModuleChecker:
         self.disabled_configure: list[ModuleInfo] = []
         self.disabled_setup: list[ModuleInfo] = []
         self.notavailable: list[ModuleInfo] = []
+        
 
     def check(self) -> None:
         if not hasattr(_imp, 'create_dynamic'):
