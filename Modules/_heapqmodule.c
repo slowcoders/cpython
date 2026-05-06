@@ -60,8 +60,8 @@ siftdown(PyListObject *heap, Py_ssize_t startpos, Py_ssize_t pos)
         arr = _PyList_ITEMS(heap);
         parent = arr[parentpos];
         newitem = arr[pos];
-        FT_ATOMIC_STORE_PTR_RELAXED(arr[parentpos], newitem);
-        FT_ATOMIC_STORE_PTR_RELAXED(arr[pos], parent);
+        FT_ATOMIC_STORE_RAW_PTR_RELAXED(arr[parentpos], newitem);
+        FT_ATOMIC_STORE_RAW_PTR_RELAXED(arr[pos], parent);
         pos = parentpos;
     }
     return 0;
@@ -109,8 +109,8 @@ siftup(PyListObject *heap, Py_ssize_t pos)
         /* Move the smaller child up. */
         tmp1 = arr[childpos];
         tmp2 = arr[pos];
-        FT_ATOMIC_STORE_PTR_RELAXED(arr[childpos], tmp2);
-        FT_ATOMIC_STORE_PTR_RELAXED(arr[pos], tmp1);
+        FT_ATOMIC_STORE_RAW_PTR_RELAXED(arr[childpos], tmp2);
+        FT_ATOMIC_STORE_RAW_PTR_RELAXED(arr[pos], tmp1);
         pos = childpos;
     }
     /* Bubble it up to its final resting place (by sifting its parents down). */
@@ -174,7 +174,7 @@ heappop_internal(PyObject *heap, int siftup_func(PyListObject *, Py_ssize_t))
         return lastelt;
     returnitem = PyList_GET_ITEM(heap, 0);
     PyListObject *list = _PyList_CAST(heap);
-    FT_ATOMIC_STORE_PTR_RELAXED(list->ob_item[0], lastelt);
+    FT_ATOMIC_STORE_RAW_PTR_RELAXED(list->ob_item[0], lastelt); // heap sort 자리 변경??
     if (siftup_func(list, 0)) {
         Py_DECREF(returnitem);
         return NULL;
@@ -441,8 +441,8 @@ siftdown_max(PyListObject *heap, Py_ssize_t startpos, Py_ssize_t pos)
         arr = _PyList_ITEMS(heap);
         parent = arr[parentpos];
         newitem = arr[pos];
-        FT_ATOMIC_STORE_PTR_RELAXED(arr[parentpos], newitem);
-        FT_ATOMIC_STORE_PTR_RELAXED(arr[pos], parent);
+        FT_ATOMIC_STORE_RAW_PTR_RELAXED(arr[parentpos], newitem);
+        FT_ATOMIC_STORE_RAW_PTR_RELAXED(arr[pos], parent);
         pos = parentpos;
     }
     return 0;
@@ -490,8 +490,8 @@ siftup_max(PyListObject *heap, Py_ssize_t pos)
         /* Move the larger child up. */
         tmp1 = arr[childpos];
         tmp2 = arr[pos];
-        FT_ATOMIC_STORE_PTR_RELAXED(arr[childpos], tmp2);
-        FT_ATOMIC_STORE_PTR_RELAXED(arr[pos], tmp1);
+        FT_ATOMIC_STORE_RAW_PTR_RELAXED(arr[childpos], tmp2);
+        FT_ATOMIC_STORE_RAW_PTR_RELAXED(arr[pos], tmp1);
         pos = childpos;
     }
     /* Bubble it up to its final resting place (by sifting its parents down). */

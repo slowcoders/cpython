@@ -2665,6 +2665,7 @@ new_reference(PyObject *op)
     _Py_AddToAllObjects(op);
 #endif
 #ifdef ENABLE_RTGC
+    assert(op->ob_refcnt < _Py_IMMORTAL_INITIAL_REFCNT);
     if (!PyType_IS_GC(op->ob_type)) {
         op->ob_flags |= RTGC_ACYCLIC;
     }

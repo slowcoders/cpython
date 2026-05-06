@@ -210,6 +210,9 @@ static inline void _Py_SetMortal(PyObject *op, short refcnt)
         op->ob_ref_shared = _Py_REF_SHARED(refcnt, _Py_REF_MERGED);
 #else
         op->ob_refcnt = refcnt;
+#ifdef ENABLE_RTGC
+        op->ob_overflow = 2;
+#endif
 #endif
     }
 }

@@ -264,7 +264,7 @@ PyAPI_FUNC(void) RTGC_dump(PyObject *, const char* tag);
 static inline Py_ALWAYS_INLINE void RTGC_decStableRef(PyObject *op)
 {
     if (op == NULL) return;
-    if ((op->ob_flags & RTGC_ACYCLIC) == 0 && op->ob_refcnt < _Py_IMMORTAL_INITIAL_REFCNT) {
+    if ((op->ob_flags & (RTGC_ACYCLIC|_Py_IMMORTAL_FLAGS)) == 0) {//} && op->ob_refcnt < _Py_IMMORTAL_INITIAL_REFCNT) {
         if (op->ob_overflow < 2) {
             RTGC_dump(op, "Error - RTGC_decStableRef");
         } else {

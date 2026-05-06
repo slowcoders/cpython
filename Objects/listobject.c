@@ -1091,7 +1091,7 @@ list_ass_item_lock_held(PyListObject *a, Py_ssize_t i, PyObject *v)
     if (v == NULL) {
         Py_ssize_t size = Py_SIZE(a);
         for (Py_ssize_t idx = i; idx < size - 1; idx++) {
-            FT_ATOMIC_STORE_PTR_RELAXED(a->ob_item[idx], a->ob_item[idx + 1]);
+            FT_ATOMIC_STORE_RAW_PTR_RELAXED(a->ob_item[idx], a->ob_item[idx + 1]);
         }
         Py_SET_SIZE(a, size - 1);
     }

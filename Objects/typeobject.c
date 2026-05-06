@@ -3781,7 +3781,7 @@ _PyObject_SetDict(PyObject *obj, PyObject *value)
     }
     Py_BEGIN_CRITICAL_SECTION(obj);
     PyObject *olddict = *dictptr;
-    FT_ATOMIC_STORE_PTR_RELEASE(*dictptr, Py_NewRef_HEAP(value));
+    FT_ATOMIC_STORE_PTR_RELEASE(*dictptr, Py_NewRef(value));
 #ifdef Py_GIL_DISABLED
     _PyObject_XDecRefDelayed(olddict);  // heap-ref
 #else
