@@ -2027,6 +2027,7 @@ show_stats_each_generations(GCState *gcstate)
         buf, gc_list_size(&gcstate->permanent_generation.head));
 }
 
+static int g_cntRTGC = 0;
 Py_ssize_t
 _PyGC_Collect(PyThreadState *tstate, int generation, _PyGC_Reason reason)
 {
@@ -2039,6 +2040,10 @@ _PyGC_Collect(PyThreadState *tstate, int generation, _PyGC_Reason reason)
         return 0;
     }
 
+    if (++g_cntRTGC > 1000) {
+        printf("_PyGC_Collect %d\n", ++g_cntRTGC);
+        exit(-1);
+    }
     struct gc_collection_stats stats = { 0 };
     if (reason != _Py_GC_REASON_SHUTDOWN) {
         invoke_gc_callback(gcstate, "start", generation, &stats);

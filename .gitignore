@@ -37,7 +37,7 @@ __pycache__
 tags
 TAGS
 .vs/
-.vscode/
+# .vscode/
 .cache/
 gmon.out
 .coverage

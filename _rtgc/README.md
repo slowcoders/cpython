@@ -53,9 +53,16 @@ Reference ???
 
 ### gcmodule.c
 PyGC_Head { _gc_next, __gc_prev };
-gc_collect_main()
-    deduce_unreachable()
-        move_unreachable()
+PyType_GenericAlloc
+    _PyObject_GC_TRACK (<-> _PyObject_GC_UNTRACK)
+        _Py_TriggerGC
+            _Py_ScheduleGC
+                _Py_set_eval_breaker_bit(tstate, _PY_GC_SCHEDULED_BIT);
+
+    _Py_HandlePending
+        _Py_RunGC
+            _PyGC_Collect
+
 
 ### pylifecycle.c
 _PyRuntimeState _PyRuntime;

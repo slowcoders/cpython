@@ -1,0 +1,48 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch",
+            "type": "lldb",
+            "request": "launch",
+            
+            // <heavy gc tests>
+            // "program": "_debug/python.exe", "args": ["-m", "test.test_gc", "IncrementalGCTests.test_incremental_gc_handles_fast_cycle_creation"],
+            // "program": "_debug/python.exe", "args": ["-m", "test.test_multiprocessing_spawn.test_processes", "WithProcessesTestHeap.test_free_from_gc"],
+            // "program": "_debug/python.exe", "args": ["-m", "test.test_multiprocessing_forkserver.test_processes", "WithProcessesTestHeap.test_free_from_gc"],
+
+            
+            // <do test>
+            // "program": "_debug/python.exe", "args": ["-u", "-W", "error", "-bb", "-E", "-m", "test", "--fast-ci", "-u-gui", "--timeout=", "--dont-add-python-opts"],
+            // "program": "_debug/python.exe", "args": ["-E", "-S", "-m", "sysconfig", "--generate-posix-vars"],
+            // "program": "_debug/python.exe", "args": ["-E", "../Tools/build/check_extension_modules.py"],
+            // "program": "_debug/python.exe", "args": ["-m", "test", "test_email.py"],
+            // "program": "_debug/python.exe", "args": ["-m", "test", "test_heapq.py"],
+            // "program": "_debug/python.exe", "args": ["-m", "test.test_sort", "TestBase.testStressfully"],
+            // "program": "_debug/python.exe", "args": ["-m", "test.test_xml_etree", "BugsTest.test_bug_xmltoolkit63"],
+            // "program": "_debug/python.exe", "args": ["-m", "test.test_pickle", "CDumpPickle_LoadPickle.test_bytes"],
+
+            // "program": "_debug/python.exe", "args": ["-m", "test.test_heapq", "TestHeapC.test_merge"],
+            // "program": "_debug/python.exe", "args": ["-m", "test.test_queue", "CPriorityQueueTest.test_shutdown_all_methods_in_many_threads"],
+            // "program": "_debug/python.exe", "args": ["-m", "test", "test_multiprocessing_forkserver.test_misc"],
+            // "program": "_debug/python.exe", "args": ["-m", "test", "test_importlib"],
+            // "program": "_debug/python.exe", "args": ["-m", "test.test_capi.test_object", "CAPITest.test_negative_refcount"],
+
+            // "program": "_debug/python.exe", "args": ["-m", "test", "test_functools.py"],
+            // "program": "_debug/python.exe", "args": ["-m", "test", "test_asyncio.test_tasks.py"],
+
+            // <build process>
+            // "program": "_debug/Programs/_freeze_module", "args": ["getpath", "../Modules/getpath.py", "Python/frozen_modules/getpath.h"],
+            // "program": "_debug/_bootstrap_python", "args": ["../Programs/_freeze_module.py", "abc", "../Lib/abc.py Python/frozen_modules/abc.h"],
+
+            
+            "breakpointMode": "file",  // 참고) file 모드에서는 assembly breakpoint 가 동작하지 않는다.
+            "stopOnEntry": false,
+
+            "cwd": "${workspaceRoot}/_debug",
+        }
+    ]
+}
