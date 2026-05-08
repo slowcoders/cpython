@@ -78,3 +78,39 @@ stack 변수 처리용? 주로 c lib 함수에 사용됨.
 ### _Py_DECREF_INT, _Py_DECREF_SPECIALIZED, _Py_DECREF_NO_DEALLOC
 주로 ceval.c 에서 사용. primitive 또는 stack 변수 처리 시 사용.
 
+### (No-RTGC)
+10 slowest tests:
+- test_subprocess: 1 min 16 sec
+- test_signal: 41.7 sec
+- test_io: 32.9 sec
+- test.test_multiprocessing_spawn.test_processes: 32.8 sec
+- test.test_multiprocessing_forkserver.test_processes: 31.0 sec
+- test.test_concurrent_futures.test_process_pool: 29.4 sec
+- test_socket: 28.4 sec
+- test.test_multiprocessing_forkserver.test_misc: 28.0 sec
+- test_urllib2net: 27.7 sec
+- test_xmlrpc: 27.3 sec
+
+32 tests skipped:
+    test.test_asyncio.test_windows_events
+    test.test_asyncio.test_windows_utils test.test_gdb.test_backtrace
+    test.test_gdb.test_cfunction test.test_gdb.test_cfunction_full
+    test.test_gdb.test_misc test.test_gdb.test_pretty_print
+    test.test_multiprocessing_fork.test_manager
+    test.test_multiprocessing_fork.test_misc
+    test.test_multiprocessing_fork.test_processes
+    test.test_multiprocessing_fork.test_threads test_android
+    test_dbm_gnu test_devpoll test_epoll test_free_threading test_idle
+    test_launcher test_msvcrt test_perf_profiler test_perfmaps
+    test_startfile test_tcl test_tkinter test_ttk test_ttk_textonly
+    test_turtle test_winapi test_winconsoleio test_winreg
+    test_winsound test_wmi
+
+3 tests skipped (resource denied):
+    test_peg_generator test_xpickle test_zipfile64
+
+457 tests OK.
+
+Total duration: 2 min 19 sec
+Total tests: run=47,011 skipped=2,118
+Total test files: run=489/492 skipped=32 resource_denied=3

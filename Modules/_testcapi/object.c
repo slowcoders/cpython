@@ -263,6 +263,7 @@ test_incref_decref_API(PyObject *ob, PyObject *Py_UNUSED(ignored))
 static PyObject *
 negative_refcount(PyObject *self, PyObject *Py_UNUSED(args))
 {
+    printf("### negative_refcount ###\n");
     PyObject *obj = PyUnicode_FromString("negative_refcount");
     if (obj == NULL) {
         return NULL;

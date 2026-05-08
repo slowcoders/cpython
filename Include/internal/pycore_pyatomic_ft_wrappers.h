@@ -161,19 +161,20 @@ extern "C" {
         RTGC_decStableRef(&(value = new_value)->ob_base)
     #define FT_ATOMIC_STORE_PTR_RELAXED(value, new_value) \
         (value = new_value); RTGC_decStableRef2(&(value))
-    #define FT_ATOMIC_STORE_RAW_PTR_RELAXED(value, new_value) value = new_value
 #else 
     #define FT_ATOMIC_STORE_PTR_RELAXED(value, new_value) value = new_value
 #endif
+    #define FT_ATOMIC_STORE_RAW_PTR_RELAXED(value, new_value) value = new_value
 #ifdef ENABLE_RTGC
     #define FT_ATOMIC_STORE_EX_OBJ_RELEASE(value, new_value) \
         RTGC_decStableRef(&(value = new_value)->ob_base)
     #define FT_ATOMIC_STORE_PTR_RELEASE(value, new_value) \
         (value = new_value); RTGC_decStableRef2(&(value))
-    #define FT_ATOMIC_STORE_RAW_PTR_RELEASE(value, new_value) value = new_value
 #else 
+    #define FT_ATOMIC_STORE_EX_OBJ_RELEASE(value, new_value) value = new_value
     #define FT_ATOMIC_STORE_PTR_RELEASE(value, new_value) value = new_value
 #endif
+    #define FT_ATOMIC_STORE_RAW_PTR_RELEASE(value, new_value) value = new_value
 #define FT_ATOMIC_STORE_UINTPTR_RELEASE(value, new_value) value = new_value
 #define FT_ATOMIC_STORE_SSIZE_RELAXED(value, new_value) value = new_value
 #define FT_ATOMIC_STORE_SSIZE_RELEASE(value, new_value) value = new_value

@@ -545,7 +545,9 @@ static inline PyObject *
 PyStackRef_AsPyObjectSteal_HEAP(_PyStackRef ref)
 {
     PyObject* po = PyStackRef_AsPyObjectSteal(ref);
+#ifdef ENABLE_RTGC    
     RTGC_decStableRef(po);
+#endif
     return po;
 }
 

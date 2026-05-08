@@ -266,7 +266,7 @@ static inline Py_ALWAYS_INLINE void RTGC_decStableRef(PyObject *op)
     if (op == NULL) return;
     if ((op->ob_flags & (RTGC_ACYCLIC|_Py_IMMORTAL_FLAGS)) == 0) {//} && op->ob_refcnt < _Py_IMMORTAL_INITIAL_REFCNT) {
         if (op->ob_overflow < 2) {
-            RTGC_dump(op, "Error - RTGC_decStableRef");
+            // RTGC_dump(op, "Error - RTGC_decStableRef");
         } else {
             op->ob_overflow -= 2;
             RTGC_trace(op, "RTGC_decStableRef");
@@ -496,9 +496,13 @@ static inline void Py_DECREF(PyObject *op)
 static inline void Py_DECREF(const char *filename, int lineno, PyObject *op)
 {
 #if SIZEOF_VOID_P > 4
-    /* If an object has been freed, it will have a negative full refcnt
-     * If it has not it been freed, will have a very large refcnt */
-    if (op->ob_refcnt_full <= 0 || op->ob_refcnt > (((PY_UINT32_T)-1) - (1<<20))) {
+    #ifdef ENABLE_RTGC
+        if (op->ob_refcnt_full <= 0 || op->ob_refcnt <= 0) {
+    #else
+        /* If an object has been freed, it will have a negative full refcnt
+        * If it has not it been freed, will have a very large refcnt */
+        if (op->ob_refcnt_full <= 0 || op->ob_refcnt > (((PY_UINT32_T)-1) - (1<<20))) {
+    #endif
 #else
     if (op->ob_refcnt <= 0) {
 #endif
