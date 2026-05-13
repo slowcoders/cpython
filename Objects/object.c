@@ -2637,7 +2637,7 @@ new_reference(PyObject *op)
 #if SIZEOF_VOID_P > 4
 #ifdef ENABLE_RTGC
     op->ob_refcnt_full = 1 | (2L << 32);
-    assert(op->ob_overflow == 2);
+    assert(op->ob_overflow == MIN_RTGC_STABLE_REF_COUNT);
 #else
     op->ob_refcnt_full = 1;
 #endif

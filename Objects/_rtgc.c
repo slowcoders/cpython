@@ -1,5 +1,6 @@
 #include "_rtgc.h"
 #include "_rtgc_util.h"
+#include "pycore_gc.h"
 #include <execinfo.h>
 #include <stdlib.h>
 
@@ -246,8 +247,30 @@ _Py_NegativeRefcount(const char *filename, int lineno, PyObject *op)
 Py_ssize_t _Py_RefTotal;
 #endif
 
-PyAPI_FUNC(void) RTGC_registerUnsafe(PyObject* ptr) {
+PyAPI_FUNC(void) RTGC_registerUnsafe(PyObject* op) {
+#ifdef ENABLE_RTGC_GC    
+    PyGC_Head *gc = _Py_AS_GC(op);
+    struct _gc_runtime_state *gcstate = &_PyInterpreterState_GET()->gc;
+    PyGC_Head *generation0 = &gcstate->unsafe.head;
+    PyGC_Head *last = (PyGC_Head*)(generation0->_gc_prev);
+    _PyGCHead_SET_NEXT(last, gc);
+    _PyGCHead_SET_PREV(gc, last);
+    // uintptr_t not_visited = 1 ^ gcstate->visited_space;
+    gc->_gc_next = ((uintptr_t)generation0); // | not_visited;
+    generation0->_gc_prev = (uintptr_t)gc;
+    gcstate->unsafe.count++; /* number of tracked GC objects */
+
+    op->ob_overflow |= RTGC_UNSAFE_FLAG;
+#endif
 }
+
+
+void gc_collect_rtgc(PyThreadState *tstate,
+                 struct gc_collection_stats *stats) 
+{
+
+}
+
 
 volatile uint g_cntTrace = 0;
 volatile uint g_dbgTrace = INT_MAX;
@@ -256,7 +279,7 @@ volatile PyObject* g_dbgObj = NULL;
 
 int cnt_dump = 0;
 PyAPI_FUNC(void) RTGC_dump(PyObject* op, const char* tag) {
-    printf("[%d:%d] %s %s %p, %d/%d (%d)\n", cnt_dump, g_cntTrace, tag, op->ob_type->tp_name, op, op->ob_overflow/2, op->ob_refcnt, PyType_IS_GC(Py_TYPE(op)));
+    printf("[%d:%d] %s %s %p, %d/%d (%d)\n", cnt_dump, g_cntTrace, tag, op->ob_type->tp_name, op, op->ob_overflow/MIN_RTGC_STABLE_REF_COUNT, op->ob_refcnt, PyType_IS_GC(Py_TYPE(op)));
     if (++cnt_dump > 1000) {
         exit(-1);
     }

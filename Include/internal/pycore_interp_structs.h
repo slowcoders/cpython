@@ -217,6 +217,9 @@ struct _gc_runtime_state {
     /* linked lists of container objects */
     struct gc_generation young;
     struct gc_generation old[2];
+#ifdef ENABLE_RTGC
+    struct gc_generation unsafe;
+#endif    
     /* a permanent generation which won't be collected */
     struct gc_generation permanent_generation;
     struct gc_generation_stats generation_stats[NUM_GENERATIONS];

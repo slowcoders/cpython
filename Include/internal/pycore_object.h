@@ -211,7 +211,7 @@ static inline void _Py_SetMortal(PyObject *op, short refcnt)
 #else
         op->ob_refcnt = refcnt;
 #ifdef ENABLE_RTGC
-        op->ob_overflow = 2;
+        op->ob_overflow = MIN_RTGC_STABLE_REF_COUNT;
 #endif
 #endif
     }
@@ -1053,7 +1053,7 @@ static inline Py_ALWAYS_INLINE void _Py_INCREF_MORTAL(PyObject *op)
     op->ob_refcnt++;
 #ifdef ENABLE_RTGC
     if (op->ob_overflow < MAX_RTGC_STABLE_REF_COUNT) {
-        op->ob_overflow += 2;
+        op->ob_overflow += MIN_RTGC_STABLE_REF_COUNT;
     }
     RTGC_trace(op, "_Py_INCREF_MORTAL");
 #endif
@@ -1064,6 +1064,11 @@ static inline Py_ALWAYS_INLINE void _Py_INCREF_MORTAL(PyObject *op)
     }
 #endif
 }
+#endif
+
+#ifdef ENABKE_RTGC
+void gc_collect_rtgc(PyThreadState *tstate,
+                 struct gc_collection_stats *stats);
 #endif
 
 #ifdef __cplusplus

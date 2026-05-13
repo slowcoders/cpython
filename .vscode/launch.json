@@ -10,7 +10,7 @@
             "request": "launch",
             
             // <heavy gc tests>
-            // "program": "_debug/python.exe", "args": ["-m", "test.test_gc", "IncrementalGCTests.test_incremental_gc_handles_fast_cycle_creation"],
+            "program": "_debug/python.exe", "args": ["-m", "test.test_gc", "IncrementalGCTests.test_incremental_gc_handles_fast_cycle_creation"],
             // "program": "_debug/python.exe", "args": ["-m", "test.test_multiprocessing_spawn.test_processes", "WithProcessesTestHeap.test_free_from_gc"],
             // "program": "_debug/python.exe", "args": ["-m", "test.test_multiprocessing_forkserver.test_processes", "WithProcessesTestHeap.test_free_from_gc"],
 

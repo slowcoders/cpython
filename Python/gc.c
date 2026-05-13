@@ -165,8 +165,11 @@ _PyGC_InitState(GCState *gcstate)
     assert(gcstate->old[1].count == 0);
     INIT_HEAD(gcstate->young);
     INIT_HEAD(gcstate->old[0]);
-    INIT_HEAD(gcstate->old[1]);
+    INIT_HEAD(gcstate->old[1]);    
     INIT_HEAD(gcstate->permanent_generation);
+#ifdef ENABLE_RTGC
+    INIT_HEAD(gcstate->unsafe);
+#endif
 
 #undef INIT_HEAD
 }
@@ -2028,6 +2031,9 @@ show_stats_each_generations(GCState *gcstate)
 }
 
 static int g_cntRTGC = 0;
+static int g_cntRTGC_young = 0;
+static int g_cntRTGC_incremental = 0;
+static int g_cntRTGC_full = 0;
 Py_ssize_t
 _PyGC_Collect(PyThreadState *tstate, int generation, _PyGC_Reason reason)
 {
@@ -2040,9 +2046,22 @@ _PyGC_Collect(PyThreadState *tstate, int generation, _PyGC_Reason reason)
         return 0;
     }
 
-    if (++g_cntRTGC > 1000) {
-        printf("_PyGC_Collect %d\n", ++g_cntRTGC);
-        exit(-1);
+    switch(generation) {
+        case 0:
+            g_cntRTGC_young++;
+            break;
+        case 1:
+            g_cntRTGC_incremental ++;
+            break;
+        case 2:
+            g_cntRTGC_full ++;
+            break;
+        default:
+            Py_UNREACHABLE();
+    }
+    if (++g_cntRTGC % 1000 == 0) {
+        printf("_PyGC_Collect young: %d, incremental: %d, full: %d\n"
+                , g_cntRTGC_young, g_cntRTGC_incremental, g_cntRTGC_full);
     }
     struct gc_collection_stats stats = { 0 };
     if (reason != _Py_GC_REASON_SHUTDOWN) {

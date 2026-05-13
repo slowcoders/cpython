@@ -23,6 +23,10 @@ cleanup during runtime finalization.
 #define _Py_IMMORTAL_FLAGS 1
 
 #define MAX_RTGC_STABLE_REF_COUNT   ((uint16_t)-1)
+#define MIN_RTGC_STABLE_REF_COUNT    2
+#define RTGC_UNSAFE_FLAG             1
+
+
 #if SIZEOF_VOID_P > 4
 /*
 In 64+ bit systems, any object whose 32 bit reference count is >= 2**31
@@ -265,10 +269,10 @@ static inline Py_ALWAYS_INLINE void RTGC_decStableRef(PyObject *op)
 {
     if (op == NULL) return;
     if ((op->ob_flags & (RTGC_ACYCLIC|_Py_IMMORTAL_FLAGS)) == 0) {//} && op->ob_refcnt < _Py_IMMORTAL_INITIAL_REFCNT) {
-        if (op->ob_overflow < 2) {
+        if (op->ob_overflow < MIN_RTGC_STABLE_REF_COUNT) {
             // RTGC_dump(op, "Error - RTGC_decStableRef");
         } else {
-            op->ob_overflow -= 2;
+            op->ob_overflow -= MIN_RTGC_STABLE_REF_COUNT;
             RTGC_trace(op, "RTGC_decStableRef");
         }
     }
@@ -281,7 +285,7 @@ static inline Py_ALWAYS_INLINE void RTGC_decStableRef2(PyObject **op)
 
 static inline Py_ALWAYS_INLINE void RTGC_decUnStableRef(PyObject *op)
 {
-    if (op->ob_overflow >= 2 && (op->ob_overflow -= 2) == 0) {
+    if (op->ob_overflow >= MIN_RTGC_STABLE_REF_COUNT && (op->ob_overflow -= MIN_RTGC_STABLE_REF_COUNT) == 0) {
         RTGC_registerUnsafe(op);
         // assert((op->ob_overflow & 1) != 0);
     }
@@ -329,7 +333,7 @@ static inline Py_ALWAYS_INLINE void Py_INCREF(PyObject *op)
     op->ob_refcnt = cur_refcnt + 1;
 #ifdef ENABLE_RTGC
     if (op->ob_overflow < MAX_RTGC_STABLE_REF_COUNT) {
-        op->ob_overflow += 2;
+        op->ob_overflow += MIN_RTGC_STABLE_REF_COUNT;
     }
     RTGC_trace(op, "Py_INCREF");
 #endif

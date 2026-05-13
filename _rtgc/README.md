@@ -63,6 +63,12 @@ PyType_GenericAlloc
         _Py_RunGC
             _PyGC_Collect
 
+_Py_RunGC
+    _PyGC_Collect
+        gc_collect_increment/young/full
+            gc_collect_region
+                deduce_unreachable
+
 
 ### pylifecycle.c
 _PyRuntimeState _PyRuntime;
