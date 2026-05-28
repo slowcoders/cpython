@@ -15,6 +15,7 @@
 
 #include "pydtrace.h"
 
+#define ENABLE_RTGC_GC
 
 #ifndef Py_GIL_DISABLED
 
@@ -167,9 +168,6 @@ _PyGC_InitState(GCState *gcstate)
     INIT_HEAD(gcstate->old[0]);
     INIT_HEAD(gcstate->old[1]);    
     INIT_HEAD(gcstate->permanent_generation);
-#ifdef ENABLE_RTGC
-    INIT_HEAD(gcstate->unsafe);
-#endif
 
 #undef INIT_HEAD
 }
@@ -525,6 +523,9 @@ update_refs(PyGC_Head *containers)
     }
 }
 
+static int
+visit_decref_circuit(PyObject *op, void *param);
+
 /* A traversal callback for subtract_refs. */
 static int
 visit_decref(PyObject *op, void *parent)
@@ -552,9 +553,15 @@ _PyGC_VisitStackRef(_PyStackRef *ref, visitproc visit, void *arg)
     // refcounts when computing the incoming references, but otherwise treat
     // them like normal.
     assert(!PyStackRef_IsTaggedInt(*ref));
+#ifdef ENABLE_RTGC_GC
+    if (!PyStackRef_RefcountOnObject(*ref) && (visit == visit_decref || visit == visit_decref_circuit)) {
+        return 0;
+    }
+#else
     if (!PyStackRef_RefcountOnObject(*ref) && (visit == visit_decref)) {
         return 0;
     }
+#endif
     Py_VISIT(PyStackRef_AsPyObjectBorrow(*ref));
     return 0;
 }
@@ -591,11 +598,96 @@ subtract_refs(PyGC_Head *containers)
     }
 }
 
+#ifdef ENABLE_RTGC_GC
+typedef struct _RtgcState {
+    PyGC_Head* unsafe_list;
+    PyGC_Head* pending_list;
+    PyGC_Head* visited_list;
+
+    PyObject* parent;
+} RtgcState;
+
+static inline bool
+is_unsafe_circuit_root(PyObject *op) {
+    return (op->ob_flags & RTGC_CIRCUIT_ROOT) != 0 
+        &&  op->ob_refcnt == 1;
+}
+
+
+static inline bool
+is_part_of_circuit(PyObject *op) {
+    return (op->ob_flags & RTGC_CIRCUIT) != 0 
+        &&  op->ob_refcnt == 1;
+}
+
+static int
+visit_decref_circuit(PyObject *op, void *param)
+{
+    OBJECT_STAT_INC(object_visits);
+    PyGC_Head *scanning_list = param;  
+    // _PyObject_ASSERT(_PyObject_CAST(parent), !_PyObject_IsFreed(op));
+
+    if (_PyObject_IS_GC(op)) {
+        PyGC_Head *gc = AS_GC(op);
+        /* We're only interested in gc_refs for objects in the
+         * generation being collected, which can be recognized
+         * because only they have positive gc_refs.
+         */
+        if (!gc_is_collecting(gc)) {
+            if (!is_part_of_circuit(op)) {
+                return 0;
+            }
+            gc_list_move(gc, scanning_list);
+            gc_reset_refs(gc, Py_REFCNT(op));
+        }
+        gc_decref(gc);
+    }
+    return 0;
+}
+
+static void
+rtgc_subtract_refs(PyGC_Head *containers)
+{
+    traverseproc traverse;
+    PyGC_Head *gc = GC_NEXT(containers);
+
+    for (; gc != containers; gc = GC_NEXT(gc)) {
+        PyObject *op = FROM_GC(gc);
+        traverse = Py_TYPE(op)->tp_traverse;
+
+        if (is_unsafe_circuit_root(op)) {
+            (void) traverse(op,
+                            visit_decref_circuit,
+                            containers);
+        }
+        else {
+            (void) traverse(op,
+                        visit_decref,
+                        containers);
+        }
+    }
+}
+#endif
+
+#if 1// def ENABLE_RTGC_GC
+#define MAX_CIRCLE_LEN  4
+typedef struct _RtgcScanStack {
+    int depth;
+    PyObject* stack[MAX_CIRCLE_LEN];
+    PyGC_Head* reachable;
+} RtgcScanStack;
+#endif
+
 /* A traversal callback for move_unreachable. */
 static int
 visit_reachable(PyObject *op, void *arg)
 {
+#ifdef ENABLE_RTGC_GC
+    RtgcScanStack* rtStack = arg;
+    PyGC_Head *reachable = rtStack->reachable;
+#else
     PyGC_Head *reachable = arg;
+#endif
     OBJECT_STAT_INC(object_visits);
     if (!_PyObject_IS_GC(op)) {
         return 0;
@@ -650,8 +742,28 @@ visit_reachable(PyObject *op, void *arg)
      * list, and move_unreachable will eventually get to it.
      */
     else {
-        _PyObject_ASSERT_WITH_MSG(op, gc_refs > 0, "refcount is too small");
+        _PyObject_ASSERT_WITH_MSG(op, gc_refs > 0, "refcount is too small");        
+#ifdef ENABLE_RTGC_GC
+        if (op == rtStack->stack[0]) {
+            for (int i = rtStack->depth; --i > 0; ) {
+                rtStack->stack[i]->ob_flags |= RTGC_CIRCUIT;       
+            }
+            rtStack->stack[0]->ob_flags |= RTGC_CIRCUIT_ROOT;     
+        }
+        return 0;
+#endif
     }
+#ifdef ENABLE_RTGC_GC
+    if (op->ob_refcnt == 1 && rtStack->depth < MAX_CIRCLE_LEN) {
+        rtStack->stack[rtStack->depth++] = op;
+        traverseproc traverse = Py_TYPE(op)->tp_traverse;
+        (void) traverse(op,
+                visit_reachable,
+                (void *)reachable);
+        rtStack->depth--;
+        gc_clear_collecting(gc);
+    }
+#endif
     return 0;
 }
 
@@ -687,6 +799,12 @@ move_unreachable(PyGC_Head *young, PyGC_Head *unreachable)
     /* Record which old space we are in, and set NEXT_MASK_UNREACHABLE bit for convenience */
     uintptr_t flags = NEXT_MASK_UNREACHABLE | (gc->_gc_next & _PyGC_NEXT_MASK_OLD_SPACE_1);
     while (gc != young) {
+#ifdef ENABLE_RTGC_GC        
+        if (! gc_is_collecting(gc)) {
+            prev = gc;
+        } 
+        else
+#endif
         if (gc_get_refs(gc)) {
             /* gc is definitely reachable from outside the
              * original 'young'.  Mark it as such, and traverse
@@ -702,9 +820,20 @@ move_unreachable(PyGC_Head *young, PyGC_Head *unreachable)
                                       "refcount is too small");
             // NOTE: visit_reachable may change gc->_gc_next when
             // young->_gc_prev == gc.  Don't do gc = GC_NEXT(gc) before!
-            (void) traverse(op,
-                    visit_reachable,
-                    (void *)young);
+            #ifdef ENABLE_RTGC_GC
+                if (op->ob_refcnt > 1) {
+                    RtgcScanStack rtStack;
+                    rtStack.stack[0] = op;
+                    rtStack.reachable = young;
+                    rtStack.depth = 0;
+                    (void) traverse(op,
+                            visit_reachable,
+                            (void *)&rtStack);
+                } else
+            #endif
+                (void) traverse(op,
+                        visit_reachable,
+                        (void *)young);
             // relink gc_prev to prev element.
             _PyGCHead_SET_PREV(gc, prev);
             // gc is not COLLECTING state after here.
@@ -1205,7 +1334,11 @@ deduce_unreachable(PyGC_Head *base, PyGC_Head *unreachable) {
      * set are taken into account).
      */
     update_refs(base);  // gc_prev is used for gc_refs
+#ifdef ENABLE_RTGC_GC
+    rtgc_subtract_refs(base);
+#else
     subtract_refs(base);
+#endif
 
     /* Leave everything reachable from outside base in base, and move
      * everything else (in base) to unreachable.
@@ -2495,3 +2628,4 @@ done:
 }
 
 #endif  // Py_GIL_DISABLED
+

@@ -245,7 +245,6 @@ static inline void _PyObject_GC_TRACK(
                           filename, lineno, __func__);
 
     struct _gc_runtime_state *gcstate = &_PyInterpreterState_GET()->gc;
-#ifndef ENABLE_RTGC_GC
     PyGC_Head *generation0 = &gcstate->young.head;
     PyGC_Head *last = (PyGC_Head*)(generation0->_gc_prev);
     _PyGCHead_SET_NEXT(last, gc);
@@ -253,6 +252,8 @@ static inline void _PyObject_GC_TRACK(
     uintptr_t not_visited = 1 ^ gcstate->visited_space;
     gc->_gc_next = ((uintptr_t)generation0) | not_visited;
     generation0->_gc_prev = (uintptr_t)gc;
+#ifdef ENABLE_RTGC_GC
+    // op->ob_overflow |= 1;
 #endif
     gcstate->young.count++; /* number of tracked GC objects */
     gcstate->heap_size++;
@@ -279,16 +280,13 @@ static inline void _PyObject_GC_UNTRACK(
 #endif
     PyObject *op)
 {
-#ifndef ENABLE_RTGC_GC
     _PyObject_ASSERT_FROM(op, _PyObject_GC_IS_TRACKED(op),
                           "object not tracked by the garbage collector",
                           filename, lineno, __func__);
-#endif
 
 #ifdef Py_GIL_DISABLED
     _PyObject_CLEAR_GC_BITS(op, _PyGC_BITS_TRACKED);
 #else
-#ifndef ENABLE_RTGC_GC
     PyGC_Head *gc = _Py_AS_GC(op);
     PyGC_Head *prev = _PyGCHead_PREV(gc);
     PyGC_Head *next = _PyGCHead_NEXT(gc);
@@ -296,7 +294,6 @@ static inline void _PyObject_GC_UNTRACK(
     _PyGCHead_SET_PREV(next, prev);
     gc->_gc_next = 0;
     gc->_gc_prev &= _PyGC_PREV_MASK_FINALIZED;
-#endif
     struct _gc_runtime_state *gcstate = &_PyInterpreterState_GET()->gc;
     if (gcstate->young.count > 0) {
         gcstate->young.count--;

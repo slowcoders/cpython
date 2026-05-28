@@ -247,29 +247,245 @@ _Py_NegativeRefcount(const char *filename, int lineno, PyObject *op)
 Py_ssize_t _Py_RefTotal;
 #endif
 
+
 PyAPI_FUNC(void) RTGC_registerUnsafe(PyObject* op) {
 #ifdef ENABLE_RTGC_GC    
-    PyGC_Head *gc = _Py_AS_GC(op);
-    struct _gc_runtime_state *gcstate = &_PyInterpreterState_GET()->gc;
-    PyGC_Head *generation0 = &gcstate->unsafe.head;
-    PyGC_Head *last = (PyGC_Head*)(generation0->_gc_prev);
-    _PyGCHead_SET_NEXT(last, gc);
-    _PyGCHead_SET_PREV(gc, last);
-    // uintptr_t not_visited = 1 ^ gcstate->visited_space;
-    gc->_gc_next = ((uintptr_t)generation0); // | not_visited;
-    generation0->_gc_prev = (uintptr_t)gc;
-    gcstate->unsafe.count++; /* number of tracked GC objects */
+    PyGC_Head* gc = AS_GC(op);
 
-    op->ob_overflow |= RTGC_UNSAFE_FLAG;
+    finalize_unlink_gc_head(gc);
+    _PyObject_GC_TRACK(op);
+    gc->_gc_next = gc->_gc_prev = 0;
 #endif
+}
+
+#if 0
+
+static const int MAX_REF_COUNT_IN_STACK_CHUNK = 4090;
+typedef struct _RtgcStackChunk {
+    RtgcStack* prev;
+    RtgcStack* next;
+    int count;
+    PyObject* refs[MAX_REF_COUNT_IN_STACK_CHUNK];
+} RtgcStackChunk;
+
+RtgcStack g_refStack = {
+    .prev = NULL,
+    .next = NULL,
+    count = 0,
+};
+
+static RtgcStack* topStack = &g_refStack;
+
+static inline void
+ref_stack_push(PyObject* po)
+{
+    assert(topStack->count < MAX_REF_COUNT_IN_STACK_CHUNK);
+    if (topStack->count == MAX_REF_COUNT_IN_STACK_CHUNK - 1) {
+        RtgcStack* next = topStack->next;
+        if (next == NULL) {
+            next = (RtgcStack*)malloc(sizeof(RtgcStack));
+            next->prev = topStack;
+            next->next = NULL;
+            next->count = 0;
+            topStack->next = next;
+        } else {
+            assert(next->count == 0);
+            assert(next->prev == topStack);
+        }
+        topStack = next;
+    }
+    topStack->refs[topStack->count] = po;
+    topStack->count ++;
+}
+
+
+static inline PyObject*
+ref_stack_pop()
+{
+    if (topStack->count == 0) {
+        if (topStack == &g_refStack) {
+            return NULL;
+        }
+        topStack = topStack->prev;
+        assert(topStack != NULL);
+        assert(topStack->count == MAX_REF_COUNT_IN_STACK_CHUNK);
+    }
+    PyObject* po = topStack->refs[--topStack->count];
+    return po;
+}
+
+
+static void
+mark_reachable(PyObject* po, void* parent) {
+    if (_PyObject_IS_GC(op)) {
+        PyGC_Head *gc = AS_GC(op);
+        if (!gc_is_collecting(gc)) continue;
+
+        if (!rtgc_is_marked(gc)) {
+            GC_SET_PREV(gc) = 
+            ref_stack_push(op);
+        }
+        else if (rtgc_is_scanning(op)) {
+            // cycle.
+        }
+    }
+}
+
+static inline void
+drain_ref_stack() {
+    for (PyObject* po; (po = ref_stack_pop()) != NULL; ) {
+        PyObject *op = FROM_GC(gc);
+        traverse = Py_TYPE(op)->tp_traverse;
+
+        (void) traverse(op,
+                        mark_reachable,
+                        containers);
+    }
+}
+#endif
+
+#if 0 // def ENABLE_RTGC
+
+#define RTGC_MARK_SCANNING 1
+#define RTGC_MARK_UNSAFE    1
+#define RTGC_GC_DEBUG 1
+
+static void
+rtgc_collect_unreachable(PyGC_Head *unsafe, 
+                         PyGC_Head *unreachable,
+                         GCState *gcstate);
+
+
+
+static inline bool
+rtgc_is_unsafe(PyObject *op)
+{
+    return (op->ob_overflow & RTGC_MARK_UNSAFE) != 0;
+}
+
+
+static inline void
+rtgc_unmark_unsafe(PyObject *op)
+{
+    if (rtgc_is_unsafe(op)) {
+        op->ob_overflow &= ~RTGC_MARK_UNSAFE;
+    }
+}
+
+static inline bool
+rtgc_mark_scanning(PyObject *op, PyGC_Head* scanning_list)
+{    
+    assert(!rtgc_is_unsafe(op));
+
+    if (op->ob_overflow == MIN_RTGC_STABLE_REF_COUNT) return true;
+    if ((op->ob_flags & RTGC_MARK_SCANNING) != 0) return false;
+
+    op->ob_flags |= RTGC_MARK_SCANNING;
+
+    PyGC_Head* gc = AS_GC(op);
+    gc_list_append(gc, scanning_list);
+
+    return true;
+}
+
+
+static const int GC_PREV_INCREMENT = (1 << _PyGC_PREV_SHIFT);
+static int
+visit_detect_cycle(PyObject *op, void* referents) {
+    rtgc_unmark_unsafe(op);
+    PyGC_Head* gc = AS_GC(op);
+    if ((op->ob_flags & RTGC_MARK_SCANNING) != 0) {
+        gc->_gc_prev -= GC_PREV_INCREMENT;
+        if (gc->_gc_prev < GC_PREV_INCREMENT) {
+            // cyclic garbage detect!!!
+        }
+        return 0;
+    }
+
+    if (op->ob_refcnt > 1) {
+        gc_list_append(gc, NULL/*scanning_list*/);
+        return 0;
+    }
+
+    if (rtgc_mark_scanning(op, NULL)) {
+        PyGC_Head* gc = AS_GC(op);
+        _PyGCHead_SET_PREV(gc, referents);
+        _PyGCHead_SET_NEXT(referents, gc);
+    }
+    return 0;
+}
+
+bool
+rtgc_scan_unsafe_links(PyObject *op, RtgcState *rtgcstate) {
+    rtgc_unmark_unsafe(op);
+
+    rtgc_mark_scanning(op, NULL);
+
+    traverseproc traverse = Py_TYPE(op)->tp_traverse;
+    (void) traverse(op,
+                    visit_detect_cycle,
+                    rtgcstate);
+}
+
+void
+rtgc_collect_unreachable(PyGC_Head *containers, PyGC_Head *unreachable, GCState *gcstate) {
+    PyGC_Head *next;
+    PyGC_Head *gc = GC_NEXT(containers);
+
+    RtgcState rtgcstate;
+    rtgcstate.unsafe_list = &gcstate->young.head;
+    rtgcstate.pending_list = &gcstate->old[gcstate->visited_space^1].head;
+    rtgcstate.visited_list = &gcstate->old[gcstate->visited_space].head;
+
+    for (; gc != containers; gc = next) {
+        next = GC_NEXT(gc);
+        PyObject *op = FROM_GC(gc);
+        assert(!_Py_IsImmortal(op));
+        if (rtgc_is_unsafe(op)) {
+            rtgc_scan_unsafe_links(op, &rtgcstate);
+        }
+    }
 }
 
 
 void gc_collect_rtgc(PyThreadState *tstate,
                  struct gc_collection_stats *stats) 
 {
+    GC_STAT_ADD(2, collections, 1);
+    GCState *gcstate = &tstate->interp->gc;
+    validate_spaces(gcstate);
+    PyGC_Head *unsafe = &gcstate->young.head;
+    // PyGC_Head *pending = &gcstate->old[gcstate->visited_space^1].head;
+    // PyGC_Head *visited = &gcstate->old[gcstate->visited_space].head;
+    untrack_tuples(unsafe);
+    /* merge all generations into visited */
+    // gc_list_merge(young, pending);
+    // gc_list_validate_space(pending, 1-gcstate->visited_space);
+    // gc_list_set_space(pending, gcstate->visited_space);
+    gcstate->young.count = 0;
+    // PyGC_Head *unsafe_first = unsafe->_gc_next;
+    gc_list_init(unsafe);
 
+    // gc_list_merge(pending, visited);
+    validate_spaces(gcstate);
+
+    PyGC_Head survivors;
+    gc_list_init(&survivors);
+    // gc_list_set_space(unsafe, gcstate->visited_space);
+    gc_collect_region(tstate, unsafe, &survivors, stats);
+
+    validate_spaces(gcstate);
+    gcstate->young.count = 0;
+    gcstate->old[0].count = 0;
+    gcstate->old[1].count = 0;
+
+    // ?? completed_scavenge(gcstate);
+    _PyGC_ClearAllFreeLists(tstate->interp);
+    validate_spaces(gcstate);
+    add_stats(gcstate, 2, stats);
 }
+
+#endif
 
 
 volatile uint g_cntTrace = 0;
@@ -301,3 +517,5 @@ PyAPI_FUNC(void) RTGC_trace(PyObject* op, const char* tag) {
         RTGC_dump(op, tag);
     }
 }
+
+

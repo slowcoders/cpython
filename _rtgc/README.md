@@ -70,6 +70,27 @@ _Py_RunGC
                 deduce_unreachable
 
 
+### gc_collect_young
+1. gc_collect_region(...)
+2. deduce_unreachable
+    2.1 모든 Young 객체에 대해
+        gc_reset_refs(gc, Py_REFCNT(op));
+        {
+            g->_gc_prev = (g->_gc_prev & _PyGC_PREV_MASK_FINALIZED)
+                | PREV_MASK_COLLECTING
+                | ((uintptr_t)(refs) << _PyGC_PREV_SHIFT);
+        }
+    2.2 모든 Young 객체에 대해
+        gc_decref(PyGC_Head *g)
+        {
+            _PyObject_ASSERT_WITH_MSG(FROM_GC(g),
+                                    gc_get_refs(g) > 0,
+                                    "refcount is too small");
+            g->_gc_prev -= 1 << _PyGC_PREV_SHIFT;
+        }
+
+
+
 ### pylifecycle.c
 _PyRuntimeState _PyRuntime;
 _PyThreadState_GET(void)
