@@ -759,7 +759,7 @@ visit_reachable(PyObject *op, void *arg)
         traverseproc traverse = Py_TYPE(op)->tp_traverse;
         (void) traverse(op,
                 visit_reachable,
-                (void *)reachable);
+                (void *)rtStack);
         rtStack->depth--;
         gc_clear_collecting(gc);
     }
@@ -786,6 +786,12 @@ move_unreachable(PyGC_Head *young, PyGC_Head *unreachable)
     PyGC_Head *prev = young;
     PyGC_Head *gc = GC_NEXT(young);
 
+#ifdef ENABLE_RTGC_GC        
+    RtgcScanStack rtStack;
+    rtStack.reachable = young;
+    rtStack.depth = 1;
+#endif
+
     /* Invariants:  all objects "to the left" of us in young are reachable
      * (directly or indirectly) from outside the young list as it was at entry.
      *
@@ -801,6 +807,7 @@ move_unreachable(PyGC_Head *young, PyGC_Head *unreachable)
     while (gc != young) {
 #ifdef ENABLE_RTGC_GC        
         if (! gc_is_collecting(gc)) {
+            _PyGCHead_SET_PREV(gc, prev);
             prev = gc;
         } 
         else
@@ -821,19 +828,15 @@ move_unreachable(PyGC_Head *young, PyGC_Head *unreachable)
             // NOTE: visit_reachable may change gc->_gc_next when
             // young->_gc_prev == gc.  Don't do gc = GC_NEXT(gc) before!
             #ifdef ENABLE_RTGC_GC
-                if (op->ob_refcnt > 1) {
-                    RtgcScanStack rtStack;
-                    rtStack.stack[0] = op;
-                    rtStack.reachable = young;
-                    rtStack.depth = 0;
-                    (void) traverse(op,
-                            visit_reachable,
-                            (void *)&rtStack);
-                } else
-            #endif
+                rtStack.stack[0] = op;
+                (void) traverse(op,
+                        visit_reachable,
+                        (void *)&rtStack);
+            #else
                 (void) traverse(op,
                         visit_reachable,
                         (void *)young);
+            #endif
             // relink gc_prev to prev element.
             _PyGCHead_SET_PREV(gc, prev);
             // gc is not COLLECTING state after here.
