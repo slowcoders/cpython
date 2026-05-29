@@ -51,10 +51,16 @@ for omitting increfs is much higher than for omitting decrefs. Consequently, onc
 the refcount for an object exceeds _Py_IMMORTAL_MINIMUM_REFCNT it will gradually
 increase over time until it reaches _Py_IMMORTAL_INITIAL_REFCNT.
 */
+#ifdef ENABLE_RTGC
+#define _Py_IMMORTAL_INITIAL_REFCNT (3ULL << 29)
+#define _Py_IMMORTAL_MINIMUM_REFCNT (1ULL << 30)
+#define _Py_STATIC_IMMORTAL_INITIAL_REFCNT (((Py_ssize_t)_Py_IMMORTAL_INITIAL_REFCNT << 1) | 1 | (_Py_STATIC_FLAG_BITS << 48))
+#else
 #define _Py_IMMORTAL_INITIAL_REFCNT (3ULL << 30)
 #define _Py_IMMORTAL_MINIMUM_REFCNT (1ULL << 31)
-#define _Py_STATIC_FLAG_BITS ((Py_ssize_t)(_Py_STATICALLY_ALLOCATED_FLAG | _Py_IMMORTAL_FLAGS))
 #define _Py_STATIC_IMMORTAL_INITIAL_REFCNT (((Py_ssize_t)_Py_IMMORTAL_INITIAL_REFCNT) | (_Py_STATIC_FLAG_BITS << 48))
+#endif
+#define _Py_STATIC_FLAG_BITS ((Py_ssize_t)(_Py_STATICALLY_ALLOCATED_FLAG | _Py_IMMORTAL_FLAGS))
 
 #else
 /*
@@ -132,7 +138,7 @@ static inline Py_ALWAYS_INLINE int _Py_IsImmortal(PyObject *op)
 #if defined(Py_GIL_DISABLED)
     return (_Py_atomic_load_uint32_relaxed(&op->ob_ref_local) ==
             _Py_IMMORTAL_REFCNT_LOCAL);
-#elif SIZEOF_VOID_P > 4
+#elif SIZEOF_VOID_P > 4 && !defined ENABLE_RTGC
     return _Py_CAST(PY_INT32_T, op->ob_refcnt) < 0;
 #else
     return op->ob_refcnt >= _Py_IMMORTAL_MINIMUM_REFCNT;
@@ -265,15 +271,29 @@ PyAPI_FUNC(void) RTGC_trace(PyObject *, const char* tag);
 PyAPI_FUNC(void) RTGC_dump(PyObject *, const char* tag);
 
 #ifdef ENABLE_RTGC
-static inline Py_ALWAYS_INLINE void RTGC_decStableRef(PyObject *op)
+static inline Py_ALWAYS_INLINE void RTGC_decRefMortal(PyObject *po)
 {
-    if (op == NULL) return;
-    if ((op->ob_flags & (RTGC_ACYCLIC|_Py_IMMORTAL_FLAGS)) == 0) {//} && op->ob_refcnt < _Py_IMMORTAL_INITIAL_REFCNT) {
-        if (op->ob_overflow < MIN_RTGC_STABLE_REF_COUNT) {
-            // RTGC_dump(op, "Error - RTGC_decStableRef");
+    uint32_t* pRef32 = (uint32_t*)&po->ob_refcnt_full;
+    if ((pRef32[0] -= 2) <= 2) {
+        if (pRef32[0] == 2) {
+            assert(po->ob_flags & RTGC_CIRCUIT_ROOT);
+            RTGC_registerUnsafe(po);
         } else {
-            op->ob_overflow -= MIN_RTGC_STABLE_REF_COUNT;
-            RTGC_trace(op, "RTGC_decStableRef");
+            _Py_Dealloc(po);
+        }
+    }
+}
+
+
+static inline Py_ALWAYS_INLINE void RTGC_decStableRef(PyObject *po)
+{
+    if (po == NULL) return;
+    if ((po->ob_flags & (RTGC_ACYCLIC|_Py_IMMORTAL_FLAGS)) == 0) {//} && po->ob_refcnt < _Py_IMMORTAL_INITIAL_REFCNT) {
+        if (po->ob_overflow < MIN_RTGC_STABLE_REF_COUNT) {
+            // RTGC_dump(po, "Error - RTGC_decStableRef");
+        } else {
+            po->ob_overflow -= MIN_RTGC_STABLE_REF_COUNT;
+            RTGC_trace(po, "RTGC_decStableRef");
         }
     }
 }
@@ -518,12 +538,11 @@ static inline void Py_DECREF(const char *filename, int lineno, PyObject *op)
     }
     _Py_DECREF_STAT_INC();
     _Py_DECREF_DecRefTotal();
+#ifdef ENABLE_RTGC 
+    RTGC_decRefMortal(op);
+#else
     if (--op->ob_refcnt == 0) {
         _Py_Dealloc(op);
-    }
-#ifdef ENABLE_RTGC 
-    else {
-        RTGC_decUnStableRef(op);
     }
 #endif
 }
@@ -540,12 +559,11 @@ static inline Py_ALWAYS_INLINE void Py_DECREF(PyObject *op)
         return;
     }
     _Py_DECREF_STAT_INC();
+#ifdef ENABLE_RTGC 
+    RTGC_decRefMortal(op);
+#else
     if (--op->ob_refcnt == 0) {
         _Py_Dealloc(op);
-    }
-#ifdef ENABLE_RTGC 
-    else {
-        RTGC_decUnStableRef(op);
     }
 #endif
 }

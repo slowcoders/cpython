@@ -456,12 +456,11 @@ static inline void Py_DECREF_MORTAL(const char *filename, int lineno, PyObject *
     if (!_Py_IsImmortal(op)) {
         _Py_DECREF_DecRefTotal();
     }
+#ifdef ENABLE_RTGC 
+    RTGC_decRefMortal(op);
+#else
     if (--op->ob_refcnt == 0) {
         _Py_Dealloc(op);
-    }
-#ifdef ENABLE_RTGC 
-    else {
-        RTGC_decUnStableRef(op);
     }
 #endif
 }
@@ -500,12 +499,11 @@ static inline void Py_DECREF_MORTAL(PyObject *op)
 {
     assert(!_Py_IsStaticImmortal(op));
     _Py_DECREF_STAT_INC();
+#ifdef ENABLE_RTGC 
+    RTGC_decRefMortal(op);
+#else
     if (--op->ob_refcnt == 0) {
         _Py_Dealloc(op);
-    }
-#ifdef ENABLE_RTGC 
-    else {
-        RTGC_decUnStableRef(op);
     }
 #endif
 }

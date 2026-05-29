@@ -251,10 +251,9 @@ Py_ssize_t _Py_RefTotal;
 PyAPI_FUNC(void) RTGC_registerUnsafe(PyObject* op) {
 #ifdef ENABLE_RTGC_GC    
     PyGC_Head* gc = AS_GC(op);
-
     finalize_unlink_gc_head(gc);
     _PyObject_GC_TRACK(op);
-    gc->_gc_next = gc->_gc_prev = 0;
+    op->ob_acyclic = 1;
 #endif
 }
 

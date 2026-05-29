@@ -133,7 +133,8 @@ struct _object {
             uint16_t ob_overflow;
             uint32_t ob_refcnt;
 #  else
-            uint32_t ob_refcnt;
+            uint32_t ob_acyclic: 1;
+            uint32_t ob_refcnt: 31;
             uint16_t ob_overflow;
             uint16_t ob_flags;
 #  endif

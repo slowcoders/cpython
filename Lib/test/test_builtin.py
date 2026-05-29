@@ -2812,7 +2812,8 @@ class ShutdownTest(unittest.TestCase):
 @cpython_only
 class ImmortalTests(unittest.TestCase):
 
-    if sys.maxsize < (1 << 32):
+    ENABLE_RTGC = True
+    if ENABLE_RTGC or sys.maxsize < (1 << 32):
         IMMORTAL_REFCOUNT_MINIMUM = 1 << 30
     else:
         IMMORTAL_REFCOUNT_MINIMUM = 1 << 31

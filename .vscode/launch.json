@@ -35,8 +35,8 @@
             // "program": "_debug/python.exe", "args": ["-m", "test", "test_asyncio.test_tasks.py"],
 
             // <build process>
-            // "program": "_debug/Programs/_freeze_module", "args": ["getpath", "../Modules/getpath.py", "Python/frozen_modules/getpath.h"],
-            "program": "_debug/_bootstrap_python", "args": ["../Programs/_freeze_module.py", "abc", "../Lib/abc.py Python/frozen_modules/abc.h"],
+            "program": "_debug/Programs/_freeze_module", "args": ["getpath", "../Modules/getpath.py", "Python/frozen_modules/getpath.h"],
+            // "program": "_debug/_bootstrap_python", "args": ["../Programs/_freeze_module.py", "abc", "../Lib/abc.py Python/frozen_modules/abc.h"],
 
             
             "breakpointMode": "file",  // 참고) file 모드에서는 assembly breakpoint 가 동작하지 않는다.
