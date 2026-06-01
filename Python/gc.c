@@ -626,11 +626,10 @@ is_part_of_circuit(PyObject *op) {
 }
 
 static int
-visit_decref_circuit(PyObject *op, void *param)
+visit_decref_circuit_part_only(PyObject *op, void *param)
 {
     OBJECT_STAT_INC(object_visits);
-    PyGC_Head *scanning_list = param;  
-    // _PyObject_ASSERT(_PyObject_CAST(parent), !_PyObject_IsFreed(op));
+    PyGC_Head *circuit_root = param;  
 
     if (_PyObject_IS_GC(op)) {
         PyGC_Head *gc = AS_GC(op);
@@ -638,14 +637,42 @@ visit_decref_circuit(PyObject *op, void *param)
          * generation being collected, which can be recognized
          * because only they have positive gc_refs.
          */
-        if (!gc_is_collecting(gc)) {
-            if (!is_part_of_circuit(op)) {
-                return 0;
-            }
-            gc_list_move(gc, scanning_list);
-            gc_reset_refs(gc, Py_REFCNT(op));
+        if (gc == circuit_root) {
+            gc_decref(gc);
+        } 
+        else if (is_part_of_circuit(op)) {
+            traverseproc traverse = Py_TYPE(op)->tp_traverse;
+            (void) traverse(op,
+                            visit_decref_circuit_part_only,
+                            gc_is_collecting(gc) 
+                                ? (void*)((uintptr_t)circuit_root | 1)
+                                : (void*)((uintptr_t)circuit_root & ~1));
         }
-        gc_decref(gc);
+    }
+    return 0;    
+}
+
+static int
+visit_decref_circuit(PyObject *op, void *param)
+{
+    OBJECT_STAT_INC(object_visits);
+    PyGC_Head *circuit_root = param;  
+
+    if (_PyObject_IS_GC(op)) {
+        PyGC_Head *gc = AS_GC(op);
+        /* We're only interested in gc_refs for objects in the
+         * generation being collected, which can be recognized
+         * because only they have positive gc_refs.
+         */
+        if (gc_is_collecting(gc)) {
+            gc_decref(gc);
+        }
+        else if (is_part_of_circuit(op)) {
+            traverseproc traverse = Py_TYPE(op)->tp_traverse;
+            (void) traverse(op,
+                            visit_decref_circuit_part_only,
+                            circuit_root);
+        }
     }
     return 0;
 }
@@ -663,7 +690,7 @@ rtgc_subtract_refs(PyGC_Head *containers)
         if (is_unsafe_circuit_root(op)) {
             (void) traverse(op,
                             visit_decref_circuit,
-                            containers);
+                            gc);
         }
         else {
             (void) traverse(op,
@@ -831,13 +858,18 @@ move_unreachable(PyGC_Head *young, PyGC_Head *unreachable)
                             visit_reachable,
                             (void *)&rtStack);
                     assert(rtStack.scanDepth == 1);
-                    rtStack.scanDepth = INT_MAX;
                 }
-                else
-            #endif
+                else {
+                    rtStack.scanDepth = INT_MAX;
+                    (void) traverse(op,
+                            visit_reachable,
+                            (void *)&rtStack);
+                }
+            #else
                 (void) traverse(op,
                         visit_reachable,
                         (void *)young);
+            #endif
             // relink gc_prev to prev element.
             _PyGCHead_SET_PREV(gc, prev);
             // gc is not COLLECTING state after here.
@@ -2689,7 +2721,8 @@ PyAPI_FUNC(void) RTGC_registerUnsafe(PyObject* op) {
     if (!gc_is_collecting(gc)) {
         finalize_unlink_gc_head(gc);
         // !_PyObject_GC_IS_TRACKED(gc) 로 만들기.
-        gc->_gc_next = gc->_gc_prev = 0;
+        gc->_gc_next = 0;
+        gc->_gc_prev &= _PyGC_PREV_MASK_FINALIZED;
         _PyObject_GC_TRACK(op);
         op->ob_anchored = 1;
     }
