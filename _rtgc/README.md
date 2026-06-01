@@ -55,6 +55,7 @@ Reference ???
 PyGC_Head { _gc_next, __gc_prev };
 PyType_GenericAlloc
     _PyObject_GC_TRACK (<-> _PyObject_GC_UNTRACK)
+    // 객체를 not_visited space(young + old[1 ^ gcstate->visited_space]) 에 등록.
         _Py_TriggerGC
             _Py_ScheduleGC
                 _Py_set_eval_breaker_bit(tstate, _PY_GC_SCHEDULED_BIT);
@@ -148,3 +149,7 @@ stack 변수 처리용? 주로 c lib 함수에 사용됨.
 Total duration: 2 min 19 sec
 Total tests: run=47,011 skipped=2,118
 Total test files: run=489/492 skipped=32 resource_denied=3
+
+_release
+Ran 1 test in 0.051s
+Ran 1 test in 0.086s

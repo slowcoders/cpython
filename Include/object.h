@@ -133,8 +133,12 @@ struct _object {
             uint16_t ob_overflow;
             uint32_t ob_refcnt;
 #  else
-            uint32_t ob_acyclic: 1;
+    #ifdef ENABLE_RTGC_GC
+            uint32_t ob_anchored: 1;
             uint32_t ob_refcnt: 31;
+    #else
+            uint32_t ob_refcnt;
+    #endif
             uint16_t ob_overflow;
             uint16_t ob_flags;
 #  endif

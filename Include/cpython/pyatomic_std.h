@@ -785,7 +785,7 @@ _Py_atomic_store_ptr(void *obj, void *value)
 #ifdef ENABLE_RTGC
     // RTGC_atomic_decStableRef(value);
 #else 
-    No rtgc!!!!
+    // No rtgc!!!!
 #endif    
     atomic_store((_Atomic(void*)*)obj, value);
 }

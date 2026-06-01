@@ -14,8 +14,8 @@
 #include "pyconfig.h"
 #include "pymacconfig.h"
 
-#define ENABLE_RTGC
-// #define ENABLE_RTGC_GC
+// #define ENABLE_RTGC
+#define ENABLE_RTGC_GC
 #define RTGC_ACYCLIC    0x10
 #define RTGC_CIRCUIT_ROOT    0x20
 #define RTGC_CIRCUIT    0x40

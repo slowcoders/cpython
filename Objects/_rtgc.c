@@ -248,15 +248,6 @@ Py_ssize_t _Py_RefTotal;
 #endif
 
 
-PyAPI_FUNC(void) RTGC_registerUnsafe(PyObject* op) {
-#ifdef ENABLE_RTGC_GC    
-    PyGC_Head* gc = AS_GC(op);
-    finalize_unlink_gc_head(gc);
-    _PyObject_GC_TRACK(op);
-    op->ob_acyclic = 1;
-#endif
-}
-
 #if 0
 
 static const int MAX_REF_COUNT_IN_STACK_CHUNK = 4090;
