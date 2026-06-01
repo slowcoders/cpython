@@ -24,12 +24,12 @@ class IncrementalGCTests(unittest.TestCase):
                     prev.next = self
 
         def make_ll(depth):
-            head = LinkedList()
             for i in range(depth):
+                head = LinkedList()
                 head = LinkedList(head, head.prev)
             return head
 
-        head = make_ll(1000)
+        head = make_ll(1000*100)
 
         assert(gc.isenabled())
         olds = []

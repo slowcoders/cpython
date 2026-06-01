@@ -625,6 +625,8 @@ is_part_of_circuit(PyObject *op) {
         &&  op->ob_refcnt == 1;
 }
 
+static int cc_count = 0;
+
 static int
 visit_decref_circuit_part_only(PyObject *op, void *param)
 {
@@ -639,6 +641,9 @@ visit_decref_circuit_part_only(PyObject *op, void *param)
          */
         if (gc == circuit_root) {
             gc_decref(gc);
+            if (gc_get_refs(gc) == 0 && (++cc_count % 100) == 0) {
+                printf("scan_circuit3: %d, %p\n", cc_count, op);
+            }
         } 
         else if (is_part_of_circuit(op)) {
             traverseproc traverse = Py_TYPE(op)->tp_traverse;
@@ -1568,8 +1573,28 @@ visit_add_to_container(PyObject *op, void *arg)
                 gc_list_move(gc, cf->container);
                 cf->size++;
             }
-#if 0 // def ENABLE_RTGC_GC
-            else if (op == cf->scanPath[0]) {
+        }
+    }
+    return 0;
+}
+
+#ifdef ENABLE_RTGC_GC
+static int
+visit_add_to_container_and_detect_circuit(PyObject *op, void *arg)
+{
+    OBJECT_STAT_INC(object_visits);
+    struct container_and_flag *cf = (struct container_and_flag *)arg;
+    int visited = cf->visited_space;
+    assert(visited == get_gc_state()->visited_space);
+    if (!_Py_IsImmortal(op) && _PyObject_IS_GC(op)) {
+        PyGC_Head *gc = AS_GC(op);
+        if (_PyObject_GC_IS_TRACKED(op)) {
+            if (gc_old_space(gc) != visited) {
+                gc_flip_old_space(gc);
+                gc_list_move(gc, cf->container);
+                cf->size++;
+            }
+            if (op == cf->scanPath[0]) {
                 for (int i = cf->scanDepth; --i > 0; ) {
                     cf->scanPath[i]->ob_flags |= RTGC_CIRCUIT;       
                 }
@@ -1580,18 +1605,15 @@ visit_add_to_container(PyObject *op, void *arg)
                 cf->scanPath[cf->scanDepth++] = op;
                 traverseproc traverse = Py_TYPE(op)->tp_traverse;
                 (void) traverse(op,
-                        visit_add_to_container,
+                        visit_add_to_container_and_detect_circuit,
                         (void *)cf);
                 cf->scanDepth--;
             }
-#endif
         }
     }
-#ifdef ENABLE_RTGC_GC
-#endif
-
     return 0;
 }
+#endif
 
 static intptr_t
 expand_region_transitively_reachable(PyGC_Head *container, PyGC_Head *gc, GCState *gcstate)
@@ -1603,7 +1625,7 @@ expand_region_transitively_reachable(PyGC_Head *container, PyGC_Head *gc, GCStat
     };
 
 #ifdef ENABLE_RTGC_GC        
-    arg.scanDepth = 1;
+    arg.scanDepth = INT_MAX;
 #endif
 
     assert(GC_NEXT(gc) == container);
@@ -1621,18 +1643,18 @@ expand_region_transitively_reachable(PyGC_Head *container, PyGC_Head *gc, GCStat
         }
 
         traverseproc traverse = Py_TYPE(op)->tp_traverse;
-        #ifdef ENABLE_RTGC_GC
-        if (op->ob_refcnt > 1) {
-            arg.scanPath[0] = op;
-            arg.scanDepth = 1;
-            (void) traverse(op,
-                        visit_add_to_container,
-                        &arg);
-            assert(arg.scanDepth == 1);
-            arg.scanDepth = INT_MAX;
-        }
-        else 
-        #endif
+        // #ifdef ENABLE_RTGC_GC
+        // if (op->ob_refcnt > 1) {
+        //     arg.scanPath[0] = op;
+        //     arg.scanDepth = 1;
+        //     (void) traverse(op,
+        //                 visit_add_to_container,
+        //                 &arg);
+        //     assert(arg.scanDepth == 1);
+        //     arg.scanDepth = INT_MAX;
+        // }
+        // else 
+        // #endif
             (void) traverse(op,
                         visit_add_to_container,
                         &arg);
@@ -1694,12 +1716,28 @@ mark_all_reachable(PyGC_Head *reachable, PyGC_Head *visited, int visited_space)
         .visited_space = visited_space,
         .size = 0
     };
+#ifdef ENABLE_RTGC_GC        
+    arg.scanDepth = INT_MAX;
+#endif
+
     while (!gc_list_is_empty(reachable)) {
         PyGC_Head *gc = _PyGCHead_NEXT(reachable);
         assert(gc_old_space(gc) == visited_space);
         gc_list_move(gc, visited);
         PyObject *op = FROM_GC(gc);
         traverseproc traverse = Py_TYPE(op)->tp_traverse;
+#ifdef ENABLE_RTGC_GC
+        if (op->ob_refcnt > 1) {
+            arg.scanPath[0] = op;
+            arg.scanDepth = 1;
+            (void) traverse(op,
+                        visit_add_to_container_and_detect_circuit,
+                        &arg);
+            assert(arg.scanDepth == 1);
+            arg.scanDepth = INT_MAX;
+        }
+        else 
+#endif
         (void) traverse(op,
                         visit_add_to_container,
                         &arg);
