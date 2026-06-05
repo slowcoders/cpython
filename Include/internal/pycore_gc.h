@@ -252,7 +252,7 @@ static inline void _PyObject_GC_TRACK(
     uintptr_t not_visited = 1 ^ gcstate->visited_space;
     gc->_gc_next = ((uintptr_t)generation0) | not_visited;
     generation0->_gc_prev = (uintptr_t)gc;
-#ifdef ENABLE_RTGC_GC
+#ifdef ENABLE_RTGC_REF_ANCHOR
     // op->ob_overflow |= 1;
 #endif
     gcstate->young.count++; /* number of tracked GC objects */

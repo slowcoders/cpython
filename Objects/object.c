@@ -2635,7 +2635,7 @@ new_reference(PyObject *op)
     // Skip the immortal object check in Py_SET_REFCNT; always set refcnt to 1
 #if !defined(Py_GIL_DISABLED)
 #if SIZEOF_VOID_P > 4
-#if defined(ENABLE_RTGC) || defined(ENABLE_RTGC_GC)
+#if defined(ENABLE_RTGC) || defined(ENABLE_RTGC_REF_ANCHOR)
     op->ob_refcnt_full = 2 | 1 | (2L << 32);
     assert(op->ob_overflow == MIN_RTGC_STABLE_REF_COUNT);
 #else
@@ -2664,7 +2664,7 @@ new_reference(PyObject *op)
 #ifdef Py_TRACE_REFS
     _Py_AddToAllObjects(op);
 #endif
-#if defined(ENABLE_RTGC) || defined(ENABLE_RTGC_GC)
+#if defined(ENABLE_RTGC) || defined(ENABLE_RTGC_REF_ANCHOR)
     assert(op->ob_refcnt < _Py_IMMORTAL_INITIAL_REFCNT);
     if (!PyType_IS_GC(op->ob_type)) {
         op->ob_flags |= RTGC_ACYCLIC;

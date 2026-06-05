@@ -51,7 +51,7 @@ for omitting increfs is much higher than for omitting decrefs. Consequently, onc
 the refcount for an object exceeds _Py_IMMORTAL_MINIMUM_REFCNT it will gradually
 increase over time until it reaches _Py_IMMORTAL_INITIAL_REFCNT.
 */
-#ifdef ENABLE_RTGC_GC
+#ifdef ENABLE_RTGC_REF_ANCHOR
 #define _Py_IMMORTAL_INITIAL_REFCNT (3ULL << 29)
 #define _Py_IMMORTAL_MINIMUM_REFCNT (1ULL << 30)
 #define _Py_STATIC_IMMORTAL_INITIAL_REFCNT (((Py_ssize_t)_Py_IMMORTAL_INITIAL_REFCNT << 1) | 1 | (_Py_STATIC_FLAG_BITS << 48))
@@ -138,7 +138,7 @@ static inline Py_ALWAYS_INLINE int _Py_IsImmortal(PyObject *op)
 #if defined(Py_GIL_DISABLED)
     return (_Py_atomic_load_uint32_relaxed(&op->ob_ref_local) ==
             _Py_IMMORTAL_REFCNT_LOCAL);
-#elif SIZEOF_VOID_P > 4 && !defined ENABLE_RTGC_GC
+#elif SIZEOF_VOID_P > 4 && !defined ENABLE_RTGC_REF_ANCHOR
     return _Py_CAST(PY_INT32_T, op->ob_refcnt) < 0;
 #else
     return op->ob_refcnt >= _Py_IMMORTAL_MINIMUM_REFCNT;
@@ -270,7 +270,7 @@ PyAPI_FUNC(void) RTGC_registerUnsafe(PyObject *);
 PyAPI_FUNC(void) RTGC_trace(PyObject *, const char* tag);
 PyAPI_FUNC(void) RTGC_dump(PyObject *, const char* tag);
 
-#ifdef ENABLE_RTGC_GC
+#ifdef ENABLE_RTGC_REF_ANCHOR
 static inline Py_ALWAYS_INLINE void RTGC_decRefMortal(PyObject *po)
 {
     uint32_t* pRef32 = (uint32_t*)&po->ob_refcnt_full;
@@ -286,7 +286,7 @@ static inline Py_ALWAYS_INLINE void RTGC_decRefMortal(PyObject *po)
 #endif
 
 
-#ifdef ENABLE_RTGC_GC
+#ifdef ENABLE_RTGC
 static inline Py_ALWAYS_INLINE void RTGC_decStableRef(PyObject *po)
 {
     if (po == NULL) return;
@@ -522,7 +522,7 @@ static inline void Py_DECREF(PyObject *op)
 static inline void Py_DECREF(const char *filename, int lineno, PyObject *op)
 {
 #if SIZEOF_VOID_P > 4
-    #if defined(ENABLE_RTGC) || defined(ENABLE_RTGC_GC)
+    #if defined(ENABLE_RTGC) || defined(ENABLE_RTGC_REF_ANCHOR)
         if (op->ob_refcnt_full <= 0 || op->ob_refcnt <= 0) {
     #else
         /* If an object has been freed, it will have a negative full refcnt
@@ -540,7 +540,7 @@ static inline void Py_DECREF(const char *filename, int lineno, PyObject *op)
     }
     _Py_DECREF_STAT_INC();
     _Py_DECREF_DecRefTotal();
-#ifdef ENABLE_RTGC_GC 
+#ifdef ENABLE_RTGC_REF_ANCHOR 
     RTGC_decRefMortal(op);
 #else
     if (--op->ob_refcnt == 0) {
@@ -561,7 +561,7 @@ static inline Py_ALWAYS_INLINE void Py_DECREF(PyObject *op)
         return;
     }
     _Py_DECREF_STAT_INC();
-#ifdef ENABLE_RTGC_GC 
+#ifdef ENABLE_RTGC_REF_ANCHOR 
     RTGC_decRefMortal(op);
 #else
     if (--op->ob_refcnt == 0) {

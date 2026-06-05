@@ -10,15 +10,19 @@
             "request": "launch",
             
             // <heavy gc tests>
-            // "program": "_debug/python.exe", "args": ["-m", "test.test_gc", "IncrementalGCTests.test_incremental_gc_handles_fast_cycle_creation"],
+            "program": "_debug/python.exe", "args": ["-m", "test.test_gc_fast_cycles2", "IncrementalGCTests.test_incremental_gc_handles_fast_cycle_creation"],
             // "program": "_debug/python.exe", "args": ["-m", "test.test_gc", "GCTests.test_resurrection_only_happens_once_per_object"],
             // "program": "_debug/python.exe", "args": ["-m", "test.test_dict"], // "DictTest.test_repr_deep"],
 
             // "program": "_debug/python.exe", "args": ["-m", "test.test_multiprocessing_spawn.test_processes", "WithProcessesTestHeap.test_free_from_gc"],
             // "program": "_debug/python.exe", "args": ["-m", "test.test_multiprocessing_forkserver.test_processes", "WithProcessesTestHeap.test_free_from_gc"],
 
-            "program": "_debug/python.exe", "args": ["-m", "test", "test_socket"],
+            // "program": "_debug/python.exe", "args": ["-m", "test", "test_re"],
+            // "program": "_debug/python.exe", "args": ["-m", "test", "test_pickle"],
+            // "program": "_debug/python.exe", "args": ["-m", "test", "test_generated_cases"],
 
+            // "program": "_debug/python.exe", "args": ["-m", "test", "test_call"],
+            // "program": "_debug/python.exe", "args": ["-m", "test", "test_functools"],
             
             // <do test>
             // "program": "_debug/python.exe", "args": ["-u", "-W", "error", "-bb", "-E", "-m", "test", "--fast-ci", "-u-gui", "--timeout=", "--dont-add-python-opts"],
@@ -52,5 +56,9 @@
     ]
 }
 
-// _debug/python.exe -m test.test_gc IncrementalGCTests.test_incremental_gc_handles_fast_cycle_creation
+// _rt_rtgc/python.exe -m test.test_gc IncrementalGCTests.test_incremental_gc_handles_fast_cycle_creation
+// Ran 1 test in 0.496s, 0.530s
 // _release/python.exe -m test.test_gc IncrementalGCTests.test_incremental_gc_handles_fast_cycle_creation
+// Ran 1 test in 0.442s, 0.476s
+// _rt_rtgc/python.exe -m test test_re 
+// _release/python.exe -m test test_re

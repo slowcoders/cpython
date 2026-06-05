@@ -15,6 +15,7 @@
 
 #include "pydtrace.h"
 
+// #undef ENABLE_RTGC_GC
 #ifndef Py_GIL_DISABLED
 
 typedef struct _gc_runtime_state GCState;
@@ -642,7 +643,7 @@ visit_decref_circuit_part_only(PyObject *op, void *param)
         if (gc == circuit_root) {
             gc_decref(gc);
             if (gc_get_refs(gc) == 0 && (++cc_count % 100) == 0) {
-                printf("scan_circuit3: %d, %p\n", cc_count, op);
+                printf("garbage circuit found: %d, %p\n", cc_count, op);
             }
         } 
         else if (is_part_of_circuit(op)) {
@@ -777,7 +778,9 @@ visit_reachable(PyObject *op, void *arg)
                 rtStack->stack[i]->ob_flags |= RTGC_CIRCUIT;       
             }
             rtStack->stack[0]->ob_flags |= RTGC_CIRCUIT_ROOT;     
+#ifdef ENABLE_RTGC_REF_ANCHOR
             rtStack->stack[0]->ob_anchored = 0;     
+#endif
         }
         return 0;
 #endif
@@ -809,7 +812,7 @@ visit_reachable(PyObject *op, void *arg)
  * So we can not gc_list_* functions for unreachable until we remove the flag.
  */
 static void
-move_unreachable(PyGC_Head *young, PyGC_Head *unreachable)
+move_unreachable(PyGC_Head *young, PyGC_Head *unreachable, bool do_detect_cyclic)
 {
     // previous elem in the young list, used for restore gc_prev.
     PyGC_Head *prev = young;
@@ -856,20 +859,16 @@ move_unreachable(PyGC_Head *young, PyGC_Head *unreachable)
             // NOTE: visit_reachable may change gc->_gc_next when
             // young->_gc_prev == gc.  Don't do gc = GC_NEXT(gc) before!
             #ifdef ENABLE_RTGC_GC
-                if (op->ob_refcnt > 1) {
+                if (op->ob_refcnt > 1 && do_detect_cyclic) {
                     rtStack.stack[0] = op;
                     rtStack.scanDepth = 1;
-                    (void) traverse(op,
-                            visit_reachable,
-                            (void *)&rtStack);
-                    assert(rtStack.scanDepth == 1);
                 }
                 else {
                     rtStack.scanDepth = INT_MAX;
-                    (void) traverse(op,
-                            visit_reachable,
-                            (void *)&rtStack);
                 }
+                (void) traverse(op,
+                        visit_reachable,
+                        (void *)&rtStack);
             #else
                 (void) traverse(op,
                         visit_reachable,
@@ -1322,10 +1321,14 @@ delete_garbage(PyThreadState *tstate, GCState *gcstate,
             inquiry clear;
             if ((clear = Py_TYPE(op)->tp_clear) != NULL) {
                 Py_INCREF(op);
-                (void) clear(op);
-#ifdef ENABLE_RTGC_GC
+#ifdef ENABLE_RTGC_REF_ANCHOR
+                // if ((FROM_GC(gc)->ob_flags & RTGC_CIRCUIT_ROOT) != 0) {
+                //     printf("c-root %p\n", FROM_GC(gc));
+                // }
                 op->ob_anchored = 1;
 #endif                
+
+                (void) clear(op);
                 if (_PyErr_Occurred(tstate)) {
                     PyErr_FormatUnraisable("Exception ignored in tp_clear of %s",
                                            Py_TYPE(op)->tp_name);
@@ -1421,7 +1424,7 @@ deduce_unreachable(PyGC_Head *base, PyGC_Head *unreachable, bool do_detect_cycli
      * the reachable objects instead.  But this is a one-time cost, probably not
      * worth complicating the code to speed just a little.
      */
-    move_unreachable(base, unreachable);  // gc_prev is pointer again
+    move_unreachable(base, unreachable, do_detect_cyclic);  // gc_prev is pointer again
     validate_list(base, collecting_clear_unreachable_clear);
     validate_list(unreachable, collecting_set_unreachable_set);
 }
@@ -1451,7 +1454,7 @@ handle_resurrected_objects(PyGC_Head *unreachable, PyGC_Head* still_unreachable,
     // have the PREV_MARK_COLLECTING set, but the objects are going to be
     // removed so we can skip the expense of clearing the flag.
     PyGC_Head* resurrected = unreachable;
-    deduce_unreachable(resurrected, still_unreachable, false);
+    deduce_unreachable(resurrected, still_unreachable, true);
     clear_unreachable_mask(still_unreachable);
 
     // Move the resurrected objects to the old generation for future collection.
@@ -1599,7 +1602,9 @@ visit_add_to_container_and_detect_circuit(PyObject *op, void *arg)
                     cf->scanPath[i]->ob_flags |= RTGC_CIRCUIT;       
                 }
                 cf->scanPath[0]->ob_flags |= RTGC_CIRCUIT_ROOT;     
+#ifdef ENABLE_RTGC_REF_ANCHOR                
                 cf->scanPath[0]->ob_anchored = 0;     
+#endif
             }
             else if (cf->scanDepth < MAX_RTGC_CIRCLE_LEN && op->ob_refcnt == 1) {
                 cf->scanPath[cf->scanDepth++] = op;
@@ -1871,6 +1876,14 @@ assess_work_to_do(GCState *gcstate)
     return new_objects + heap_fraction;
 }
 
+static int g_cntRTGC = 0;
+static int g_cntRTGC_young = 0;
+static int g_cntRTGC_incremental = 0;
+static int g_cntRTGC_incremental_scan = 0;
+static int g_cntRTGC_incremental_mark = 0;
+static int g_cntRTGC_full = 0;
+int g_cntDealloc = -1;
+
 static void
 gc_collect_increment(PyThreadState *tstate, struct gc_collection_stats *stats)
 {
@@ -1885,9 +1898,11 @@ gc_collect_increment(PyThreadState *tstate, struct gc_collection_stats *stats)
         Py_ssize_t objects_marked = mark_at_start(tstate);
         GC_STAT_ADD(1, objects_transitively_reachable, objects_marked);
         gcstate->work_to_do -= objects_marked;
+        g_cntRTGC_incremental_mark ++;
         validate_spaces(gcstate);
         return;
     }
+    g_cntRTGC_incremental_scan ++;
     PyGC_Head *not_visited = &gcstate->old[gcstate->visited_space^1].head;
     PyGC_Head *visited = &gcstate->old[gcstate->visited_space].head;
     PyGC_Head increment;
@@ -2288,10 +2303,6 @@ show_stats_each_generations(GCState *gcstate)
         buf, gc_list_size(&gcstate->permanent_generation.head));
 }
 
-static int g_cntRTGC = 0;
-static int g_cntRTGC_young = 0;
-static int g_cntRTGC_incremental = 0;
-static int g_cntRTGC_full = 0;
 Py_ssize_t
 _PyGC_Collect(PyThreadState *tstate, int generation, _PyGC_Reason reason)
 {
@@ -2762,7 +2773,9 @@ PyAPI_FUNC(void) RTGC_registerUnsafe(PyObject* op) {
         gc->_gc_next = 0;
         gc->_gc_prev &= _PyGC_PREV_MASK_FINALIZED;
         _PyObject_GC_TRACK(op);
+#ifdef ENABLE_RTGC_REF_ANCHOR
         op->ob_anchored = 1;
+#endif
     }
 }
 
