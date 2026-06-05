@@ -1,0 +1,8 @@
+#undef PP_FIELD_OBJ
+#undef PP_FIELD_ARRAY
+#undef PP_FIELD_PRIMITIVE_ARRAY
+#ifdef CLOSE_BRACE
+    CLOSE_BRACE
+#endif
+#undef CLOSE_BRACE
+#undef PP_REPLACE_FIELD

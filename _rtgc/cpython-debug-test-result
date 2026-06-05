@@ -1,0 +1,666 @@
+2023-01-04 (No-RTGC)
+
+zeedh@DaeHoons-MacBook-Pro _debug % make test
+ CC='gcc' LDSHARED='gcc -bundle -undefined dynamic_lookup   -flto -Wl,-export_dynamic -g ' OPT='-g -Og -Wall' ./python.exe -E ../setup.py  build
+running build
+running build_ext
+
+The necessary bits to build these optional modules were not found:
+_gdbm                 _hashlib              _lzma              
+_ssl                  _tkinter                                 
+To find the necessary bits, look in setup.py in detect_modules() for the module's name.
+
+
+Could not build the ssl module!
+Python requires a OpenSSL 1.1.1 or newer
+
+running build_scripts
+copying and adjusting /Users/zeedh/slowcoders/cpython/Tools/scripts/pydoc3 -> build/scripts-3.11
+copying and adjusting /Users/zeedh/slowcoders/cpython/Tools/scripts/idle3 -> build/scripts-3.11
+copying and adjusting /Users/zeedh/slowcoders/cpython/Tools/scripts/2to3 -> build/scripts-3.11
+changing mode of build/scripts-3.11/pydoc3 from 644 to 755
+changing mode of build/scripts-3.11/idle3 from 644 to 755
+changing mode of build/scripts-3.11/2to3 from 644 to 755
+renaming build/scripts-3.11/pydoc3 to build/scripts-3.11/pydoc3.11
+renaming build/scripts-3.11/idle3 to build/scripts-3.11/idle3.11
+renaming build/scripts-3.11/2to3 to build/scripts-3.11/2to3-3.11
+./python.exe -E  ../Tools/scripts/run_tests.py 
+/Users/zeedh/slowcoders/cpython/_debug/python.exe -u -W default -bb -E -E -m test -r -w -j 0 -u all,-largefile,-audio,-gui
+== CPython 3.11.7 (heads/rtgc-3.11.7-dirty:48e3e6a3d8, Jan 4 2024, 00:14:11) [Clang 13.0.0 (clang-1300.0.29.30)]
+== macOS-11.7.10-x86_64-i386-64bit little-endian
+== Python build: debug LTO
+== cwd: /Users/zeedh/slowcoders/cpython/_debug/build/test_python_worker_62090æ
+== CPU count: 8
+== encodings: locale=UTF-8 FS=utf-8
+== resources: all,-audio,-gui,-largefile
+
+Using random seed: 2344058684
+0:00:00 load avg: 2.20 Run 484 tests in parallel using 10 worker processes
+0:00:00 load avg: 2.74 [  1/484] test_dictcomps passed
+0:00:00 load avg: 2.74 [  2/484] test_except_star passed
+0:00:00 load avg: 2.74 [  3/484] test_xdrlib passed
+0:00:00 load avg: 2.74 [  4/484] test_html passed
+0:00:00 load avg: 2.74 [  5/484] test_colorsys passed
+0:00:01 load avg: 2.74 [  6/484] test_dbm_dumb passed
+0:00:01 load avg: 2.74 [  7/484] test_crypt passed
+0:00:01 load avg: 2.74 [  8/484] test_wsgiref passed
+0:00:01 load avg: 2.74 [  9/484] test_xxtestfuzz passed
+/Users/zeedh/slowcoders/cpython/Lib/re/__init__.py:289: DeprecationWarning: The re.TEMPLATE/re.T flag is deprecated as it is an undocumented flag without an obvious purpose. Don't use it.
+  warnings.warn("The re.TEMPLATE/re.T flag is deprecated "
+0:00:01 load avg: 2.74 [ 10/484] test_launcher skipped
+test_launcher skipped -- test only applies to Windows
+0:00:02 load avg: 2.74 [ 11/484] test_float passed
+0:00:02 load avg: 2.74 [ 12/484] test_tomllib passed
+0:00:02 load avg: 2.74 [ 13/484] test.test_asyncio.test_ssl passed
+0:00:02 load avg: 2.74 [ 14/484] test_syntax passed
+0:00:02 load avg: 2.74 [ 15/484] test_numeric_tower passed
+0:00:02 load avg: 2.74 [ 16/484] test_keywordonlyarg passed
+0:00:03 load avg: 2.74 [ 17/484] test_docxmlrpc passed
+0:00:04 load avg: 2.74 [ 18/484] test_codecencodings_jp passed
+0:00:04 load avg: 2.74 [ 19/484] test_fcntl passed
+struct.pack:  b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00'
+struct.pack:  b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00'
+0:00:04 load avg: 2.74 [ 20/484] test_shelve passed
+0:00:05 load avg: 2.74 [ 21/484] test_urllib_response passed
+0:00:05 load avg: 4.04 [ 22/484] test_dict passed
+0:00:05 load avg: 4.04 [ 23/484] test_dynamicclassattribute passed
+0:00:05 load avg: 4.04 [ 24/484] test_base64 passed
+0:00:06 load avg: 4.04 [ 25/484] test_binop passed
+0:00:07 load avg: 4.04 [ 26/484] test_thread passed
+0:00:09 load avg: 4.04 [ 27/484] test.test_asyncio.test_futures passed
+0:00:10 load avg: 7.24 [ 28/484] test_ucn passed
+0:00:10 load avg: 7.24 [ 29/484] test_timeit passed
+0:00:11 load avg: 7.24 [ 30/484] test.test_future_stmt.test_future_single_import passed
+0:00:11 load avg: 7.24 [ 31/484] test_codecmaps_jp passed
+0:00:11 load avg: 7.24 [ 32/484] test.test_inspect.test_inspect passed
+0:00:11 load avg: 7.24 [ 33/484] test.test_multiprocessing_fork.test_processes skipped
+test.test_multiprocessing_fork.test_processes skipped -- test may crash on macOS (bpo-33725)
+0:00:12 load avg: 7.24 [ 34/484] test_ioctl skipped
+test_ioctl skipped -- Unable to open /dev/tty
+0:00:12 load avg: 7.24 [ 35/484] test_codeccallbacks passed
+0:00:13 load avg: 7.24 [ 36/484] test_asynchat passed
+0:00:14 load avg: 7.24 [ 37/484] test_richcmp passed
+0:00:14 load avg: 7.24 [ 38/484] test_typechecks passed
+0:00:15 load avg: 8.26 [ 39/484] test_flufl passed
+0:00:15 load avg: 8.26 [ 40/484] test_uu passed
+0:00:15 load avg: 8.26 [ 41/484] test_listcomps passed
+0:00:19 load avg: 8.26 [ 42/484] test_math passed
+0:00:20 load avg: 8.80 [ 43/484] test_unpack_ex passed
+0:00:20 load avg: 8.80 [ 44/484] test_glob passed
+0:00:22 load avg: 8.80 [ 45/484] test_pickletools passed
+0:00:23 load avg: 8.80 [ 46/484] test_datetime passed
+0:00:26 load avg: 8.74 [ 47/484] test_builtin passed
+0:00:27 load avg: 8.74 [ 48/484] test_filecmp passed
+0:00:29 load avg: 8.74 [ 49/484] test_xmlrpc passed
+0:00:29 load avg: 8.74 [ 50/484] test_unpack passed
+0:00:31 load avg: 9.16 [ 51/484] test.test_concurrent_futures.test_future passed
+0:00:34 load avg: 9.16 [ 52/484] test_utf8_mode passed -- running (2): test.test_multiprocessing_spawn.test_manager (32.1 sec), test_io (31.9 sec)
+0:00:39 load avg: 9.07 [ 53/484] test_zipfile passed -- running (3): test.test_multiprocessing_spawn.test_manager (37.0 sec), test.test_concurrent_futures.test_deadlock (33.0 sec), test_io (36.8 sec)
+0:00:39 load avg: 9.07 [ 54/484] test.test_concurrent_futures.test_deadlock passed (33.7 sec) -- running (2): test.test_multiprocessing_spawn.test_manager (37.6 sec), test_io (37.4 sec)
+0:00:40 load avg: 9.86 [ 55/484] test_generator_stop passed -- running (2): test.test_multiprocessing_spawn.test_manager (38.4 sec), test_io (38.2 sec)
+0:00:41 load avg: 9.86 [ 56/484] test_contains passed -- running (2): test.test_multiprocessing_spawn.test_manager (39.5 sec), test_io (39.3 sec)
+0:00:41 load avg: 9.86 [ 57/484] test.test_asyncio.test_waitfor passed -- running (2): test.test_multiprocessing_spawn.test_manager (39.7 sec), test_io (39.5 sec)
+0:00:41 load avg: 9.86 [ 58/484] test_unittest passed -- running (2): test.test_multiprocessing_spawn.test_manager (39.8 sec), test_io (39.6 sec)
+0:00:42 load avg: 9.86 [ 59/484] test_stringprep passed -- running (2): test.test_multiprocessing_spawn.test_manager (40.5 sec), test_io (40.2 sec)
+0:00:43 load avg: 9.86 [ 60/484] test_slice passed -- running (2): test.test_multiprocessing_spawn.test_manager (41.7 sec), test_io (41.5 sec)
+0:00:44 load avg: 9.86 [ 61/484] test_faulthandler passed -- running (2): test.test_multiprocessing_spawn.test_manager (42.3 sec), test_io (42.1 sec)
+0:00:44 load avg: 9.86 [ 62/484] test_isinstance passed -- running (2): test.test_multiprocessing_spawn.test_manager (42.4 sec), test_io (42.2 sec)
+0:00:45 load avg: 11.71 [ 63/484] test_graphlib passed -- running (2): test.test_multiprocessing_spawn.test_manager (43.7 sec), test_io (43.5 sec)
+0:00:46 load avg: 11.71 [ 64/484] test.test_gdb.test_cfunction skipped -- running (2): test.test_multiprocessing_spawn.test_manager (44.6 sec), test_io (44.3 sec)
+test.test_gdb.test_cfunction skipped -- Couldn't find gdb program on the path: [Errno 2] No such file or directory: 'gdb'
+0:00:47 load avg: 11.71 [ 65/484] test_winreg skipped -- running (2): test.test_multiprocessing_spawn.test_manager (45.2 sec), test_io (44.9 sec)
+test_winreg skipped -- No module named 'winreg'
+0:00:47 load avg: 11.71 [ 66/484] test_errno passed -- running (2): test.test_multiprocessing_spawn.test_manager (45.8 sec), test_io (45.5 sec)
+0:00:48 load avg: 11.71 [ 67/484] test_dtrace passed -- running (2): test.test_multiprocessing_spawn.test_manager (46.6 sec), test_io (46.4 sec)
+0:00:49 load avg: 11.71 [ 68/484] test_context passed -- running (2): test.test_multiprocessing_spawn.test_manager (47.8 sec), test_io (47.6 sec)
+0:00:50 load avg: 11.50 [ 69/484] test_abstract_numbers passed -- running (2): test.test_multiprocessing_spawn.test_manager (48.4 sec), test_io (48.2 sec)
+0:00:50 load avg: 11.50 [ 70/484] test_robotparser passed -- running (2): test.test_multiprocessing_spawn.test_manager (48.9 sec), test_io (48.7 sec)
+0:00:52 load avg: 11.50 [ 71/484] test.test_asyncio.test_context passed -- running (2): test.test_multiprocessing_spawn.test_manager (50.0 sec), test_io (49.8 sec)
+0:00:52 load avg: 11.50 [ 72/484] test_doctest passed -- running (2): test.test_multiprocessing_spawn.test_manager (50.2 sec), test_io (49.9 sec)
+0:00:52 load avg: 11.50 [ 73/484] test.test_asyncio.test_queues passed -- running (3): test.test_multiprocessing_spawn.test_manager (50.5 sec), test_subprocess (30.2 sec), test_io (50.3 sec)
+0:00:52 load avg: 11.50 [ 74/484] test_wave passed -- running (3): test.test_multiprocessing_spawn.test_manager (51.0 sec), test_subprocess (30.7 sec), test_io (50.7 sec)
+0:00:53 load avg: 11.50 [ 75/484] test_sched passed -- running (3): test.test_multiprocessing_spawn.test_manager (51.4 sec), test_subprocess (31.2 sec), test_io (51.2 sec)
+0:00:54 load avg: 11.50 [ 76/484] test_winsound skipped (resource denied) -- running (4): test_decimal (31.1 sec), test.test_multiprocessing_spawn.test_manager (52.7 sec), test_subprocess (32.4 sec), test_io (52.5 sec)
+test_winsound skipped -- Use of the 'audio' resource not enabled
+0:00:57 load avg: 11.94 [ 77/484] test.test_asyncio.test_proactor_events passed -- running (4): test_decimal (33.9 sec), test.test_multiprocessing_spawn.test_manager (55.5 sec), test_subprocess (35.2 sec), test_io (55.3 sec)
+0:00:59 load avg: 11.94 [ 78/484] test.test_multiprocessing_spawn.test_manager passed (57.9 sec) -- running (3): test_decimal (36.4 sec), test_subprocess (37.7 sec), test_io (57.7 sec)
+0:01:00 load avg: 11.94 [ 79/484] test.test_asyncio.test_sendfile passed -- running (3): test_decimal (36.6 sec), test_subprocess (37.9 sec), test_io (58.0 sec)
+0:01:01 load avg: 11.70 [ 80/484] test_atexit passed -- running (4): test_decimal (38.2 sec), test_subprocess (39.5 sec), test_io (59.6 sec), test_weakref (30.5 sec)
+0:01:02 load avg: 11.70 [ 81/484] test_codecencodings_cn passed -- running (4): test_decimal (38.6 sec), test_subprocess (39.9 sec), test_io (59.9 sec), test_weakref (30.8 sec)
+0:01:02 load avg: 11.70 [ 82/484] test_utf8source passed -- running (4): test_decimal (39.0 sec), test_subprocess (40.3 sec), test_io (1 min), test_weakref (31.2 sec)
+0:01:03 load avg: 11.70 [ 83/484] test_nis passed -- running (4): test_decimal (39.7 sec), test_subprocess (41.0 sec), test_io (1 min 1 sec), test_weakref (31.9 sec)
+0:01:04 load avg: 11.70 [ 84/484] test_reprlib passed -- running (4): test_decimal (40.4 sec), test_subprocess (41.7 sec), test_io (1 min 1 sec), test_weakref (32.6 sec)
+0:01:04 load avg: 11.70 [ 85/484] test.test_asyncio.test_events passed -- running (5): test_decimal (40.9 sec), test_itertools (30.3 sec), test_subprocess (42.2 sec), test_io (1 min 2 sec), test_weakref (33.1 sec)
+0:01:04 load avg: 11.70 [ 86/484] test_genericpath passed -- running (5): test_decimal (41.2 sec), test_itertools (30.6 sec), test_subprocess (42.4 sec), test_io (1 min 2 sec), test_weakref (33.4 sec)
+0:01:05 load avg: 11.73 [ 87/484] test_weakset passed -- running (5): test_decimal (41.9 sec), test_itertools (31.3 sec), test_subprocess (43.2 sec), test_io (1 min 3 sec), test_weakref (34.1 sec)
+0:01:05 load avg: 11.73 [ 88/484] test_fnmatch passed -- running (5): test_decimal (42.0 sec), test_itertools (31.4 sec), test_subprocess (43.2 sec), test_io (1 min 3 sec), test_weakref (34.2 sec)
+0:01:06 load avg: 11.73 [ 89/484] test_hmac passed -- running (5): test_decimal (42.8 sec), test_itertools (32.3 sec), test_subprocess (44.1 sec), test_io (1 min 4 sec), test_weakref (35.1 sec)
+0:01:06 load avg: 11.73 [ 90/484] test___all__ passed -- running (5): test_decimal (43.3 sec), test_itertools (32.8 sec), test_subprocess (44.6 sec), test_io (1 min 4 sec), test_weakref (35.6 sec)
+0:01:07 load avg: 11.73 [ 91/484] test_tty passed -- running (5): test_decimal (43.4 sec), test_itertools (32.9 sec), test_subprocess (44.7 sec), test_io (1 min 4 sec), test_weakref (35.7 sec)
+0:01:07 load avg: 11.73 [ 92/484] test_io passed (1 min 4 sec) -- running (4): test_decimal (43.7 sec), test_itertools (33.1 sec), test_subprocess (44.9 sec), test_weakref (35.9 sec)
+0:01:07 load avg: 11.73 [ 93/484] test_itertools passed (33.3 sec) -- running (3): test_decimal (43.9 sec), test_subprocess (45.2 sec), test_weakref (36.1 sec)
+0:01:07 load avg: 11.73 [ 94/484] test_symtable passed -- running (3): test_decimal (44.0 sec), test_subprocess (45.3 sec), test_weakref (36.3 sec)
+0:01:07 load avg: 11.73 [ 95/484] test_weakref passed (36.4 sec) -- running (2): test_decimal (44.2 sec), test_subprocess (45.4 sec)
+0:01:07 load avg: 11.73 [ 96/484] test_smtpnet skipped -- running (2): test_decimal (44.2 sec), test_subprocess (45.5 sec)
+test_smtpnet skipped -- No module named '_ssl'
+0:01:07 load avg: 11.73 [ 97/484] test_defaultdict passed -- running (2): test_decimal (44.4 sec), test_subprocess (45.7 sec)
+0:01:08 load avg: 11.73 [ 98/484] test_abc passed -- running (2): test_decimal (44.6 sec), test_subprocess (45.9 sec)
+0:01:08 load avg: 11.73 [ 99/484] test_call passed -- running (2): test_decimal (45.0 sec), test_subprocess (46.3 sec)
+0:01:08 load avg: 11.73 [100/484] test_poplib passed -- running (2): test_decimal (45.1 sec), test_subprocess (46.4 sec)
+0:01:08 load avg: 11.73 [101/484] test.test_asyncio.test_windows_utils skipped -- running (2): test_decimal (45.3 sec), test_subprocess (46.5 sec)
+test.test_asyncio.test_windows_utils skipped -- Windows only
+0:01:08 load avg: 11.73 [102/484] test_sort passed -- running (2): test_decimal (45.4 sec), test_subprocess (46.7 sec)
+0:01:09 load avg: 11.73 [103/484] test_argparse passed -- running (2): test_decimal (45.5 sec), test_subprocess (46.8 sec)
+0:01:09 load avg: 11.73 [104/484] test_pep646_syntax passed -- running (2): test_decimal (45.8 sec), test_subprocess (47.0 sec)
+0:01:09 load avg: 11.73 [105/484] test_xmlrpc_net passed -- running (2): test_decimal (45.9 sec), test_subprocess (47.2 sec)
+0:01:09 load avg: 11.73 [106/484] test_unicode_identifiers passed -- running (2): test_decimal (46.0 sec), test_subprocess (47.3 sec)
+0:01:10 load avg: 11.73 [107/484] test_optparse passed -- running (2): test_decimal (46.5 sec), test_subprocess (47.8 sec)
+0:01:10 load avg: 11.43 [108/484] test_site passed -- running (2): test_decimal (47.3 sec), test_subprocess (48.6 sec)
+0:01:11 load avg: 11.43 [109/484] test_script_helper passed -- running (2): test_decimal (47.8 sec), test_subprocess (49.1 sec)
+0:01:11 load avg: 11.43 [110/484] test_exception_variations passed -- running (2): test_decimal (48.0 sec), test_subprocess (49.3 sec)
+0:01:11 load avg: 11.43 [111/484] test_zlib passed -- running (2): test_decimal (48.1 sec), test_subprocess (49.4 sec)
+0:01:12 load avg: 11.43 [112/484] test_structseq passed -- running (2): test_decimal (48.8 sec), test_subprocess (50.0 sec)
+0:01:13 load avg: 11.43 [113/484] test_extcall passed -- running (2): test_decimal (49.7 sec), test_subprocess (51.0 sec)
+0:01:14 load avg: 11.43 [114/484] test_types passed -- running (2): test_decimal (50.8 sec), test_subprocess (52.1 sec)
+0:01:14 load avg: 11.43 [115/484] test_userstring passed -- running (2): test_decimal (51.0 sec), test_subprocess (52.3 sec)
+0:01:14 load avg: 11.43 [116/484] test_configparser passed -- running (2): test_decimal (51.3 sec), test_subprocess (52.6 sec)
+0:01:15 load avg: 11.43 [117/484] test_cmd passed -- running (2): test_decimal (51.6 sec), test_subprocess (52.9 sec)
+0:01:15 load avg: 11.31 [118/484] test_collections passed -- running (2): test_decimal (52.2 sec), test_subprocess (53.5 sec)
+0:01:15 load avg: 11.31 [119/484] test_peepholer passed -- running (2): test_decimal (52.2 sec), test_subprocess (53.5 sec)
+0:01:16 load avg: 11.31 [120/484] test_dynamic passed -- running (2): test_decimal (52.5 sec), test_subprocess (53.8 sec)
+0:01:16 load avg: 11.31 [121/484] test.test_asyncio.test_windows_events skipped -- running (2): test_decimal (53.0 sec), test_subprocess (54.3 sec)
+test.test_asyncio.test_windows_events skipped -- Windows only
+0:01:17 load avg: 11.31 [122/484] test_stable_abi_ctypes passed -- running (2): test_decimal (53.8 sec), test_subprocess (55.1 sec)
+0:01:18 load avg: 11.31 [123/484] test_epoll skipped -- running (2): test_decimal (54.4 sec), test_subprocess (55.7 sec)
+test_epoll skipped -- test works only on Linux 2.6
+0:01:18 load avg: 11.31 [124/484] test_fstring passed -- running (2): test_decimal (54.4 sec), test_subprocess (55.7 sec)
+0:01:18 load avg: 11.31 [125/484] test_warnings passed -- running (2): test_decimal (55.2 sec), test_subprocess (56.5 sec)
+0:01:18 load avg: 11.31 [126/484] test_fileutils passed -- running (2): test_decimal (55.3 sec), test_subprocess (56.6 sec)
+0:01:19 load avg: 11.31 [127/484] test_cprofile passed -- running (2): test_decimal (55.7 sec), test_subprocess (57.0 sec)
+0:01:20 load avg: 11.31 [128/484] test_ipaddress passed -- running (2): test_decimal (56.5 sec), test_subprocess (57.7 sec)
+0:01:20 load avg: 11.31 [129/484] test_complex passed -- running (2): test_decimal (56.7 sec), test_subprocess (58.0 sec)
+0:01:20 load avg: 10.81 [130/484] test_http_cookies passed -- running (2): test_decimal (57.1 sec), test_subprocess (58.4 sec)
+0:01:20 load avg: 10.81 [131/484] test_decimal passed (57.3 sec) -- running (1): test_subprocess (58.6 sec)
+------------------------------------ NOTICE ------------------------------------
+test_decimal may generate "malloc can't allocate region"
+warnings on macOS systems. This behavior is known. Do not
+report a bug unless tests are also failing. See bpo-40928.
+--------------------------------------------------------------------------------
+0:01:22 load avg: 10.81 [132/484] test_interpreters passed -- running (1): test_subprocess (1 min)
+0:01:22 load avg: 10.81 [133/484] test_urllib2net passed -- running (1): test_subprocess (1 min)
+0:01:22 load avg: 10.81 [134/484] test_xml_etree_c passed -- running (1): test_subprocess (1 min)
+0:01:24 load avg: 10.81 [135/484] test_picklebuffer passed -- running (1): test_subprocess (1 min 1 sec)
+0:01:25 load avg: 10.81 [136/484] test_dbm_gnu skipped -- running (1): test_subprocess (1 min 2 sec)
+test_dbm_gnu skipped -- No module named '_gdbm'
+0:01:25 load avg: 10.81 [137/484] test_getpath passed -- running (1): test_subprocess (1 min 2 sec)
+0:01:25 load avg: 11.46 [138/484] test_bigaddrspace passed -- running (1): test_subprocess (1 min 3 sec)
+0:01:26 load avg: 11.46 [139/484] test_imp passed -- running (1): test_subprocess (1 min 4 sec)
+0:01:26 load avg: 11.46 [140/484] test_frozen passed -- running (1): test_subprocess (1 min 4 sec)
+0:01:26 load avg: 11.46 [141/484] test_bufio passed -- running (1): test_subprocess (1 min 4 sec)
+0:01:27 load avg: 11.46 [142/484] test_iter passed -- running (1): test_subprocess (1 min 4 sec)
+0:01:28 load avg: 11.46 [143/484] test_lltrace passed -- running (1): test_subprocess (1 min 5 sec)
+0:01:28 load avg: 11.46 [144/484] test_clinic passed -- running (1): test_subprocess (1 min 5 sec)
+0:01:28 load avg: 11.46 [145/484] test_dataclasses passed -- running (1): test_subprocess (1 min 6 sec)
+0:01:28 load avg: 11.46 [146/484] test_idle skipped -- running (1): test_subprocess (1 min 6 sec)
+test_idle skipped -- No module named '_tkinter'
+0:01:28 load avg: 11.46 [147/484] test_subprocess passed (1 min 6 sec)
+0:01:29 load avg: 11.46 [148/484] test_sunau passed
+0:01:31 load avg: 12.07 [149/484] test_socketserver passed
+0:01:31 load avg: 12.07 [150/484] test_re passed
+0:01:31 load avg: 12.07 [151/484] test_bool passed
+0:01:31 load avg: 12.07 [152/484] test.test_concurrent_futures.test_as_completed passed
+0:01:32 load avg: 12.07 [153/484] test_zoneinfo skipped
+test_zoneinfo skipped -- No module named '_lzma'
+0:01:32 load avg: 12.07 [154/484] test_difflib passed
+0:01:32 load avg: 12.07 [155/484] test_selectors passed
+0:01:33 load avg: 12.07 [156/484] test_osx_env passed
+0:01:33 load avg: 12.07 [157/484] test_code_module passed
+0:01:33 load avg: 12.07 [158/484] test__opcode passed
+0:01:33 load avg: 12.07 [159/484] test_baseexception passed
+0:01:34 load avg: 12.07 [160/484] test_file passed
+0:01:34 load avg: 12.07 [161/484] test_threadsignals passed
+0:01:34 load avg: 12.07 [162/484] test_enumerate passed
+0:01:35 load avg: 12.07 [163/484] test_finalization passed
+0:01:35 load avg: 12.07 [164/484] test_imghdr passed
+0:01:35 load avg: 11.66 [165/484] test.test_multiprocessing_fork.test_manager skipped
+test.test_multiprocessing_fork.test_manager skipped -- test may crash on macOS (bpo-33725)
+0:01:36 load avg: 11.66 [166/484] test_codecs passed
+0:01:36 load avg: 11.66 [167/484] test_functools passed
+0:01:37 load avg: 11.66 [168/484] test_uuid passed
+0:01:38 load avg: 11.66 [169/484] test_mailbox passed
+0:01:40 load avg: 11.66 [170/484] test_tracemalloc passed
+0:01:40 load avg: 11.37 [171/484] test_typing passed
+/Users/zeedh/slowcoders/cpython/Lib/doctest.py:1062: DeprecationWarning: typing.io is deprecated, import directly from typing instead. typing.io will be removed in Python 3.12.
+  if obj.__doc__ is None:
+/Users/zeedh/slowcoders/cpython/Lib/doctest.py:1065: DeprecationWarning: typing.io is deprecated, import directly from typing instead. typing.io will be removed in Python 3.12.
+  docstring = obj.__doc__
+/Users/zeedh/slowcoders/cpython/Lib/doctest.py:1096: DeprecationWarning: typing.io is deprecated, import directly from typing instead. typing.io will be removed in Python 3.12.
+  docstring = getattr(obj, '__doc__', None)
+/Users/zeedh/slowcoders/cpython/Lib/doctest.py:1062: DeprecationWarning: typing.re is deprecated, import directly from typing instead. typing.re will be removed in Python 3.12.
+  if obj.__doc__ is None:
+/Users/zeedh/slowcoders/cpython/Lib/doctest.py:1065: DeprecationWarning: typing.re is deprecated, import directly from typing instead. typing.re will be removed in Python 3.12.
+  docstring = obj.__doc__
+/Users/zeedh/slowcoders/cpython/Lib/doctest.py:1096: DeprecationWarning: typing.re is deprecated, import directly from typing instead. typing.re will be removed in Python 3.12.
+  docstring = getattr(obj, '__doc__', None)
+0:01:41 load avg: 11.37 [172/484] test_codecencodings_kr passed
+0:01:42 load avg: 11.37 [173/484] test_tcl skipped
+test_tcl skipped -- No module named '_tkinter'
+0:01:44 load avg: 11.37 [174/484] test_distutils passed
+/Users/zeedh/slowcoders/cpython/Lib/distutils/command/install.py:326: DeprecationWarning: check_home argument is deprecated and ignored.
+  if sysconfig.is_python_build(True):
+/Users/zeedh/slowcoders/cpython/Lib/distutils/command/install.py:326: DeprecationWarning: check_home argument is deprecated and ignored.
+  if sysconfig.is_python_build(True):
+0:01:45 load avg: 11.37 [175/484] test_codecencodings_tw passed
+0:01:45 load avg: 11.02 [176/484] test.test_multiprocessing_spawn.test_threads passed
+0:01:46 load avg: 11.02 [177/484] test_print passed
+0:01:46 load avg: 11.02 [178/484] test_urllib passed
+0:01:46 load avg: 11.02 [179/484] test_getopt passed
+0:01:47 load avg: 11.02 [180/484] test_importlib passed
+0:01:47 load avg: 11.02 [181/484] test_linecache passed
+0:01:48 load avg: 11.02 [182/484] test_grammar passed -- running (1): test.test_concurrent_futures.test_wait (30.2 sec)
+0:01:48 load avg: 11.02 [183/484] test_logging passed -- running (1): test.test_concurrent_futures.test_wait (30.2 sec)
+0:01:48 load avg: 11.02 [184/484] test.test_multiprocessing_fork.test_misc skipped -- running (1): test.test_concurrent_futures.test_wait (30.7 sec)
+test.test_multiprocessing_fork.test_misc skipped -- test may crash on macOS (bpo-33725)
+0:01:48 load avg: 11.02 [185/484] test_ordered_dict passed -- running (1): test.test_concurrent_futures.test_wait (30.9 sec)
+0:01:49 load avg: 11.02 [186/484] test_fileinput passed -- running (1): test.test_concurrent_futures.test_wait (31.7 sec)
+0:01:50 load avg: 10.69 [187/484] test_tabnanny passed -- running (2): test.test_concurrent_futures.test_wait (32.7 sec), test.test_multiprocessing_forkserver.test_processes (30.1 sec)
+0:01:51 load avg: 10.69 [188/484] test_strtod passed -- running (2): test.test_concurrent_futures.test_wait (33.8 sec), test.test_multiprocessing_forkserver.test_processes (31.2 sec)
+0:01:52 load avg: 10.69 [189/484] test_long passed -- running (2): test.test_concurrent_futures.test_wait (34.2 sec), test.test_multiprocessing_forkserver.test_processes (31.6 sec)
+0:01:52 load avg: 10.69 [190/484] test_charmapcodec passed -- running (2): test.test_concurrent_futures.test_wait (34.7 sec), test.test_multiprocessing_forkserver.test_processes (32.0 sec)
+0:01:53 load avg: 10.69 [191/484] test_pkgutil passed -- running (2): test.test_concurrent_futures.test_wait (35.6 sec), test.test_multiprocessing_forkserver.test_processes (32.9 sec)
+0:01:54 load avg: 10.69 [192/484] test_doctest2 passed -- running (2): test.test_concurrent_futures.test_wait (36.3 sec), test.test_multiprocessing_forkserver.test_processes (33.6 sec)
+0:01:55 load avg: 10.69 [193/484] test_metaclass passed -- running (2): test.test_concurrent_futures.test_wait (37.0 sec), test.test_multiprocessing_forkserver.test_processes (34.3 sec)
+0:01:55 load avg: 10.69 [194/484] test.test_future_stmt.test_future_multiple_imports passed -- running (2): test.test_concurrent_futures.test_wait (37.6 sec), test.test_multiprocessing_forkserver.test_processes (34.9 sec)
+0:01:58 load avg: 10.32 [195/484] test_mmap passed -- running (2): test.test_concurrent_futures.test_wait (40.2 sec), test.test_multiprocessing_forkserver.test_processes (37.5 sec)
+0:01:58 load avg: 10.32 [196/484] test_nntplib passed -- running (2): test.test_concurrent_futures.test_wait (40.4 sec), test.test_multiprocessing_forkserver.test_processes (37.7 sec)
+0:02:00 load avg: 12.46 [197/484] test_threading passed -- running (2): test.test_concurrent_futures.test_wait (42.8 sec), test.test_multiprocessing_forkserver.test_processes (40.2 sec)
+0:02:02 load avg: 12.46 [198/484] test_exceptions passed -- running (2): test.test_concurrent_futures.test_wait (44.1 sec), test.test_multiprocessing_forkserver.test_processes (41.4 sec)
+0:02:03 load avg: 12.46 [199/484] test_mailcap passed -- running (2): test.test_concurrent_futures.test_wait (45.4 sec), test.test_multiprocessing_forkserver.test_processes (42.7 sec)
+0:02:04 load avg: 12.46 [200/484] test_cmd_line passed -- running (2): test.test_concurrent_futures.test_wait (46.1 sec), test.test_multiprocessing_forkserver.test_processes (43.5 sec)
+0:02:04 load avg: 12.46 [201/484] test_shutil passed -- running (2): test.test_concurrent_futures.test_wait (46.2 sec), test.test_multiprocessing_forkserver.test_processes (43.5 sec)
+0:02:04 load avg: 12.46 [202/484] test_devpoll skipped -- running (2): test.test_concurrent_futures.test_wait (46.9 sec), test.test_multiprocessing_forkserver.test_processes (44.2 sec)
+test_devpoll skipped -- test works only on Solaris OS family
+0:02:05 load avg: 12.46 [203/484] test_ntpath passed -- running (2): test.test_concurrent_futures.test_wait (47.5 sec), test.test_multiprocessing_forkserver.test_processes (44.9 sec)
+0:02:07 load avg: 14.02 [204/484] test_codecencodings_hk passed -- running (3): test.test_concurrent_futures.test_wait (49.3 sec), test_signal (31.3 sec), test.test_multiprocessing_forkserver.test_processes (46.6 sec)
+0:02:07 load avg: 14.02 [205/484] test_cgitb passed -- running (3): test.test_concurrent_futures.test_wait (49.5 sec), test_signal (31.5 sec), test.test_multiprocessing_forkserver.test_processes (46.8 sec)
+0:02:08 load avg: 14.02 [206/484] test_check_c_globals passed -- running (3): test.test_concurrent_futures.test_wait (50.7 sec), test_signal (32.7 sec), test.test_multiprocessing_forkserver.test_processes (48.0 sec)
+/Users/zeedh/slowcoders/cpython/Tools/c-analyzer/c_parser/preprocessor/__init__.py:2: DeprecationWarning: The distutils package is deprecated and slated for removal in Python 3.12. Use setuptools or check PEP 632 for potential alternatives
+  import distutils.ccompiler
+0:02:09 load avg: 14.02 [207/484] test_getpass passed -- running (3): test.test_concurrent_futures.test_wait (51.5 sec), test_signal (33.5 sec), test.test_multiprocessing_forkserver.test_processes (48.9 sec)
+0:02:09 load avg: 14.02 [208/484] test__locale passed -- running (3): test.test_concurrent_futures.test_wait (51.8 sec), test_signal (33.9 sec), test.test_multiprocessing_forkserver.test_processes (49.2 sec)
+0:02:10 load avg: 14.18 [209/484] test.test_asyncio.test_sock_lowlevel passed -- running (3): test.test_concurrent_futures.test_wait (52.9 sec), test_signal (34.9 sec), test.test_multiprocessing_forkserver.test_processes (50.2 sec)
+0:02:12 load avg: 14.18 [210/484] test_contextlib passed -- running (3): test.test_concurrent_futures.test_wait (54.3 sec), test_signal (36.3 sec), test.test_multiprocessing_forkserver.test_processes (51.6 sec)
+0:02:14 load avg: 14.18 [211/484] test.test_concurrent_futures.test_wait passed (56.0 sec) -- running (2): test_signal (38.1 sec), test.test_multiprocessing_forkserver.test_processes (53.4 sec)
+0:02:15 load avg: 14.18 [212/484] test_posix passed -- running (2): test_signal (39.3 sec), test.test_multiprocessing_forkserver.test_processes (54.6 sec)
+0:02:15 load avg: 14.18 [213/484] test_plistlib passed -- running (2): test_signal (39.5 sec), test.test_multiprocessing_forkserver.test_processes (54.8 sec)
+0:02:16 load avg: 14.32 [214/484] test_aifc passed -- running (2): test_signal (40.7 sec), test.test_multiprocessing_forkserver.test_processes (56.0 sec)
+0:02:18 load avg: 14.32 [215/484] test_smtplib passed -- running (3): test_unparse (31.7 sec), test_signal (42.7 sec), test.test_multiprocessing_forkserver.test_processes (58.1 sec)
+0:02:25 load avg: 14.78 [216/484] test_set passed (32.9 sec) -- running (3): test_unparse (38.1 sec), test_signal (49.1 sec), test.test_multiprocessing_forkserver.test_processes (1 min 4 sec)
+0:02:26 load avg: 15.20 [217/484] test_scope passed -- running (3): test_unparse (38.9 sec), test_signal (50.0 sec), test.test_multiprocessing_forkserver.test_processes (1 min 5 sec)
+0:02:27 load avg: 15.20 [218/484] test_positional_only_arg passed -- running (3): test_unparse (40.8 sec), test_signal (51.9 sec), test.test_multiprocessing_forkserver.test_processes (1 min 7 sec)
+0:02:29 load avg: 15.20 [219/484] test_poll passed -- running (4): test.test_multiprocessing_forkserver.test_manager (31.0 sec), test_unparse (42.1 sec), test_signal (53.2 sec), test.test_multiprocessing_forkserver.test_processes (1 min 8 sec)
+0:02:29 load avg: 15.20 [220/484] test_signal passed (53.6 sec) -- running (3): test.test_multiprocessing_forkserver.test_manager (31.5 sec), test_unparse (42.6 sec), test.test_multiprocessing_forkserver.test_processes (1 min 8 sec)
+0:02:31 load avg: 15.42 [221/484] test.test_asyncio.test_runners passed -- running (4): test.test_multiprocessing_forkserver.test_manager (33.1 sec), test_unparse (44.2 sec), test.test_concurrent_futures.test_shutdown (30.4 sec), test.test_multiprocessing_forkserver.test_processes (1 min 10 sec)
+0:02:31 load avg: 15.42 [222/484] test.test_asyncio.test_buffered_proto passed -- running (4): test.test_multiprocessing_forkserver.test_manager (33.2 sec), test_unparse (44.3 sec), test.test_concurrent_futures.test_shutdown (30.6 sec), test.test_multiprocessing_forkserver.test_processes (1 min 10 sec)
+0:02:32 load avg: 15.42 [223/484] test_ossaudiodev skipped (resource denied) -- running (4): test.test_multiprocessing_forkserver.test_manager (34.0 sec), test_unparse (45.1 sec), test.test_concurrent_futures.test_shutdown (31.4 sec), test.test_multiprocessing_forkserver.test_processes (1 min 11 sec)
+test_ossaudiodev skipped -- Use of the 'audio' resource not enabled
+0:02:32 load avg: 15.42 [224/484] test_textwrap passed -- running (4): test.test_multiprocessing_forkserver.test_manager (34.0 sec), test_unparse (45.2 sec), test.test_concurrent_futures.test_shutdown (31.4 sec), test.test_multiprocessing_forkserver.test_processes (1 min 11 sec)
+0:02:33 load avg: 15.42 [225/484] test_time passed -- running (4): test.test_multiprocessing_forkserver.test_manager (35.1 sec), test_unparse (46.2 sec), test.test_concurrent_futures.test_shutdown (32.5 sec), test.test_multiprocessing_forkserver.test_processes (1 min 12 sec)
+0:02:33 load avg: 15.42 [226/484] test_rlcompleter passed -- running (4): test.test_multiprocessing_forkserver.test_manager (35.6 sec), test_unparse (46.7 sec), test.test_concurrent_futures.test_shutdown (32.9 sec), test.test_multiprocessing_forkserver.test_processes (1 min 13 sec)
+0:02:35 load avg: 15.42 [227/484] test_descrtut passed -- running (4): test.test_multiprocessing_forkserver.test_manager (36.9 sec), test_unparse (48.0 sec), test.test_concurrent_futures.test_shutdown (34.3 sec), test.test_multiprocessing_forkserver.test_processes (1 min 14 sec)
+0:02:35 load avg: 16.35 [228/484] test.test_asyncio.test_threads passed -- running (4): test.test_multiprocessing_forkserver.test_manager (37.7 sec), test_unparse (48.8 sec), test.test_concurrent_futures.test_shutdown (35.0 sec), test.test_multiprocessing_forkserver.test_processes (1 min 15 sec)
+0:02:37 load avg: 16.35 [229/484] test.test_concurrent_futures.test_shutdown passed (36.3 sec) -- running (3): test.test_multiprocessing_forkserver.test_manager (39.0 sec), test_unparse (50.1 sec), test.test_multiprocessing_forkserver.test_processes (1 min 16 sec)
+0:02:37 load avg: 16.35 [230/484] test_code passed -- running (3): test.test_multiprocessing_forkserver.test_manager (39.3 sec), test_unparse (50.4 sec), test.test_multiprocessing_forkserver.test_processes (1 min 16 sec)
+0:02:38 load avg: 16.35 [231/484] test_strftime passed -- running (3): test.test_multiprocessing_forkserver.test_manager (40.1 sec), test_unparse (51.2 sec), test.test_multiprocessing_forkserver.test_processes (1 min 17 sec)
+0:02:38 load avg: 16.35 [232/484] test_unary passed -- running (3): test.test_multiprocessing_forkserver.test_manager (40.4 sec), test_unparse (51.5 sec), test.test_multiprocessing_forkserver.test_processes (1 min 17 sec)
+0:02:39 load avg: 16.35 [233/484] test_setcomps passed -- running (3): test.test_multiprocessing_forkserver.test_manager (41.2 sec), test_unparse (52.3 sec), test.test_multiprocessing_forkserver.test_processes (1 min 18 sec)
+0:02:40 load avg: 16.35 [234/484] test_exception_hierarchy passed -- running (4): test.test_multiprocessing_forkserver.test_manager (42.1 sec), test.test_multiprocessing_spawn.test_processes (30.5 sec), test_unparse (53.2 sec), test.test_multiprocessing_forkserver.test_processes (1 min 19 sec)
+0:02:41 load avg: 17.68 [235/484] test.test_multiprocessing_forkserver.test_manager passed (43.3 sec) -- running (3): test.test_multiprocessing_spawn.test_processes (31.6 sec), test_unparse (54.4 sec), test.test_multiprocessing_forkserver.test_processes (1 min 20 sec)
+0:02:41 load avg: 17.68 [236/484] test_urllib2_localnet passed -- running (3): test.test_multiprocessing_spawn.test_processes (31.9 sec), test_unparse (54.6 sec), test.test_multiprocessing_forkserver.test_processes (1 min 21 sec)
+0:02:41 load avg: 17.68 [237/484] test_htmlparser passed -- running (3): test.test_multiprocessing_spawn.test_processes (32.0 sec), test_unparse (54.7 sec), test.test_multiprocessing_forkserver.test_processes (1 min 21 sec)
+0:02:43 load avg: 17.68 [238/484] test_unicode_file_functions passed -- running (3): test.test_multiprocessing_spawn.test_processes (33.4 sec), test_unparse (56.2 sec), test.test_multiprocessing_forkserver.test_processes (1 min 22 sec)
+0:02:43 load avg: 17.68 [239/484] test_pulldom passed -- running (3): test.test_multiprocessing_spawn.test_processes (33.5 sec), test_unparse (56.2 sec), test.test_multiprocessing_forkserver.test_processes (1 min 22 sec)
+0:02:44 load avg: 17.68 [240/484] test_profile passed -- running (3): test.test_multiprocessing_spawn.test_processes (34.2 sec), test_unparse (56.9 sec), test.test_multiprocessing_forkserver.test_processes (1 min 23 sec)
+0:02:44 load avg: 17.68 [241/484] test_gc passed -- running (3): test.test_multiprocessing_spawn.test_processes (34.7 sec), test_unparse (57.5 sec), test.test_multiprocessing_forkserver.test_processes (1 min 23 sec)
+0:02:44 load avg: 17.68 [242/484] test_genericalias passed -- running (3): test.test_multiprocessing_spawn.test_processes (34.8 sec), test_unparse (57.6 sec), test.test_multiprocessing_forkserver.test_processes (1 min 23 sec)
+0:02:45 load avg: 17.68 [243/484] test_augassign passed -- running (3): test.test_multiprocessing_spawn.test_processes (35.5 sec), test_unparse (58.2 sec), test.test_multiprocessing_forkserver.test_processes (1 min 24 sec)
+0:02:45 load avg: 17.68 [244/484] test_grp passed -- running (4): test.test_multiprocessing_spawn.test_processes (35.7 sec), test_unparse (58.5 sec), test.test_multiprocessing_forkserver.test_processes (1 min 24 sec), test_buffer (30.1 sec)
+0:02:45 load avg: 17.68 [245/484] test_ftplib passed -- running (4): test.test_multiprocessing_spawn.test_processes (35.7 sec), test_unparse (58.5 sec), test.test_multiprocessing_forkserver.test_processes (1 min 24 sec), test_buffer (30.1 sec)
+0:02:50 load avg: 23.41 [246/484] test_raise passed -- running (5): test_regrtest (32.2 sec), test.test_multiprocessing_spawn.test_processes (41.1 sec), test_unparse (1 min 3 sec), test.test_multiprocessing_forkserver.test_processes (1 min 30 sec), test_buffer (35.5 sec)
+0:02:52 load avg: 23.41 [247/484] test_smtpd passed -- running (5): test_regrtest (33.8 sec), test.test_multiprocessing_spawn.test_processes (42.7 sec), test_unparse (1 min 5 sec), test.test_multiprocessing_forkserver.test_processes (1 min 31 sec), test_buffer (37.1 sec)
+0:02:55 load avg: 23.41 [248/484] test_subclassinit passed -- running (5): test_regrtest (36.3 sec), test.test_multiprocessing_spawn.test_processes (45.2 sec), test_unparse (1 min 7 sec), test.test_multiprocessing_forkserver.test_processes (1 min 34 sec), test_buffer (39.6 sec)
+0:02:56 load avg: 28.43 [249/484] test.test_asyncio.test_locks passed -- running (5): test_regrtest (37.7 sec), test.test_multiprocessing_spawn.test_processes (46.6 sec), test_unparse (1 min 9 sec), test.test_multiprocessing_forkserver.test_processes (1 min 35 sec), test_buffer (41.0 sec)
+Executing <Task pending name='Task-66' coro=<BarrierTests.test_draining_state() running at /Users/zeedh/slowcoders/cpython/Lib/test/test_asyncio/test_locks.py:1250> wait_for=<_GatheringFuture pending cb=[Task.task_wakeup()] created at /Users/zeedh/slowcoders/cpython/Lib/asyncio/tasks.py:709> cb=[_run_until_complete_cb() at /Users/zeedh/slowcoders/cpython/Lib/asyncio/base_events.py:180] created at /Users/zeedh/slowcoders/cpython/Lib/asyncio/runners.py:100> took 0.258 seconds
+Executing <Task pending name='Task-110' coro=<BarrierTests.test_filling_tasks_check_return_value.<locals>.coro() running at /Users/zeedh/slowcoders/cpython/Lib/test/test_asyncio/test_locks.py:1226> wait_for=<Future pending cb=[Task.task_wakeup()] created at /Users/zeedh/slowcoders/cpython/Lib/asyncio/base_events.py:427> cb=[gather.<locals>._done_callback() at /Users/zeedh/slowcoders/cpython/Lib/asyncio/tasks.py:764] created at /Users/zeedh/slowcoders/cpython/Lib/asyncio/tasks.py:384> took 0.254 seconds
+Executing <Task pending name='Task-129' coro=<BarrierTests.test_repr.<locals>.wait() running at /Users/zeedh/slowcoders/cpython/Lib/test/test_asyncio/test_locks.py:1082> wait_for=<Future pending cb=[Task.task_wakeup()] created at /Users/zeedh/slowcoders/cpython/Lib/asyncio/base_events.py:427> created at /Users/zeedh/slowcoders/cpython/Lib/asyncio/tasks.py:384> took 0.374 seconds
+Executing <Task pending name='Task-145' coro=<BarrierTests.test_reset_barrier_when_tasks_half_draining() running at /Users/zeedh/slowcoders/cpython/Lib/test/test_asyncio/test_locks.py:1378> wait_for=<_GatheringFuture pending cb=[Task.task_wakeup()] created at /Users/zeedh/slowcoders/cpython/Lib/asyncio/tasks.py:709> cb=[_run_until_complete_cb() at /Users/zeedh/slowcoders/cpython/Lib/asyncio/base_events.py:180] created at /Users/zeedh/slowcoders/cpython/Lib/asyncio/runners.py:100> took 0.328 seconds
+Executing <Task pending name='Task-155' coro=<BarrierTests.test_reset_barrier_when_tasks_half_draining_half_blocking() running at /Users/zeedh/slowcoders/cpython/Lib/test/test_asyncio/test_locks.py:1417> wait_for=<_GatheringFuture pending cb=[Task.task_wakeup()] created at /Users/zeedh/slowcoders/cpython/Lib/asyncio/tasks.py:709> cb=[_run_until_complete_cb() at /Users/zeedh/slowcoders/cpython/Lib/asyncio/base_events.py:180] created at /Users/zeedh/slowcoders/cpython/Lib/asyncio/runners.py:100> took 0.233 seconds
+Executing <Task pending name='Task-160' coro=<BarrierTests.test_reset_barrier_when_tasks_half_draining_half_blocking.<locals>.coro() running at /Users/zeedh/slowcoders/cpython/Lib/test/test_asyncio/test_locks.py:1412> wait_for=<Future pending cb=[Task.task_wakeup()] created at /Users/zeedh/slowcoders/cpython/Lib/asyncio/base_events.py:427> cb=[gather.<locals>._done_callback() at /Users/zeedh/slowcoders/cpython/Lib/asyncio/tasks.py:764] created at /Users/zeedh/slowcoders/cpython/Lib/asyncio/tasks.py:384> took 0.104 seconds
+Executing <Task pending name='Task-165' coro=<BarrierTests.test_reset_barrier_while_tasks_draining() running at /Users/zeedh/slowcoders/cpython/Lib/test/test_asyncio/test_locks.py:1497> wait_for=<_GatheringFuture pending cb=[Task.task_wakeup()] created at /Users/zeedh/slowcoders/cpython/Lib/asyncio/tasks.py:709> cb=[_run_until_complete_cb() at /Users/zeedh/slowcoders/cpython/Lib/asyncio/base_events.py:180] created at /Users/zeedh/slowcoders/cpython/Lib/asyncio/runners.py:100> took 0.251 seconds
+Executing <Task pending name='Task-185' coro=<BarrierTests.test_reset_barrier_while_tasks_waiting_and_waiting_again() running at /Users/zeedh/slowcoders/cpython/Lib/test/test_asyncio/test_locks.py:1452> wait_for=<_GatheringFuture pending cb=[Task.task_wakeup()] created at /Users/zeedh/slowcoders/cpython/Lib/asyncio/tasks.py:709> cb=[_run_until_complete_cb() at /Users/zeedh/slowcoders/cpython/Lib/asyncio/base_events.py:180] created at /Users/zeedh/slowcoders/cpython/Lib/asyncio/runners.py:100> took 0.328 seconds
+0:02:58 load avg: 28.43 [250/484] test.test_gdb.test_misc skipped -- running (5): test_regrtest (39.8 sec), test.test_multiprocessing_spawn.test_processes (48.7 sec), test_unparse (1 min 11 sec), test.test_multiprocessing_forkserver.test_processes (1 min 37 sec), test_buffer (43.1 sec)
+test.test_gdb.test_misc skipped -- Couldn't find gdb program on the path: [Errno 2] No such file or directory: 'gdb'
+0:02:59 load avg: 28.43 [251/484] test.test_gdb.test_backtrace skipped -- running (5): test_regrtest (40.5 sec), test.test_multiprocessing_spawn.test_processes (49.3 sec), test_unparse (1 min 12 sec), test.test_multiprocessing_forkserver.test_processes (1 min 38 sec), test_buffer (43.7 sec)
+test.test_gdb.test_backtrace skipped -- Couldn't find gdb program on the path: [Errno 2] No such file or directory: 'gdb'
+0:02:59 load avg: 28.43 [252/484] test_bisect passed -- running (5): test_regrtest (41.2 sec), test.test_multiprocessing_spawn.test_processes (50.1 sec), test_unparse (1 min 12 sec), test.test_multiprocessing_forkserver.test_processes (1 min 39 sec), test_buffer (44.5 sec)
+0:03:02 load avg: 27.59 [253/484] test_sys passed -- running (6): test_regrtest (43.6 sec), test.test_multiprocessing_spawn.test_processes (52.5 sec), test_unparse (1 min 15 sec), test.test_multiprocessing_forkserver.test_processes (1 min 41 sec), test.test_multiprocessing_forkserver.test_threads (30.1 sec), test_buffer (46.9 sec)
+0:03:04 load avg: 27.59 [254/484] test_sys_settrace passed -- running (6): test_regrtest (45.9 sec), test.test_multiprocessing_spawn.test_processes (54.8 sec), test_unparse (1 min 17 sec), test.test_multiprocessing_forkserver.test_processes (1 min 43 sec), test.test_multiprocessing_forkserver.test_threads (32.4 sec), test_buffer (49.2 sec)
+0:03:05 load avg: 27.59 [255/484] test_asdl_parser passed -- running (6): test_regrtest (47.0 sec), test.test_multiprocessing_spawn.test_processes (55.9 sec), test_unparse (1 min 18 sec), test.test_multiprocessing_forkserver.test_processes (1 min 45 sec), test.test_multiprocessing_forkserver.test_threads (33.5 sec), test_buffer (50.3 sec)
+0:03:07 load avg: 27.86 [256/484] test_queue passed -- running (6): test_regrtest (48.5 sec), test.test_multiprocessing_spawn.test_processes (57.4 sec), test_unparse (1 min 20 sec), test.test_multiprocessing_forkserver.test_processes (1 min 46 sec), test.test_multiprocessing_forkserver.test_threads (35.0 sec), test_buffer (51.8 sec)
+0:03:09 load avg: 27.86 [257/484] test_int passed -- running (6): test_regrtest (50.3 sec), test.test_multiprocessing_spawn.test_processes (59.2 sec), test_unparse (1 min 21 sec), test.test_multiprocessing_forkserver.test_processes (1 min 48 sec), test.test_multiprocessing_forkserver.test_threads (36.8 sec), test_buffer (53.6 sec)
+0:03:13 load avg: 26.27 [258/484] test_heapq passed -- running (6): test_regrtest (54.9 sec), test.test_multiprocessing_spawn.test_processes (1 min 3 sec), test_unparse (1 min 26 sec), test.test_multiprocessing_forkserver.test_processes (1 min 52 sec), test.test_multiprocessing_forkserver.test_threads (41.4 sec), test_buffer (58.2 sec)
+0:03:17 load avg: 25.37 [259/484] test_cmd_line_script passed -- running (6): test_regrtest (58.6 sec), test.test_multiprocessing_spawn.test_processes (1 min 7 sec), test_unparse (1 min 30 sec), test.test_multiprocessing_forkserver.test_processes (1 min 56 sec), test.test_multiprocessing_forkserver.test_threads (45.1 sec), test_buffer (1 min 1 sec)
+0:03:19 load avg: 25.37 [260/484] test.test_multiprocessing_forkserver.test_processes passed (1 min 59 sec) -- running (5): test_regrtest (1 min 1 sec), test.test_multiprocessing_spawn.test_processes (1 min 10 sec), test_unparse (1 min 32 sec), test.test_multiprocessing_forkserver.test_threads (47.6 sec), test_buffer (1 min 4 sec)
+0:03:20 load avg: 25.37 [261/484] test_memoryio passed -- running (5): test_regrtest (1 min 2 sec), test.test_multiprocessing_spawn.test_processes (1 min 11 sec), test_unparse (1 min 33 sec), test.test_multiprocessing_forkserver.test_threads (48.6 sec), test_buffer (1 min 5 sec)
+0:03:22 load avg: 24.22 [262/484] test_readline passed -- running (5): test_regrtest (1 min 3 sec), test.test_multiprocessing_spawn.test_processes (1 min 12 sec), test_unparse (1 min 35 sec), test.test_multiprocessing_forkserver.test_threads (50.0 sec), test_buffer (1 min 6 sec)
+0:03:23 load avg: 24.22 [263/484] test_wait4 passed -- running (5): test_regrtest (1 min 4 sec), test.test_multiprocessing_spawn.test_processes (1 min 13 sec), test_unparse (1 min 36 sec), test.test_multiprocessing_forkserver.test_threads (50.9 sec), test_buffer (1 min 7 sec)
+0:03:23 load avg: 24.22 [264/484] test_xxlimited passed -- running (5): test_regrtest (1 min 4 sec), test.test_multiprocessing_spawn.test_processes (1 min 13 sec), test_unparse (1 min 36 sec), test.test_multiprocessing_forkserver.test_threads (50.9 sec), test_buffer (1 min 7 sec)
+0:03:25 load avg: 24.22 [265/484] test_buffer passed (1 min 9 sec) -- running (4): test_regrtest (1 min 6 sec), test.test_multiprocessing_spawn.test_processes (1 min 15 sec), test_unparse (1 min 38 sec), test.test_multiprocessing_forkserver.test_threads (53.1 sec)
+0:03:32 load avg: 25.58 [266/484] test_eintr passed -- running (5): test_unicodedata (32.4 sec), test_regrtest (1 min 13 sec), test.test_multiprocessing_spawn.test_processes (1 min 22 sec), test_unparse (1 min 45 sec), test.test_multiprocessing_forkserver.test_threads (1 min)
+0:03:35 load avg: 25.58 [267/484] test.test_asyncio.test_timeouts passed -- running (5): test_unicodedata (35.1 sec), test_regrtest (1 min 16 sec), test.test_multiprocessing_spawn.test_processes (1 min 25 sec), test_unparse (1 min 47 sec), test.test_multiprocessing_forkserver.test_threads (1 min 2 sec)
+0:03:35 load avg: 25.58 [268/484] test_imaplib passed -- running (5): test_unicodedata (35.6 sec), test_regrtest (1 min 16 sec), test.test_multiprocessing_spawn.test_processes (1 min 25 sec), test_unparse (1 min 48 sec), test.test_multiprocessing_forkserver.test_threads (1 min 3 sec)
+0:03:41 load avg: 23.43 [269/484] test_range passed -- running (6): test_unicodedata (41.8 sec), test_regrtest (1 min 23 sec), test.test_multiprocessing_spawn.test_processes (1 min 31 sec), test_unparse (1 min 54 sec), test_peg_generator (36.0 sec), test.test_multiprocessing_forkserver.test_threads (1 min 9 sec)
+0:03:52 load avg: 21.87 [270/484] test_timeout passed -- running (7): test_unicodedata (52.3 sec), test_regrtest (1 min 33 sec), test.test_multiprocessing_spawn.test_processes (1 min 42 sec), test_unparse (2 min 5 sec), test_statistics (38.6 sec), test_peg_generator (46.5 sec), test.test_multiprocessing_forkserver.test_threads (1 min 20 sec)
+0:03:53 load avg: 21.87 [271/484] test_unicode passed -- running (7): test_unicodedata (53.7 sec), test_regrtest (1 min 34 sec), test.test_multiprocessing_spawn.test_processes (1 min 43 sec), test_unparse (2 min 6 sec), test_statistics (40.0 sec), test_peg_generator (47.9 sec), test.test_multiprocessing_forkserver.test_threads (1 min 21 sec)
+0:03:53 load avg: 21.87 [272/484] test_pstats passed -- running (7): test_unicodedata (53.9 sec), test_regrtest (1 min 35 sec), test.test_multiprocessing_spawn.test_processes (1 min 44 sec), test_unparse (2 min 6 sec), test_statistics (40.2 sec), test_peg_generator (48.1 sec), test.test_multiprocessing_forkserver.test_threads (1 min 21 sec)
+0:03:54 load avg: 21.87 [273/484] test.test_gdb.test_cfunction_full skipped -- running (7): test_unicodedata (54.4 sec), test_regrtest (1 min 35 sec), test.test_multiprocessing_spawn.test_processes (1 min 44 sec), test_unparse (2 min 7 sec), test_statistics (40.7 sec), test_peg_generator (48.6 sec), test.test_multiprocessing_forkserver.test_threads (1 min 22 sec)
+test.test_gdb.test_cfunction_full skipped -- Couldn't find gdb program on the path: [Errno 2] No such file or directory: 'gdb'
+0:03:54 load avg: 21.87 [274/484] test_opcache passed -- running (7): test_unicodedata (54.9 sec), test_regrtest (1 min 36 sec), test.test_multiprocessing_spawn.test_processes (1 min 44 sec), test_unparse (2 min 7 sec), test_statistics (41.2 sec), test_peg_generator (49.0 sec), test.test_multiprocessing_forkserver.test_threads (1 min 22 sec)
+0:03:55 load avg: 21.87 [275/484] test_iterlen passed -- running (7): test_unicodedata (55.5 sec), test_regrtest (1 min 36 sec), test.test_multiprocessing_spawn.test_processes (1 min 45 sec), test_unparse (2 min 8 sec), test_statistics (41.8 sec), test_peg_generator (49.7 sec), test.test_multiprocessing_forkserver.test_threads (1 min 23 sec)
+0:03:58 load avg: 21.40 [276/484] test_codecencodings_iso2022 passed -- running (7): test_unicodedata (58.8 sec), test_regrtest (1 min 40 sec), test.test_multiprocessing_spawn.test_processes (1 min 48 sec), test_unparse (2 min 11 sec), test_statistics (45.1 sec), test_peg_generator (53.0 sec), test.test_multiprocessing_forkserver.test_threads (1 min 26 sec)
+0:03:59 load avg: 21.40 [277/484] test_tk skipped -- running (7): test_unicodedata (59.5 sec), test_regrtest (1 min 40 sec), test.test_multiprocessing_spawn.test_processes (1 min 49 sec), test_unparse (2 min 12 sec), test_statistics (45.8 sec), test_peg_generator (53.7 sec), test.test_multiprocessing_forkserver.test_threads (1 min 27 sec)
+test_tk skipped -- No module named '_tkinter'
+0:04:01 load avg: 20.65 [278/484] test__xxsubinterpreters passed -- running (7): test_unicodedata (1 min 1 sec), test_regrtest (1 min 43 sec), test.test_multiprocessing_spawn.test_processes (1 min 52 sec), test_unparse (2 min 14 sec), test_statistics (48.3 sec), test_peg_generator (56.2 sec), test.test_multiprocessing_forkserver.test_threads (1 min 29 sec)
+0:04:03 load avg: 20.65 [279/484] test_zipimport passed -- running (7): test_unicodedata (1 min 3 sec), test_regrtest (1 min 45 sec), test.test_multiprocessing_spawn.test_processes (1 min 53 sec), test_unparse (2 min 16 sec), test_statistics (50.1 sec), test_peg_generator (58.0 sec), test.test_multiprocessing_forkserver.test_threads (1 min 31 sec)
+0:04:04 load avg: 20.65 [280/484] test_exception_group passed -- running (7): test_unicodedata (1 min 4 sec), test_regrtest (1 min 45 sec), test.test_multiprocessing_spawn.test_processes (1 min 54 sec), test_unparse (2 min 17 sec), test_statistics (51.1 sec), test_peg_generator (59.0 sec), test.test_multiprocessing_forkserver.test_threads (1 min 32 sec)
+0:04:09 load avg: 24.60 [281/484] test_descr passed -- running (8): test_unicodedata (1 min 9 sec), test_regrtest (1 min 50 sec), test.test_multiprocessing_spawn.test_processes (1 min 59 sec), test_unparse (2 min 22 sec), test_statistics (55.7 sec), test_peg_generator (1 min 3 sec), test_lib2to3 (34.3 sec), test.test_multiprocessing_forkserver.test_threads (1 min 37 sec)
+0:04:10 load avg: 24.60 [282/484] test_ttk_textonly skipped -- running (8): test_unicodedata (1 min 10 sec), test_regrtest (1 min 51 sec), test.test_multiprocessing_spawn.test_processes (2 min), test_unparse (2 min 22 sec), test_statistics (56.4 sec), test_peg_generator (1 min 4 sec), test_lib2to3 (35.0 sec), test.test_multiprocessing_forkserver.test_threads (1 min 37 sec)
+test_ttk_textonly skipped -- No module named '_tkinter'
+0:04:10 load avg: 24.60 [283/484] test_random passed -- running (8): test_unicodedata (1 min 10 sec), test_regrtest (1 min 51 sec), test.test_multiprocessing_spawn.test_processes (2 min), test_unparse (2 min 23 sec), test_statistics (56.5 sec), test_peg_generator (1 min 4 sec), test_lib2to3 (35.1 sec), test.test_multiprocessing_forkserver.test_threads (1 min 37 sec)
+0:04:11 load avg: 24.60 [284/484] test_named_expressions passed -- running (8): test_unicodedata (1 min 11 sec), test_regrtest (1 min 52 sec), test.test_multiprocessing_spawn.test_processes (2 min 1 sec), test_unparse (2 min 23 sec), test_statistics (57.3 sec), test_peg_generator (1 min 5 sec), test_lib2to3 (35.9 sec), test.test_multiprocessing_forkserver.test_threads (1 min 38 sec)
+0:04:11 load avg: 23.75 [285/484] test_syslog passed -- running (8): test_unicodedata (1 min 11 sec), test_regrtest (1 min 53 sec), test.test_multiprocessing_spawn.test_processes (2 min 2 sec), test_unparse (2 min 24 sec), test_statistics (58.2 sec), test_peg_generator (1 min 6 sec), test_lib2to3 (36.8 sec), test.test_multiprocessing_forkserver.test_threads (1 min 39 sec)
+0:04:12 load avg: 23.75 [286/484] test_startfile skipped -- running (8): test_unicodedata (1 min 12 sec), test_regrtest (1 min 54 sec), test.test_multiprocessing_spawn.test_processes (2 min 2 sec), test_unparse (2 min 25 sec), test_statistics (59.1 sec), test_peg_generator (1 min 7 sec), test_lib2to3 (37.7 sec), test.test_multiprocessing_forkserver.test_threads (1 min 40 sec)
+test_startfile skipped -- object <module 'os' from '/Users/zeedh/slowcoders/cpython/Lib/os.py'> has no attribute 'startfile'
+0:04:13 load avg: 23.75 [287/484] test_copy passed -- running (8): test_unicodedata (1 min 13 sec), test_regrtest (1 min 55 sec), test.test_multiprocessing_spawn.test_processes (2 min 4 sec), test_unparse (2 min 26 sec), test_statistics (1 min), test_peg_generator (1 min 8 sec), test_lib2to3 (38.9 sec), test.test_multiprocessing_forkserver.test_threads (1 min 41 sec)
+0:04:14 load avg: 23.75 [288/484] test.test_concurrent_futures.test_init passed -- running (8): test_unicodedata (1 min 14 sec), test_regrtest (1 min 55 sec), test.test_multiprocessing_spawn.test_processes (2 min 4 sec), test_unparse (2 min 27 sec), test_statistics (1 min 1 sec), test_peg_generator (1 min 8 sec), test_lib2to3 (39.6 sec), test.test_multiprocessing_forkserver.test_threads (1 min 42 sec)
+0:04:15 load avg: 23.75 [289/484] test_copyreg passed -- running (8): test_unicodedata (1 min 15 sec), test_regrtest (1 min 56 sec), test.test_multiprocessing_spawn.test_processes (2 min 5 sec), test_unparse (2 min 28 sec), test_statistics (1 min 2 sec), test_peg_generator (1 min 9 sec), test_lib2to3 (40.6 sec), test.test_multiprocessing_forkserver.test_threads (1 min 43 sec)
+0:04:15 load avg: 23.75 [290/484] test_kqueue passed -- running (8): test_unicodedata (1 min 15 sec), test_regrtest (1 min 56 sec), test.test_multiprocessing_spawn.test_processes (2 min 5 sec), test_unparse (2 min 28 sec), test_statistics (1 min 2 sec), test_peg_generator (1 min 9 sec), test_lib2to3 (40.7 sec), test.test_multiprocessing_forkserver.test_threads (1 min 43 sec)
+0:04:17 load avg: 22.65 [291/484] test_httplib passed -- running (8): test_unicodedata (1 min 17 sec), test_regrtest (1 min 58 sec), test.test_multiprocessing_spawn.test_processes (2 min 7 sec), test_unparse (2 min 30 sec), test_statistics (1 min 3 sec), test_peg_generator (1 min 11 sec), test_lib2to3 (42.2 sec), test.test_multiprocessing_forkserver.test_threads (1 min 45 sec)
+0:04:17 load avg: 22.65 [292/484] test_statistics passed (1 min 3 sec) -- running (7): test_unicodedata (1 min 17 sec), test_regrtest (1 min 58 sec), test.test_multiprocessing_spawn.test_processes (2 min 7 sec), test_unparse (2 min 30 sec), test_peg_generator (1 min 11 sec), test_lib2to3 (42.3 sec), test.test_multiprocessing_forkserver.test_threads (1 min 45 sec)
+0:04:18 load avg: 22.65 [293/484] test_int_literal passed -- running (7): test_unicodedata (1 min 18 sec), test_regrtest (1 min 59 sec), test.test_multiprocessing_spawn.test_processes (2 min 8 sec), test_unparse (2 min 31 sec), test_peg_generator (1 min 12 sec), test_lib2to3 (43.1 sec), test.test_multiprocessing_forkserver.test_threads (1 min 45 sec)
+0:04:19 load avg: 22.65 [294/484] test_hash passed -- running (7): test_unicodedata (1 min 19 sec), test_regrtest (2 min), test.test_multiprocessing_spawn.test_processes (2 min 9 sec), test_unparse (2 min 32 sec), test_peg_generator (1 min 13 sec), test_lib2to3 (44.1 sec), test.test_multiprocessing_forkserver.test_threads (1 min 46 sec)
+0:04:19 load avg: 22.65 [295/484] test_regrtest passed (2 min) -- running (6): test_unicodedata (1 min 19 sec), test.test_multiprocessing_spawn.test_processes (2 min 9 sec), test_unparse (2 min 32 sec), test_peg_generator (1 min 13 sec), test_lib2to3 (44.5 sec), test.test_multiprocessing_forkserver.test_threads (1 min 47 sec)
+0:04:23 load avg: 25.72 [296/484] test_peg_generator passed (1 min 17 sec) -- running (5): test_unicodedata (1 min 23 sec), test.test_multiprocessing_spawn.test_processes (2 min 13 sec), test_unparse (2 min 36 sec), test_lib2to3 (48.6 sec), test.test_multiprocessing_forkserver.test_threads (1 min 51 sec)
+/Users/zeedh/slowcoders/cpython/Lib/test/support/__init__.py:1687: DeprecationWarning: The distutils package is deprecated and slated for removal in Python 3.12. Use setuptools or check PEP 632 for potential alternatives
+  from distutils import ccompiler, sysconfig, spawn, errors
+/Users/zeedh/slowcoders/cpython/Lib/test/support/__init__.py:1687: DeprecationWarning: The distutils.sysconfig module is deprecated, use sysconfig instead
+  from distutils import ccompiler, sysconfig, spawn, errors
+0:04:24 load avg: 25.72 [297/484] test_tempfile passed -- running (5): test_unicodedata (1 min 24 sec), test.test_multiprocessing_spawn.test_processes (2 min 15 sec), test_unparse (2 min 37 sec), test_lib2to3 (49.8 sec), test.test_multiprocessing_forkserver.test_threads (1 min 52 sec)
+0:04:25 load avg: 25.72 [298/484] test_cmath passed -- running (5): test_unicodedata (1 min 25 sec), test.test_multiprocessing_spawn.test_processes (2 min 15 sec), test_unparse (2 min 38 sec), test_lib2to3 (50.0 sec), test.test_multiprocessing_forkserver.test_threads (1 min 52 sec)
+0:04:25 load avg: 25.72 [299/484] test.test_future_stmt.test_future_flags passed -- running (5): test_unicodedata (1 min 25 sec), test.test_multiprocessing_spawn.test_processes (2 min 15 sec), test_unparse (2 min 38 sec), test_lib2to3 (50.7 sec), test.test_multiprocessing_forkserver.test_threads (1 min 53 sec)
+0:04:26 load avg: 25.34 [300/484] test_pathlib passed -- running (5): test_unicodedata (1 min 26 sec), test.test_multiprocessing_spawn.test_processes (2 min 16 sec), test_unparse (2 min 39 sec), test_lib2to3 (51.7 sec), test.test_multiprocessing_forkserver.test_threads (1 min 54 sec)
+0:04:28 load avg: 25.34 [301/484] test_source_encoding passed -- running (5): test_unicodedata (1 min 28 sec), test.test_multiprocessing_spawn.test_processes (2 min 18 sec), test_unparse (2 min 41 sec), test_lib2to3 (53.2 sec), test.test_multiprocessing_forkserver.test_threads (1 min 56 sec)
+0:04:29 load avg: 25.34 [302/484] test.test_gdb.test_pretty_print skipped -- running (5): test_unicodedata (1 min 29 sec), test.test_multiprocessing_spawn.test_processes (2 min 19 sec), test_unparse (2 min 41 sec), test_lib2to3 (53.9 sec), test.test_multiprocessing_forkserver.test_threads (1 min 56 sec)
+test.test_gdb.test_pretty_print skipped -- Couldn't find gdb program on the path: [Errno 2] No such file or directory: 'gdb'
+0:04:29 load avg: 25.34 [303/484] test_tix skipped -- running (5): test_unicodedata (1 min 29 sec), test.test_multiprocessing_spawn.test_processes (2 min 19 sec), test_unparse (2 min 42 sec), test_lib2to3 (54.6 sec), test.test_multiprocessing_forkserver.test_threads (1 min 57 sec)
+test_tix skipped -- No module named '_tkinter'
+0:04:29 load avg: 25.34 [304/484] test_pow passed -- running (5): test_unicodedata (1 min 29 sec), test.test_multiprocessing_spawn.test_processes (2 min 19 sec), test_unparse (2 min 42 sec), test_lib2to3 (54.6 sec), test.test_multiprocessing_forkserver.test_threads (1 min 57 sec)
+0:04:30 load avg: 25.34 [305/484] test_userdict passed -- running (5): test_unicodedata (1 min 30 sec), test.test_multiprocessing_spawn.test_processes (2 min 20 sec), test_unparse (2 min 43 sec), test_lib2to3 (55.6 sec), test.test_multiprocessing_forkserver.test_threads (1 min 58 sec)
+0:04:31 load avg: 24.27 [306/484] test_codeop passed -- running (5): test_unicodedata (1 min 31 sec), test.test_multiprocessing_spawn.test_processes (2 min 21 sec), test_unparse (2 min 44 sec), test_lib2to3 (56.4 sec), test.test_multiprocessing_forkserver.test_threads (1 min 59 sec)
+0:04:40 load avg: 23.21 [307/484] test_tuple passed -- running (5): test_unicodedata (1 min 40 sec), test.test_multiprocessing_spawn.test_processes (2 min 30 sec), test_unparse (2 min 53 sec), test_lib2to3 (1 min 5 sec), test.test_multiprocessing_forkserver.test_threads (2 min 8 sec)
+0:04:43 load avg: 22.95 [308/484] test_coroutines passed -- running (5): test_unicodedata (1 min 43 sec), test.test_multiprocessing_spawn.test_processes (2 min 33 sec), test_unparse (2 min 56 sec), test_lib2to3 (1 min 8 sec), test.test_multiprocessing_forkserver.test_threads (2 min 11 sec)
+0:04:44 load avg: 22.95 [309/484] test_largefile passed -- running (5): test_unicodedata (1 min 44 sec), test.test_multiprocessing_spawn.test_processes (2 min 34 sec), test_unparse (2 min 57 sec), test_lib2to3 (1 min 9 sec), test.test_multiprocessing_forkserver.test_threads (2 min 12 sec)
+0:04:45 load avg: 22.95 [310/484] test_sndhdr passed -- running (5): test_unicodedata (1 min 45 sec), test.test_multiprocessing_spawn.test_processes (2 min 35 sec), test_unparse (2 min 58 sec), test_lib2to3 (1 min 10 sec), test.test_multiprocessing_forkserver.test_threads (2 min 13 sec)
+0:04:46 load avg: 22.00 [311/484] test_pwd passed -- running (5): test_unicodedata (1 min 46 sec), test.test_multiprocessing_spawn.test_processes (2 min 36 sec), test_unparse (2 min 59 sec), test_lib2to3 (1 min 11 sec), test.test_multiprocessing_forkserver.test_threads (2 min 14 sec)
+0:04:55 load avg: 21.83 [312/484] test_traceback passed -- running (7): test_unicodedata (1 min 55 sec), test_venv (30.4 sec), test.test_multiprocessing_spawn.test_processes (2 min 45 sec), test_unparse (3 min 8 sec), test_tokenize (37.2 sec), test_lib2to3 (1 min 20 sec), test.test_multiprocessing_forkserver.test_threads (2 min 23 sec)
+0:04:56 load avg: 21.37 [313/484] test_decorators passed -- running (7): test_unicodedata (1 min 56 sec), test_venv (31.6 sec), test.test_multiprocessing_spawn.test_processes (2 min 46 sec), test_unparse (3 min 9 sec), test_tokenize (38.4 sec), test_lib2to3 (1 min 21 sec), test.test_multiprocessing_forkserver.test_threads (2 min 24 sec)
+0:05:00 load avg: 21.37 [314/484] test_urlparse passed -- running (9): test_unicodedata (2 min), test_venv (35.8 sec), test.test_multiprocessing_spawn.test_processes (2 min 50 sec), test.test_concurrent_futures.test_process_pool (33.9 sec), test_unparse (3 min 13 sec), test_tokenize (42.5 sec), test_embed (31.0 sec), test_lib2to3 (1 min 25 sec), test.test_multiprocessing_forkserver.test_threads (2 min 28 sec)
+0:05:01 load avg: 21.37 [315/484] test_embed passed (31.5 sec) -- running (8): test_unicodedata (2 min 1 sec), test_venv (36.3 sec), test.test_multiprocessing_spawn.test_processes (2 min 51 sec), test.test_concurrent_futures.test_process_pool (34.4 sec), test_unparse (3 min 14 sec), test_tokenize (43.0 sec), test_lib2to3 (1 min 26 sec), test.test_multiprocessing_forkserver.test_threads (2 min 28 sec)
+0:05:02 load avg: 21.18 [316/484] test_winconsoleio skipped -- running (8): test_unicodedata (2 min 2 sec), test_venv (37.1 sec), test.test_multiprocessing_spawn.test_processes (2 min 52 sec), test.test_concurrent_futures.test_process_pool (35.2 sec), test_unparse (3 min 14 sec), test_tokenize (43.9 sec), test_lib2to3 (1 min 26 sec), test.test_multiprocessing_forkserver.test_threads (2 min 29 sec)
+test_winconsoleio skipped -- test only relevant on win32
+0:05:04 load avg: 21.18 [317/484] test_struct passed -- running (8): test_unicodedata (2 min 4 sec), test_venv (39.5 sec), test.test_multiprocessing_spawn.test_processes (2 min 54 sec), test.test_concurrent_futures.test_process_pool (37.6 sec), test_unparse (3 min 17 sec), test_tokenize (46.3 sec), test_lib2to3 (1 min 29 sec), test.test_multiprocessing_forkserver.test_threads (2 min 32 sec)
+0:05:15 load avg: 20.46 [318/484] test.test_concurrent_futures.test_process_pool passed (48.5 sec) -- running (7): test_unicodedata (2 min 15 sec), test_venv (50.4 sec), test.test_multiprocessing_spawn.test_processes (3 min 5 sec), test_unparse (3 min 28 sec), test_tokenize (57.2 sec), test_lib2to3 (1 min 40 sec), test.test_multiprocessing_forkserver.test_threads (2 min 43 sec)
+0:05:20 load avg: 19.54 [319/484] test_array passed -- running (7): test_unicodedata (2 min 20 sec), test_venv (55.3 sec), test.test_multiprocessing_spawn.test_processes (3 min 10 sec), test_unparse (3 min 33 sec), test_tokenize (1 min 2 sec), test_lib2to3 (1 min 45 sec), test.test_multiprocessing_forkserver.test_threads (2 min 47 sec)
+0:05:21 load avg: 19.54 [320/484] test_with passed -- running (7): test_unicodedata (2 min 21 sec), test_venv (56.2 sec), test.test_multiprocessing_spawn.test_processes (3 min 11 sec), test_unparse (3 min 33 sec), test_tokenize (1 min 2 sec), test_lib2to3 (1 min 45 sec), test.test_multiprocessing_forkserver.test_threads (2 min 48 sec)
+0:05:22 load avg: 21.18 [321/484] test.test_multiprocessing_spawn.test_processes passed (3 min 12 sec) -- running (6): test_unicodedata (2 min 22 sec), test_venv (57.5 sec), test_unparse (3 min 35 sec), test_tokenize (1 min 4 sec), test_lib2to3 (1 min 47 sec), test.test_multiprocessing_forkserver.test_threads (2 min 50 sec)
+0:05:22 load avg: 21.18 [322/484] test_pprint passed -- running (6): test_unicodedata (2 min 22 sec), test_venv (57.7 sec), test_unparse (3 min 35 sec), test_tokenize (1 min 4 sec), test_lib2to3 (1 min 47 sec), test.test_multiprocessing_forkserver.test_threads (2 min 50 sec)
+0:05:23 load avg: 21.18 [323/484] test_quopri passed -- running (6): test_unicodedata (2 min 23 sec), test_venv (58.8 sec), test_unparse (3 min 36 sec), test_tokenize (1 min 5 sec), test_lib2to3 (1 min 48 sec), test.test_multiprocessing_forkserver.test_threads (2 min 51 sec)
+0:05:27 load avg: 21.17 [324/484] test_unparse passed (3 min 40 sec) -- running (5): test_unicodedata (2 min 27 sec), test_venv (1 min 2 sec), test_tokenize (1 min 9 sec), test_lib2to3 (1 min 52 sec), test.test_multiprocessing_forkserver.test_threads (2 min 55 sec)
+<unknown>:2148: DeprecationWarning: invalid escape sequence '\('
+0:05:29 load avg: 21.17 [325/484] test_asyncgen passed -- running (5): test_unicodedata (2 min 29 sec), test_venv (1 min 4 sec), test_tokenize (1 min 11 sec), test_lib2to3 (1 min 54 sec), test.test_multiprocessing_forkserver.test_threads (2 min 57 sec)
+0:05:30 load avg: 21.17 [326/484] test_zipfile64 skipped (resource denied) -- running (5): test_unicodedata (2 min 30 sec), test_venv (1 min 5 sec), test_tokenize (1 min 12 sec), test_lib2to3 (1 min 55 sec), test.test_multiprocessing_forkserver.test_threads (2 min 57 sec)
+test_zipfile64 skipped -- test requires loads of disk-space bytes and a long time to run
+0:05:34 load avg: 20.19 [327/484] test_runpy passed -- running (7): test_unicodedata (2 min 34 sec), test_venv (1 min 10 sec), test_tokenize (1 min 16 sec), test_cppext (32.9 sec), test_lib2to3 (1 min 59 sec), test.test_multiprocessing_forkserver.test_threads (3 min 2 sec), test_tarfile (30.5 sec)
+0:05:35 load avg: 20.19 [328/484] test_yield_from passed -- running (7): test_unicodedata (2 min 35 sec), test_venv (1 min 10 sec), test_tokenize (1 min 17 sec), test_cppext (33.9 sec), test_lib2to3 (2 min), test.test_multiprocessing_forkserver.test_threads (3 min 3 sec), test_tarfile (31.4 sec)
+0:05:39 load avg: 21.46 [329/484] test_support passed -- running (7): test_unicodedata (2 min 39 sec), test_venv (1 min 14 sec), test_tokenize (1 min 21 sec), test_cppext (37.5 sec), test_lib2to3 (2 min 4 sec), test.test_multiprocessing_forkserver.test_threads (3 min 7 sec), test_tarfile (35.1 sec)
+0:05:45 load avg: 20.62 [330/484] test_codecmaps_cn passed -- running (7): test_unicodedata (2 min 45 sec), test_venv (1 min 20 sec), test_tokenize (1 min 26 sec), test_cppext (43.1 sec), test_lib2to3 (2 min 9 sec), test.test_multiprocessing_forkserver.test_threads (3 min 12 sec), test_tarfile (40.6 sec)
+0:05:46 load avg: 20.62 [331/484] test_pyclbr passed -- running (7): test_unicodedata (2 min 46 sec), test_venv (1 min 21 sec), test_tokenize (1 min 28 sec), test_cppext (44.4 sec), test_lib2to3 (2 min 11 sec), test.test_multiprocessing_forkserver.test_threads (3 min 14 sec), test_tarfile (42.0 sec)
+0:05:47 load avg: 19.61 [332/484] test_class passed -- running (7): test_unicodedata (2 min 47 sec), test_venv (1 min 22 sec), test_tokenize (1 min 28 sec), test_cppext (45.1 sec), test_lib2to3 (2 min 12 sec), test.test_multiprocessing_forkserver.test_threads (3 min 14 sec), test_tarfile (42.7 sec)
+0:05:47 load avg: 19.61 [333/484] test_type_comments passed -- running (7): test_unicodedata (2 min 47 sec), test_venv (1 min 23 sec), test_tokenize (1 min 29 sec), test_cppext (45.9 sec), test_lib2to3 (2 min 12 sec), test.test_multiprocessing_forkserver.test_threads (3 min 15 sec), test_tarfile (43.5 sec)
+0:05:49 load avg: 19.61 [334/484] test_tarfile passed (45.2 sec) -- running (6): test_unicodedata (2 min 49 sec), test_venv (1 min 24 sec), test_tokenize (1 min 31 sec), test_cppext (47.6 sec), test_lib2to3 (2 min 14 sec), test.test_multiprocessing_forkserver.test_threads (3 min 17 sec)
+0:05:50 load avg: 19.61 [335/484] test_turtle skipped -- running (6): test_unicodedata (2 min 50 sec), test_venv (1 min 25 sec), test_tokenize (1 min 32 sec), test_cppext (48.4 sec), test_lib2to3 (2 min 15 sec), test.test_multiprocessing_forkserver.test_threads (3 min 18 sec)
+test_turtle skipped -- No module named '_tkinter'
+0:05:51 load avg: 19.61 [336/484] test_bdb passed -- running (6): test_unicodedata (2 min 51 sec), test_venv (1 min 26 sec), test_tokenize (1 min 33 sec), test_cppext (49.4 sec), test_lib2to3 (2 min 16 sec), test.test_multiprocessing_forkserver.test_threads (3 min 19 sec)
+0:05:53 load avg: 19.88 [337/484] test_httpservers passed -- running (6): test_unicodedata (2 min 53 sec), test_venv (1 min 28 sec), test_tokenize (1 min 35 sec), test_cppext (51.6 sec), test_lib2to3 (2 min 18 sec), test.test_multiprocessing_forkserver.test_threads (3 min 21 sec)
+0:05:54 load avg: 19.88 [338/484] test_dictviews passed -- running (6): test_unicodedata (2 min 54 sec), test_venv (1 min 29 sec), test_tokenize (1 min 36 sec), test_cppext (52.4 sec), test_lib2to3 (2 min 19 sec), test.test_multiprocessing_forkserver.test_threads (3 min 22 sec)
+0:05:54 load avg: 19.88 [339/484] test_gzip passed -- running (6): test_unicodedata (2 min 54 sec), test_venv (1 min 29 sec), test_tokenize (1 min 36 sec), test_cppext (52.4 sec), test_lib2to3 (2 min 19 sec), test.test_multiprocessing_forkserver.test_threads (3 min 22 sec)
+0:05:55 load avg: 19.88 [340/484] test_minidom passed -- running (6): test_unicodedata (2 min 55 sec), test_venv (1 min 30 sec), test_tokenize (1 min 37 sec), test_cppext (53.3 sec), test_lib2to3 (2 min 20 sec), test.test_multiprocessing_forkserver.test_threads (3 min 23 sec)
+0:05:55 load avg: 19.88 [341/484] test_patma passed -- running (6): test_unicodedata (2 min 55 sec), test_venv (1 min 30 sec), test_tokenize (1 min 37 sec), test_cppext (53.5 sec), test_lib2to3 (2 min 20 sec), test.test_multiprocessing_forkserver.test_threads (3 min 23 sec)
+0:05:55 load avg: 19.88 [342/484] test_openpty passed -- running (6): test_unicodedata (2 min 55 sec), test_venv (1 min 31 sec), test_tokenize (1 min 37 sec), test_cppext (53.9 sec), test_lib2to3 (2 min 20 sec), test.test_multiprocessing_forkserver.test_threads (3 min 23 sec)
+0:05:57 load avg: 18.93 [343/484] test_py_compile passed -- running (6): test_unicodedata (2 min 57 sec), test_venv (1 min 32 sec), test_tokenize (1 min 39 sec), test_cppext (55.9 sec), test_lib2to3 (2 min 22 sec), test.test_multiprocessing_forkserver.test_threads (3 min 25 sec)
+0:05:58 load avg: 18.93 [344/484] test.test_multiprocessing_fork.test_threads skipped -- running (6): test_unicodedata (2 min 58 sec), test_venv (1 min 33 sec), test_tokenize (1 min 40 sec), test_cppext (56.5 sec), test_lib2to3 (2 min 23 sec), test.test_multiprocessing_forkserver.test_threads (3 min 26 sec)
+test.test_multiprocessing_fork.test_threads skipped -- test may crash on macOS (bpo-33725)
+0:05:58 load avg: 18.93 [345/484] test_codecmaps_tw passed -- running (6): test_unicodedata (2 min 58 sec), test_venv (1 min 33 sec), test_tokenize (1 min 40 sec), test_cppext (56.9 sec), test_lib2to3 (2 min 23 sec), test.test_multiprocessing_forkserver.test_threads (3 min 26 sec)
+0:05:59 load avg: 18.93 [346/484] test_fractions passed -- running (6): test_unicodedata (2 min 59 sec), test_venv (1 min 34 sec), test_tokenize (1 min 41 sec), test_cppext (57.7 sec), test_lib2to3 (2 min 24 sec), test.test_multiprocessing_forkserver.test_threads (3 min 27 sec)
+0:05:59 load avg: 18.93 [347/484] test_generators passed -- running (6): test_unicodedata (2 min 59 sec), test_venv (1 min 35 sec), test_tokenize (1 min 41 sec), test_cppext (58.0 sec), test_lib2to3 (2 min 24 sec), test.test_multiprocessing_forkserver.test_threads (3 min 27 sec)
+0:06:01 load avg: 18.93 [348/484] test.test_asyncio.test_pep492 passed -- running (7): test_unicodedata (3 min 1 sec), test_venv (1 min 36 sec), test.test_multiprocessing_spawn.test_misc (30.8 sec), test_tokenize (1 min 42 sec), test_cppext (59.0 sec), test_lib2to3 (2 min 25 sec), test.test_multiprocessing_forkserver.test_threads (3 min 28 sec)
+0:06:01 load avg: 18.93 [349/484] test_sundry passed -- running (7): test_unicodedata (3 min 1 sec), test_venv (1 min 36 sec), test.test_multiprocessing_spawn.test_misc (30.9 sec), test_tokenize (1 min 42 sec), test_cppext (59.1 sec), test_lib2to3 (2 min 25 sec), test.test_multiprocessing_forkserver.test_threads (3 min 28 sec)
+0:06:02 load avg: 18.29 [350/484] test_curses passed -- running (7): test_unicodedata (3 min 2 sec), test_venv (1 min 37 sec), test.test_multiprocessing_spawn.test_misc (32.4 sec), test_tokenize (1 min 44 sec), test_cppext (1 min), test_lib2to3 (2 min 27 sec), test.test_multiprocessing_forkserver.test_threads (3 min 30 sec)
+0:06:03 load avg: 18.29 [351/484] test_zipapp passed -- running (7): test_unicodedata (3 min 3 sec), test_venv (1 min 38 sec), test.test_multiprocessing_spawn.test_misc (33.5 sec), test_tokenize (1 min 45 sec), test_cppext (1 min 1 sec), test_lib2to3 (2 min 28 sec), test.test_multiprocessing_forkserver.test_threads (3 min 31 sec)
+0:06:06 load avg: 17.39 [352/484] test_asyncore passed -- running (7): test_unicodedata (3 min 6 sec), test_venv (1 min 41 sec), test.test_multiprocessing_spawn.test_misc (36.7 sec), test_tokenize (1 min 48 sec), test_cppext (1 min 4 sec), test_lib2to3 (2 min 31 sec), test.test_multiprocessing_forkserver.test_threads (3 min 34 sec)
+0:06:06 load avg: 17.39 [353/484] test_venv passed (1 min 42 sec) -- running (6): test_unicodedata (3 min 6 sec), test.test_multiprocessing_spawn.test_misc (36.7 sec), test_tokenize (1 min 48 sec), test_cppext (1 min 4 sec), test_lib2to3 (2 min 31 sec), test.test_multiprocessing_forkserver.test_threads (3 min 34 sec)
+Could not find platform dependent libraries <exec_prefix>
+0:06:07 load avg: 17.39 [354/484] test_urllibnet passed -- running (6): test_unicodedata (3 min 7 sec), test.test_multiprocessing_spawn.test_misc (37.5 sec), test_tokenize (1 min 49 sec), test_cppext (1 min 5 sec), test_lib2to3 (2 min 32 sec), test.test_multiprocessing_forkserver.test_threads (3 min 35 sec)
+0:06:08 load avg: 17.39 [355/484] test_repl passed -- running (6): test_unicodedata (3 min 8 sec), test.test_multiprocessing_spawn.test_misc (38.4 sec), test_tokenize (1 min 50 sec), test_cppext (1 min 6 sec), test_lib2to3 (2 min 33 sec), test.test_multiprocessing_forkserver.test_threads (3 min 36 sec)
+0:06:09 load avg: 17.39 [356/484] test.test_asyncio.test_streams passed -- running (6): test_unicodedata (3 min 9 sec), test.test_multiprocessing_spawn.test_misc (39.2 sec), test_tokenize (1 min 51 sec), test_cppext (1 min 7 sec), test_lib2to3 (2 min 34 sec), test.test_multiprocessing_forkserver.test_threads (3 min 37 sec)
+0:06:09 load avg: 17.39 [357/484] test_msilib skipped -- running (6): test_unicodedata (3 min 9 sec), test.test_multiprocessing_spawn.test_misc (39.2 sec), test_tokenize (1 min 51 sec), test_cppext (1 min 7 sec), test_lib2to3 (2 min 34 sec), test.test_multiprocessing_forkserver.test_threads (3 min 37 sec)
+test_msilib skipped -- No module named '_msi'
+0:06:10 load avg: 17.39 [358/484] test_ast passed -- running (6): test_unicodedata (3 min 10 sec), test.test_multiprocessing_spawn.test_misc (40.2 sec), test_tokenize (1 min 52 sec), test_cppext (1 min 8 sec), test_lib2to3 (2 min 35 sec), test.test_multiprocessing_forkserver.test_threads (3 min 38 sec)
+0:06:10 load avg: 17.39 [359/484] test.test_asyncio.test_server passed -- running (6): test_unicodedata (3 min 10 sec), test.test_multiprocessing_spawn.test_misc (40.6 sec), test_tokenize (1 min 52 sec), test_cppext (1 min 8 sec), test_lib2to3 (2 min 35 sec), test.test_multiprocessing_forkserver.test_threads (3 min 38 sec)
+0:06:11 load avg: 17.39 [360/484] test_spwd skipped -- running (6): test_unicodedata (3 min 11 sec), test.test_multiprocessing_spawn.test_misc (41.2 sec), test_tokenize (1 min 53 sec), test_cppext (1 min 9 sec), test_lib2to3 (2 min 36 sec), test.test_multiprocessing_forkserver.test_threads (3 min 39 sec)
+test_spwd skipped -- No module named 'spwd'
+0:06:12 load avg: 16.64 [361/484] test_locale passed -- running (6): test_unicodedata (3 min 12 sec), test.test_multiprocessing_spawn.test_misc (42.0 sec), test_tokenize (1 min 54 sec), test_cppext (1 min 10 sec), test_lib2to3 (2 min 37 sec), test.test_multiprocessing_forkserver.test_threads (3 min 39 sec)
+0:06:12 load avg: 16.64 [362/484] test_bz2 passed -- running (6): test_unicodedata (3 min 12 sec), test.test_multiprocessing_spawn.test_misc (42.2 sec), test_tokenize (1 min 54 sec), test_cppext (1 min 10 sec), test_lib2to3 (2 min 37 sec), test.test_multiprocessing_forkserver.test_threads (3 min 40 sec)
+0:06:12 load avg: 16.64 [363/484] test_select passed -- running (6): test_unicodedata (3 min 12 sec), test.test_multiprocessing_spawn.test_misc (42.5 sec), test_tokenize (1 min 54 sec), test_cppext (1 min 10 sec), test_lib2to3 (2 min 37 sec), test.test_multiprocessing_forkserver.test_threads (3 min 40 sec)
+0:06:12 load avg: 16.64 [364/484] test_zipimport_support passed -- running (6): test_unicodedata (3 min 12 sec), test.test_multiprocessing_spawn.test_misc (42.6 sec), test_tokenize (1 min 54 sec), test_cppext (1 min 10 sec), test_lib2to3 (2 min 37 sec), test.test_multiprocessing_forkserver.test_threads (3 min 40 sec)
+0:06:13 load avg: 16.64 [365/484] test_strptime passed -- running (6): test_unicodedata (3 min 13 sec), test.test_multiprocessing_spawn.test_misc (43.7 sec), test_tokenize (1 min 55 sec), test_cppext (1 min 11 sec), test_lib2to3 (2 min 38 sec), test.test_multiprocessing_forkserver.test_threads (3 min 41 sec)
+0:06:14 load avg: 16.64 [366/484] test_super passed -- running (6): test_unicodedata (3 min 14 sec), test.test_multiprocessing_spawn.test_misc (44.4 sec), test_tokenize (1 min 56 sec), test_cppext (1 min 12 sec), test_lib2to3 (2 min 39 sec), test.test_multiprocessing_forkserver.test_threads (3 min 42 sec)
+0:06:15 load avg: 16.64 [367/484] test.test_asyncio.test_sslproto passed -- running (6): test_unicodedata (3 min 15 sec), test.test_multiprocessing_spawn.test_misc (45.6 sec), test_tokenize (1 min 57 sec), test_cppext (1 min 13 sec), test_lib2to3 (2 min 40 sec), test.test_multiprocessing_forkserver.test_threads (3 min 43 sec)
+0:06:16 load avg: 16.64 [368/484] test.test_asyncio.test_unix_events passed -- running (6): test_unicodedata (3 min 16 sec), test.test_multiprocessing_spawn.test_misc (45.9 sec), test_tokenize (1 min 57 sec), test_cppext (1 min 14 sec), test_lib2to3 (2 min 41 sec), test.test_multiprocessing_forkserver.test_threads (3 min 43 sec)
+0:06:16 load avg: 16.10 [369/484] test_dict_version passed -- running (6): test_unicodedata (3 min 16 sec), test.test_multiprocessing_spawn.test_misc (46.6 sec), test_tokenize (1 min 58 sec), test_cppext (1 min 14 sec), test_lib2to3 (2 min 41 sec), test.test_multiprocessing_forkserver.test_threads (3 min 44 sec)
+0:06:19 load avg: 16.10 [370/484] test_cppext passed (1 min 17 sec) -- running (5): test_unicodedata (3 min 19 sec), test.test_multiprocessing_spawn.test_misc (49.7 sec), test_tokenize (2 min 1 sec), test_lib2to3 (2 min 44 sec), test.test_multiprocessing_forkserver.test_threads (3 min 47 sec)
+0:06:20 load avg: 16.10 [371/484] test_ctypes passed -- running (5): test_unicodedata (3 min 20 sec), test.test_multiprocessing_spawn.test_misc (50.1 sec), test_tokenize (2 min 2 sec), test_lib2to3 (2 min 45 sec), test.test_multiprocessing_forkserver.test_threads (3 min 48 sec)
+0:06:21 load avg: 16.10 [372/484] test_webbrowser passed -- running (5): test_unicodedata (3 min 21 sec), test.test_multiprocessing_spawn.test_misc (50.8 sec), test_tokenize (2 min 2 sec), test_lib2to3 (2 min 45 sec), test.test_multiprocessing_forkserver.test_threads (3 min 48 sec)
+0:06:22 load avg: 15.94 [373/484] test_unicodedata passed (3 min 22 sec) -- running (4): test.test_multiprocessing_spawn.test_misc (52.0 sec), test_tokenize (2 min 4 sec), test_lib2to3 (2 min 47 sec), test.test_multiprocessing_forkserver.test_threads (3 min 49 sec)
+0:06:23 load avg: 15.94 [374/484] test_deque passed -- running (4): test.test_multiprocessing_spawn.test_misc (52.9 sec), test_tokenize (2 min 4 sec), test_lib2to3 (2 min 48 sec), test.test_multiprocessing_forkserver.test_threads (3 min 50 sec)
+0:06:23 load avg: 15.94 [375/484] test_longexp passed -- running (4): test.test_multiprocessing_spawn.test_misc (53.2 sec), test_tokenize (2 min 5 sec), test_lib2to3 (2 min 48 sec), test.test_multiprocessing_forkserver.test_threads (3 min 51 sec)
+0:06:23 load avg: 15.94 [376/484] test_pipes passed -- running (4): test.test_multiprocessing_spawn.test_misc (53.7 sec), test_tokenize (2 min 5 sec), test_lib2to3 (2 min 48 sec), test.test_multiprocessing_forkserver.test_threads (3 min 51 sec)
+0:06:24 load avg: 15.94 [377/484] test.test_asyncio.test_protocols passed -- running (4): test.test_multiprocessing_spawn.test_misc (54.0 sec), test_tokenize (2 min 6 sec), test_lib2to3 (2 min 49 sec), test.test_multiprocessing_forkserver.test_threads (3 min 52 sec)
+0:06:24 load avg: 15.94 [378/484] test_genericclass passed -- running (4): test.test_multiprocessing_spawn.test_misc (54.4 sec), test_tokenize (2 min 6 sec), test_lib2to3 (2 min 49 sec), test.test_multiprocessing_forkserver.test_threads (3 min 52 sec)
+0:06:25 load avg: 15.94 [379/484] test_netrc passed -- running (4): test.test_multiprocessing_spawn.test_misc (55.1 sec), test_tokenize (2 min 7 sec), test_lib2to3 (2 min 50 sec), test.test_multiprocessing_forkserver.test_threads (3 min 53 sec)
+0:06:26 load avg: 15.94 [380/484] test_fork1 passed -- running (4): test.test_multiprocessing_spawn.test_misc (55.9 sec), test_tokenize (2 min 7 sec), test_lib2to3 (2 min 51 sec), test.test_multiprocessing_forkserver.test_threads (3 min 53 sec)
+0:06:26 load avg: 15.54 [381/484] test.test_future_stmt.test_future_multiple_features passed -- running (4): test.test_multiprocessing_spawn.test_misc (56.7 sec), test_tokenize (2 min 8 sec), test_lib2to3 (2 min 51 sec), test.test_multiprocessing_forkserver.test_threads (3 min 54 sec)
+0:06:27 load avg: 15.54 [382/484] test_type_cache passed -- running (4): test.test_multiprocessing_spawn.test_misc (57.4 sec), test_tokenize (2 min 9 sec), test_lib2to3 (2 min 52 sec), test.test_multiprocessing_forkserver.test_threads (3 min 55 sec)
+0:06:30 load avg: 15.54 [383/484] test_csv passed -- running (4): test.test_multiprocessing_spawn.test_misc (1 min), test_tokenize (2 min 12 sec), test_lib2to3 (2 min 55 sec), test.test_multiprocessing_forkserver.test_threads (3 min 58 sec)
+0:06:31 load avg: 15.54 [384/484] test.test_future_stmt.test_future passed -- running (4): test.test_multiprocessing_spawn.test_misc (1 min 1 sec), test_tokenize (2 min 13 sec), test_lib2to3 (2 min 56 sec), test.test_multiprocessing_forkserver.test_threads (3 min 59 sec)
+0:06:32 load avg: 16.78 [385/484] test_bigmem passed -- running (4): test.test_multiprocessing_spawn.test_misc (1 min 2 sec), test_tokenize (2 min 14 sec), test_lib2to3 (2 min 57 sec), test.test_multiprocessing_forkserver.test_threads (4 min)
+0:06:33 load avg: 16.78 [386/484] test_pkg passed -- running (4): test.test_multiprocessing_spawn.test_misc (1 min 3 sec), test_tokenize (2 min 15 sec), test_lib2to3 (2 min 58 sec), test.test_multiprocessing_forkserver.test_threads (4 min 1 sec)
+0:06:35 load avg: 16.78 [387/484] test_lib2to3 passed (3 min) -- running (3): test.test_multiprocessing_spawn.test_misc (1 min 5 sec), test_tokenize (2 min 17 sec), test.test_multiprocessing_forkserver.test_threads (4 min 3 sec)
+0:06:36 load avg: 16.78 [388/484] test_genexps passed -- running (3): test.test_multiprocessing_spawn.test_misc (1 min 6 sec), test_tokenize (2 min 18 sec), test.test_multiprocessing_forkserver.test_threads (4 min 4 sec)
+0:06:38 load avg: 16.32 [389/484] test_codecmaps_hk passed -- running (3): test.test_multiprocessing_spawn.test_misc (1 min 7 sec), test_tokenize (2 min 19 sec), test.test_multiprocessing_forkserver.test_threads (4 min 5 sec)
+0:06:38 load avg: 16.32 [390/484] test_trace passed -- running (3): test.test_multiprocessing_spawn.test_misc (1 min 8 sec), test_tokenize (2 min 20 sec), test.test_multiprocessing_forkserver.test_threads (4 min 5 sec)
+0:06:39 load avg: 16.32 [391/484] test_pty passed -- running (3): test.test_multiprocessing_spawn.test_misc (1 min 9 sec), test_tokenize (2 min 21 sec), test.test_multiprocessing_forkserver.test_threads (4 min 7 sec)
+hi there
+0:06:39 load avg: 16.32 [392/484] test_ensurepip passed -- running (3): test.test_multiprocessing_spawn.test_misc (1 min 9 sec), test_tokenize (2 min 21 sec), test.test_multiprocessing_forkserver.test_threads (4 min 7 sec)
+0:06:41 load avg: 16.32 [393/484] test_memoryview passed -- running (3): test.test_multiprocessing_spawn.test_misc (1 min 10 sec), test_tokenize (2 min 22 sec), test.test_multiprocessing_forkserver.test_threads (4 min 8 sec)
+0:06:43 load avg: 16.77 [394/484] test__osx_support passed -- running (4): test.test_multiprocessing_spawn.test_misc (1 min 12 sec), test_tokenize (2 min 24 sec), test.test_multiprocessing_forkserver.test_threads (4 min 10 sec), test_pickle (30.8 sec)
+0:06:45 load avg: 16.77 [395/484] test_modulefinder passed -- running (4): test.test_multiprocessing_spawn.test_misc (1 min 14 sec), test_tokenize (2 min 26 sec), test.test_multiprocessing_forkserver.test_threads (4 min 12 sec), test_pickle (32.9 sec)
+0:06:48 load avg: 18.63 [396/484] test_string_literals passed -- running (4): test.test_multiprocessing_spawn.test_misc (1 min 18 sec), test_tokenize (2 min 30 sec), test.test_multiprocessing_forkserver.test_threads (4 min 16 sec), test_pickle (36.6 sec)
+0:06:51 load avg: 18.63 [397/484] test_bytes passed -- running (5): test.test_multiprocessing_spawn.test_misc (1 min 21 sec), test_tokenize (2 min 33 sec), test_multiprocessing_main_handling (30.2 sec), test.test_multiprocessing_forkserver.test_threads (4 min 19 sec), test_pickle (39.1 sec)
+0:06:56 load avg: 19.22 [398/484] test.test_asyncio.test_base_events passed -- running (6): test_tools (32.0 sec), test.test_multiprocessing_spawn.test_misc (1 min 26 sec), test_tokenize (2 min 38 sec), test_multiprocessing_main_handling (35.2 sec), test.test_multiprocessing_forkserver.test_threads (4 min 23 sec), test_pickle (44.0 sec)
+0:06:57 load avg: 19.68 [399/484] test_univnewlines passed -- running (6): test_tools (33.0 sec), test.test_multiprocessing_spawn.test_misc (1 min 27 sec), test_tokenize (2 min 39 sec), test_multiprocessing_main_handling (36.2 sec), test.test_multiprocessing_forkserver.test_threads (4 min 24 sec), test_pickle (45.0 sec)
+0:06:57 load avg: 19.68 [400/484] test.test_multiprocessing_spawn.test_misc passed (1 min 27 sec) -- running (5): test_tools (33.3 sec), test_tokenize (2 min 39 sec), test_multiprocessing_main_handling (36.5 sec), test.test_multiprocessing_forkserver.test_threads (4 min 25 sec), test_pickle (45.4 sec)
+0:06:58 load avg: 19.68 [401/484] test_global passed -- running (5): test_tools (33.9 sec), test_tokenize (2 min 40 sec), test_multiprocessing_main_handling (37.1 sec), test.test_multiprocessing_forkserver.test_threads (4 min 25 sec), test_pickle (46.0 sec)
+0:06:59 load avg: 19.68 [402/484] test_termios passed -- running (5): test_tools (35.6 sec), test_tokenize (2 min 41 sec), test_multiprocessing_main_handling (38.8 sec), test.test_multiprocessing_forkserver.test_threads (4 min 27 sec), test_pickle (47.6 sec)
+0:06:59 load avg: 19.68 [403/484] test_xml_etree passed -- running (5): test_tools (35.7 sec), test_tokenize (2 min 41 sec), test_multiprocessing_main_handling (38.9 sec), test.test_multiprocessing_forkserver.test_threads (4 min 27 sec), test_pickle (47.7 sec)
+0:07:00 load avg: 19.68 [404/484] test_dbm_ndbm passed -- running (5): test_tools (36.5 sec), test_tokenize (2 min 42 sec), test_multiprocessing_main_handling (39.7 sec), test.test_multiprocessing_forkserver.test_threads (4 min 28 sec), test_pickle (48.5 sec)
+0:07:00 load avg: 19.68 [405/484] test_stat passed -- running (5): test_tools (36.5 sec), test_tokenize (2 min 42 sec), test_multiprocessing_main_handling (39.7 sec), test.test_multiprocessing_forkserver.test_threads (4 min 28 sec), test_pickle (48.6 sec)
+0:07:02 load avg: 20.59 [406/484] test_multiprocessing_main_handling passed (40.9 sec) -- running (4): test_tools (37.7 sec), test_tokenize (2 min 43 sec), test.test_multiprocessing_forkserver.test_threads (4 min 29 sec), test_pickle (49.8 sec)
+0:07:02 load avg: 20.59 [407/484] test_threadedtempfile passed -- running (4): test_tools (37.9 sec), test_tokenize (2 min 43 sec), test.test_multiprocessing_forkserver.test_threads (4 min 29 sec), test_pickle (49.9 sec)
+0:07:02 load avg: 20.59 [408/484] test_gettext passed -- running (4): test_tools (37.9 sec), test_tokenize (2 min 44 sec), test.test_multiprocessing_forkserver.test_threads (4 min 29 sec), test_pickle (49.9 sec)
+0:07:03 load avg: 20.59 [409/484] test_sysconfig passed -- running (4): test_tools (39.3 sec), test_tokenize (2 min 45 sec), test.test_multiprocessing_forkserver.test_threads (4 min 31 sec), test_pickle (51.4 sec)
+0:07:04 load avg: 20.59 [410/484] test_compile passed (31.0 sec) -- running (4): test_tools (40.4 sec), test_tokenize (2 min 46 sec), test.test_multiprocessing_forkserver.test_threads (4 min 32 sec), test_pickle (52.4 sec)
+<string>:10: SyntaxWarning: 'list' object is not callable; perhaps you missed a comma?
+0:07:05 load avg: 20.59 [411/484] test_platform passed -- running (4): test_tools (40.9 sec), test_tokenize (2 min 47 sec), test.test_multiprocessing_forkserver.test_threads (4 min 32 sec), test_pickle (53.0 sec)
+0:07:05 load avg: 20.59 [412/484] test_pydoc passed -- running (4): test_tools (41.5 sec), test_tokenize (2 min 47 sec), test.test_multiprocessing_forkserver.test_threads (4 min 33 sec), test_pickle (53.5 sec)
+0:07:06 load avg: 20.59 [413/484] test_list passed -- running (4): test_tools (41.9 sec), test_tokenize (2 min 48 sec), test.test_multiprocessing_forkserver.test_threads (4 min 33 sec), test_pickle (53.9 sec)
+0:07:06 load avg: 20.59 [414/484] test_threading_local passed -- running (4): test_tools (42.0 sec), test_tokenize (2 min 48 sec), test.test_multiprocessing_forkserver.test_threads (4 min 34 sec), test_pickle (54.1 sec)
+0:07:06 load avg: 20.59 [415/484] test_lzma skipped -- running (4): test_tools (42.2 sec), test_tokenize (2 min 48 sec), test.test_multiprocessing_forkserver.test_threads (4 min 34 sec), test_pickle (54.3 sec)
+test_lzma skipped -- No module named '_lzma'
+0:07:07 load avg: 19.74 [416/484] test_dbm passed -- running (4): test_tools (42.9 sec), test_tokenize (2 min 48 sec), test.test_multiprocessing_forkserver.test_threads (4 min 34 sec), test_pickle (54.9 sec)
+0:07:08 load avg: 19.74 [417/484] test.test_asyncio.test_selector_events passed -- running (4): test_tools (44.4 sec), test_tokenize (2 min 50 sec), test.test_multiprocessing_forkserver.test_threads (4 min 36 sec), test_pickle (56.4 sec)
+0:07:12 load avg: 18.96 [418/484] test_enum passed -- running (5): test_tools (48.3 sec), test_capi (33.2 sec), test_tokenize (2 min 54 sec), test.test_multiprocessing_forkserver.test_threads (4 min 40 sec), test_pickle (1 min)
+0:07:12 load avg: 18.96 [419/484] test_dis passed -- running (5): test_tools (48.5 sec), test_capi (33.4 sec), test_tokenize (2 min 54 sec), test.test_multiprocessing_forkserver.test_threads (4 min 40 sec), test_pickle (1 min)
+0:07:13 load avg: 18.96 [420/484] test_property passed -- running (5): test_tools (49.1 sec), test_capi (34.0 sec), test_tokenize (2 min 55 sec), test.test_multiprocessing_forkserver.test_threads (4 min 41 sec), test_pickle (1 min 1 sec)
+0:07:13 load avg: 18.96 [421/484] test_compare passed -- running (5): test_tools (49.4 sec), test_capi (34.3 sec), test_tokenize (2 min 55 sec), test.test_multiprocessing_forkserver.test_threads (4 min 41 sec), test_pickle (1 min 1 sec)
+0:07:14 load avg: 18.96 [422/484] test_pdb passed -- running (5): test_tools (50.6 sec), test_capi (35.5 sec), test_tokenize (2 min 56 sec), test.test_multiprocessing_forkserver.test_threads (4 min 42 sec), test_pickle (1 min 2 sec)
+0:07:15 load avg: 18.96 [423/484] test_fileio passed -- running (5): test_tools (51.4 sec), test_capi (36.3 sec), test_tokenize (2 min 57 sec), test.test_multiprocessing_forkserver.test_threads (4 min 43 sec), test_pickle (1 min 3 sec)
+0:07:16 load avg: 18.96 [424/484] test_ssl skipped -- running (5): test_tools (52.4 sec), test_capi (37.4 sec), test_tokenize (2 min 58 sec), test.test_multiprocessing_forkserver.test_threads (4 min 44 sec), test_pickle (1 min 4 sec)
+test_ssl skipped -- No module named '_ssl'
+0:07:16 load avg: 18.96 [425/484] test_import passed -- running (5): test_tools (52.5 sec), test_capi (37.4 sec), test_tokenize (2 min 58 sec), test.test_multiprocessing_forkserver.test_threads (4 min 44 sec), test_pickle (1 min 4 sec)
+0:07:17 load avg: 19.04 [426/484] test_binascii passed -- running (5): test_tools (53.2 sec), test_capi (38.2 sec), test_tokenize (2 min 59 sec), test.test_multiprocessing_forkserver.test_threads (4 min 45 sec), test_pickle (1 min 5 sec)
+0:07:17 load avg: 19.04 [427/484] test_frame passed -- running (5): test_tools (53.6 sec), test_capi (38.5 sec), test_tokenize (2 min 59 sec), test.test_multiprocessing_forkserver.test_threads (4 min 45 sec), test_pickle (1 min 5 sec)
+0:07:17 load avg: 19.04 [428/484] test_codecmaps_kr passed -- running (5): test_tools (53.6 sec), test_capi (38.5 sec), test_tokenize (2 min 59 sec), test.test_multiprocessing_forkserver.test_threads (4 min 45 sec), test_pickle (1 min 5 sec)
+0:07:18 load avg: 19.04 [429/484] test_unicode_file passed -- running (5): test_tools (54.3 sec), test_capi (39.2 sec), test_tokenize (3 min), test.test_multiprocessing_forkserver.test_threads (4 min 46 sec), test_pickle (1 min 6 sec)
+0:07:18 load avg: 19.04 [430/484] test_telnetlib passed -- running (5): test_tools (54.4 sec), test_capi (39.3 sec), test_tokenize (3 min), test.test_multiprocessing_forkserver.test_threads (4 min 46 sec), test_pickle (1 min 6 sec)
+0:07:18 load avg: 19.04 [431/484] test_module passed -- running (5): test_tools (54.7 sec), test_capi (39.7 sec), test_tokenize (3 min), test.test_multiprocessing_forkserver.test_threads (4 min 46 sec), test_pickle (1 min 6 sec)
+0:07:19 load avg: 19.04 [432/484] test_os passed -- running (5): test_tools (55.0 sec), test_capi (39.9 sec), test_tokenize (3 min 1 sec), test.test_multiprocessing_forkserver.test_threads (4 min 47 sec), test_pickle (1 min 7 sec)
+0:07:19 load avg: 19.04 [433/484] test_keyword passed -- running (5): test_tools (55.4 sec), test_capi (40.3 sec), test_tokenize (3 min 1 sec), test.test_multiprocessing_forkserver.test_threads (4 min 47 sec), test_pickle (1 min 7 sec)
+0:07:19 load avg: 19.04 [434/484] test_funcattrs passed -- running (5): test_tools (55.7 sec), test_capi (40.6 sec), test_tokenize (3 min 1 sec), test.test_multiprocessing_forkserver.test_threads (4 min 47 sec), test_pickle (1 min 7 sec)
+0:07:20 load avg: 19.04 [435/484] test.test_asyncio.test_transports passed -- running (5): test_tools (56.2 sec), test_capi (41.1 sec), test_tokenize (3 min 2 sec), test.test_multiprocessing_forkserver.test_threads (4 min 48 sec), test_pickle (1 min 8 sec)
+0:07:20 load avg: 19.04 [436/484] test_crashers passed -- running (5): test_tools (56.4 sec), test_capi (41.3 sec), test_tokenize (3 min 2 sec), test.test_multiprocessing_forkserver.test_threads (4 min 48 sec), test_pickle (1 min 8 sec)
+0:07:21 load avg: 19.04 [437/484] test_sys_setprofile passed -- running (5): test_tools (56.9 sec), test_capi (41.8 sec), test_tokenize (3 min 2 sec), test.test_multiprocessing_forkserver.test_threads (4 min 48 sec), test_pickle (1 min 8 sec)
+0:07:21 load avg: 19.04 [438/484] test_posixpath passed -- running (5): test_tools (57.7 sec), test_capi (42.6 sec), test_tokenize (3 min 3 sec), test.test_multiprocessing_forkserver.test_threads (4 min 49 sec), test_pickle (1 min 9 sec)
+0:07:22 load avg: 19.12 [439/484] test.test_asyncio.test_futures2 passed -- running (5): test_tools (57.8 sec), test_capi (42.7 sec), test_tokenize (3 min 3 sec), test.test_multiprocessing_forkserver.test_threads (4 min 49 sec), test_pickle (1 min 9 sec)
+0:07:22 load avg: 19.12 [440/484] test_audioop passed -- running (5): test_tools (58.5 sec), test_capi (43.4 sec), test_tokenize (3 min 4 sec), test.test_multiprocessing_forkserver.test_threads (4 min 50 sec), test_pickle (1 min 10 sec)
+0:07:23 load avg: 19.12 [441/484] test_file_eintr passed -- running (5): test_tools (58.9 sec), test_capi (43.8 sec), test_tokenize (3 min 4 sec), test.test_multiprocessing_forkserver.test_threads (4 min 50 sec), test_pickle (1 min 10 sec)
+0:07:23 load avg: 19.12 [442/484] test_format passed -- running (5): test_tools (59.1 sec), test_capi (44.0 sec), test_tokenize (3 min 5 sec), test.test_multiprocessing_forkserver.test_threads (4 min 51 sec), test_pickle (1 min 11 sec)
+0:07:23 load avg: 19.12 [443/484] test_sqlite3 passed -- running (5): test_tools (59.5 sec), test_capi (44.4 sec), test_tokenize (3 min 5 sec), test.test_multiprocessing_forkserver.test_threads (4 min 51 sec), test_pickle (1 min 11 sec)
+0:07:24 load avg: 19.12 [444/484] test_pyexpat passed -- running (5): test_tools (59.8 sec), test_capi (44.7 sec), test_tokenize (3 min 5 sec), test.test_multiprocessing_forkserver.test_threads (4 min 51 sec), test_pickle (1 min 11 sec)
+0:07:24 load avg: 19.12 [445/484] test_ttk_guionly skipped -- running (5): test_tools (1 min), test_capi (45.0 sec), test_tokenize (3 min 6 sec), test.test_multiprocessing_forkserver.test_threads (4 min 52 sec), test_pickle (1 min 12 sec)
+test_ttk_guionly skipped -- No module named '_tkinter'
+0:07:26 load avg: 19.12 [446/484] test.test_asyncio.test_taskgroups passed -- running (5): test_tools (1 min 2 sec), test_capi (47.6 sec), test_tokenize (3 min 8 sec), test.test_multiprocessing_forkserver.test_threads (4 min 54 sec), test_pickle (1 min 14 sec)
+0:07:27 load avg: 21.67 [447/484] test_xml_dom_minicompat passed -- running (5): test_tools (1 min 3 sec), test_capi (48.4 sec), test_tokenize (3 min 9 sec), test.test_multiprocessing_forkserver.test_threads (4 min 55 sec), test_pickle (1 min 15 sec)
+0:07:28 load avg: 21.67 [448/484] test_http_cookiejar passed -- running (5): test_tools (1 min 3 sec), test_capi (48.7 sec), test_tokenize (3 min 9 sec), test.test_multiprocessing_forkserver.test_threads (4 min 55 sec), test_pickle (1 min 15 sec)
+0:07:28 load avg: 21.67 [449/484] test_opcodes passed -- running (5): test_tools (1 min 4 sec), test_capi (49.2 sec), test_tokenize (3 min 10 sec), test.test_multiprocessing_forkserver.test_threads (4 min 56 sec), test_pickle (1 min 16 sec)
+0:07:28 load avg: 21.67 [450/484] test_string passed -- running (5): test_tools (1 min 4 sec), test_capi (49.4 sec), test_tokenize (3 min 10 sec), test.test_multiprocessing_forkserver.test_threads (4 min 56 sec), test_pickle (1 min 16 sec)
+0:07:31 load avg: 21.67 [451/484] test_audit passed -- running (5): test_tools (1 min 6 sec), test_capi (51.8 sec), test_tokenize (3 min 12 sec), test.test_multiprocessing_forkserver.test_threads (4 min 58 sec), test_pickle (1 min 18 sec)
+0:07:32 load avg: 20.74 [452/484] test_popen passed -- running (5): test_tools (1 min 7 sec), test_capi (52.9 sec), test_tokenize (3 min 14 sec), test.test_multiprocessing_forkserver.test_threads (4 min 59 sec), test_pickle (1 min 19 sec)
+0:07:32 load avg: 20.74 [453/484] test_userlist passed -- running (5): test_tools (1 min 8 sec), test_capi (53.6 sec), test_tokenize (3 min 14 sec), test.test_multiprocessing_forkserver.test_threads (5 min), test_pickle (1 min 20 sec)
+0:07:33 load avg: 20.74 [454/484] test_operator passed -- running (5): test_tools (1 min 9 sec), test_capi (54.4 sec), test_tokenize (3 min 15 sec), test.test_multiprocessing_forkserver.test_threads (5 min 1 sec), test_pickle (1 min 21 sec)
+0:07:35 load avg: 20.74 [455/484] test_sax passed -- running (5): test_tools (1 min 10 sec), test_capi (55.8 sec), test_tokenize (3 min 17 sec), test.test_multiprocessing_forkserver.test_threads (5 min 2 sec), test_pickle (1 min 22 sec)
+0:07:38 load avg: 19.64 [456/484] test.test_concurrent_futures.test_thread_pool passed -- running (6): test_tools (1 min 14 sec), test.test_asyncio.test_tasks (32.0 sec), test_capi (59.2 sec), test_tokenize (3 min 20 sec), test.test_multiprocessing_forkserver.test_threads (5 min 6 sec), test_pickle (1 min 26 sec)
+0:07:39 load avg: 19.64 [457/484] test_cgi passed -- running (6): test_tools (1 min 15 sec), test.test_asyncio.test_tasks (33.0 sec), test_capi (1 min), test_tokenize (3 min 21 sec), test.test_multiprocessing_forkserver.test_threads (5 min 7 sec), test_pickle (1 min 27 sec)
+0:07:42 load avg: 18.87 [458/484] test_marshal passed -- running (6): test_tools (1 min 18 sec), test.test_asyncio.test_tasks (36.1 sec), test_capi (1 min 3 sec), test_tokenize (3 min 24 sec), test.test_multiprocessing_forkserver.test_threads (5 min 10 sec), test_pickle (1 min 30 sec)
+0:07:44 load avg: 18.87 [459/484] test.test_asyncio.test_tasks passed (37.9 sec) -- running (5): test_tools (1 min 20 sec), test_capi (1 min 5 sec), test_tokenize (3 min 26 sec), test.test_multiprocessing_forkserver.test_threads (5 min 12 sec), test_pickle (1 min 32 sec)
+0:07:45 load avg: 18.87 [460/484] test_email passed -- running (5): test_tools (1 min 20 sec), test_capi (1 min 5 sec), test_tokenize (3 min 26 sec), test.test_multiprocessing_forkserver.test_threads (5 min 12 sec), test_pickle (1 min 32 sec)
+0:07:45 load avg: 18.87 [461/484] test_pickle passed (1 min 33 sec) -- running (4): test_tools (1 min 21 sec), test_capi (1 min 6 sec), test_tokenize (3 min 27 sec), test.test_multiprocessing_forkserver.test_threads (5 min 13 sec)
+0:07:46 load avg: 18.87 [462/484] test_shlex passed -- running (4): test_tools (1 min 21 sec), test_capi (1 min 6 sec), test_tokenize (3 min 27 sec), test.test_multiprocessing_forkserver.test_threads (5 min 13 sec)
+0:07:46 load avg: 18.87 [463/484] test_eof passed -- running (4): test_tools (1 min 22 sec), test_capi (1 min 7 sec), test_tokenize (3 min 28 sec), test.test_multiprocessing_forkserver.test_threads (5 min 14 sec)
+0:07:47 load avg: 18.32 [464/484] test_type_annotations passed -- running (4): test_tools (1 min 23 sec), test_capi (1 min 7 sec), test_tokenize (3 min 29 sec), test.test_multiprocessing_forkserver.test_threads (5 min 15 sec)
+0:07:48 load avg: 18.32 [465/484] test_hashlib passed -- running (4): test_tools (1 min 23 sec), test_capi (1 min 8 sec), test_tokenize (3 min 30 sec), test.test_multiprocessing_forkserver.test_threads (5 min 15 sec)
+0:07:49 load avg: 18.32 [466/484] test_mimetypes passed -- running (4): test_tools (1 min 24 sec), test_capi (1 min 9 sec), test_tokenize (3 min 31 sec), test.test_multiprocessing_forkserver.test_threads (5 min 16 sec)
+0:07:50 load avg: 18.32 [467/484] test_contextlib_async passed -- running (4): test_tools (1 min 26 sec), test_capi (1 min 11 sec), test_tokenize (3 min 32 sec), test.test_multiprocessing_forkserver.test_threads (5 min 18 sec)
+0:07:51 load avg: 18.32 [468/484] test.test_multiprocessing_forkserver.test_threads passed (5 min 18 sec) -- running (3): test_tools (1 min 26 sec), test_capi (1 min 11 sec), test_tokenize (3 min 33 sec)
+0:07:52 load avg: 18.32 [469/484] test_secrets passed -- running (3): test_tools (1 min 27 sec), test_capi (1 min 12 sec), test_tokenize (3 min 33 sec)
+0:07:53 load avg: 17.89 [470/484] test_index passed -- running (3): test_tools (1 min 29 sec), test_capi (1 min 13 sec), test_tokenize (3 min 35 sec)
+0:07:55 load avg: 17.89 [471/484] test_calendar passed -- running (4): test_tools (1 min 30 sec), test_capi (1 min 15 sec), test_tokenize (3 min 36 sec), test.test_multiprocessing_forkserver.test_misc (31.1 sec)
+0:07:59 load avg: 17.66 [472/484] test.test_asyncio.test_subprocess passed -- running (4): test_tools (1 min 34 sec), test_capi (1 min 19 sec), test_tokenize (3 min 41 sec), test.test_multiprocessing_forkserver.test_misc (35.2 sec)
+0:07:59 load avg: 17.66 [473/484] test_c_locale_coercion passed -- running (4): test_tools (1 min 35 sec), test_capi (1 min 20 sec), test_tokenize (3 min 41 sec), test.test_multiprocessing_forkserver.test_misc (35.7 sec)
+0:08:01 load avg: 17.66 [474/484] test_json passed -- running (4): test_tools (1 min 37 sec), test_capi (1 min 22 sec), test_tokenize (3 min 43 sec), test.test_multiprocessing_forkserver.test_misc (37.6 sec)
+0:08:03 load avg: 16.88 [475/484] test_resource passed -- running (4): test_tools (1 min 38 sec), test_capi (1 min 23 sec), test_tokenize (3 min 45 sec), test.test_multiprocessing_forkserver.test_misc (39.2 sec)
+0:08:04 load avg: 16.88 [476/484] test_urllib2 passed -- running (4): test_tools (1 min 40 sec), test_capi (1 min 25 sec), test_tokenize (3 min 46 sec), test.test_multiprocessing_forkserver.test_misc (40.4 sec)
+0:08:05 load avg: 16.88 [477/484] test_wait3 passed -- running (4): test_tools (1 min 40 sec), test_capi (1 min 25 sec), test_tokenize (3 min 46 sec), test.test_multiprocessing_forkserver.test_misc (41.1 sec)
+0:08:06 load avg: 16.88 [478/484] test_multibytecodec passed -- running (5): test_tools (1 min 41 sec), test_compileall (31.1 sec), test_capi (1 min 26 sec), test_tokenize (3 min 48 sec), test.test_multiprocessing_forkserver.test_misc (42.2 sec)
+0:08:18 load avg: 14.93 [479/484] test.test_multiprocessing_forkserver.test_misc passed (54.7 sec) -- running (4): test_tools (1 min 54 sec), test_compileall (43.6 sec), test_capi (1 min 39 sec), test_tokenize (4 min)
+0:08:29 load avg: 13.63 [480/484] test_tokenize passed (4 min 11 sec) -- running (4): test_tools (2 min 5 sec), test_compileall (54.3 sec), test_socket (34.3 sec), test_capi (1 min 50 sec)
+0:08:34 load avg: 12.94 [481/484] test_capi passed (1 min 55 sec) -- running (3): test_tools (2 min 10 sec), test_compileall (59.6 sec), test_socket (39.6 sec)
+0:08:37 load avg: 12.07 [482/484] test_socket passed (42.5 sec) -- running (2): test_tools (2 min 13 sec), test_compileall (1 min 2 sec)
+/Users/zeedh/slowcoders/cpython/Lib/test/test_socket.py:2804: RuntimeWarning: received malformed or improperly-truncated ancillary data
+  result = sock.recvmsg_into([buf], *args)
+/Users/zeedh/slowcoders/cpython/Lib/test/test_socket.py:2713: RuntimeWarning: received malformed or improperly-truncated ancillary data
+  result = sock.recvmsg(bufsize, *args)
+0:08:42 load avg: 11.66 [483/484] test_compileall passed (1 min 7 sec) -- running (1): test_tools (2 min 18 sec)
+0:09:12 load avg: 10.39 running (1): test_tools (2 min 48 sec)
+0:09:42 load avg: 8.44 running (1): test_tools (3 min 18 sec)
+0:10:12 load avg: 6.13 running (1): test_tools (3 min 48 sec)
+0:10:42 load avg: 5.18 running (1): test_tools (4 min 18 sec)
+0:11:12 load avg: 4.23 running (1): test_tools (4 min 48 sec)
+0:11:42 load avg: 3.36 running (1): test_tools (5 min 18 sec)
+0:12:12 load avg: 3.27 running (1): test_tools (5 min 48 sec)
+0:12:42 load avg: 3.64 running (1): test_tools (6 min 18 sec)
+0:13:12 load avg: 3.96 running (1): test_tools (6 min 48 sec)
+0:13:42 load avg: 5.23 running (1): test_tools (7 min 18 sec)
+0:14:12 load avg: 4.51 running (1): test_tools (7 min 48 sec)
+0:14:42 load avg: 5.21 running (1): test_tools (8 min 18 sec)
+0:15:12 load avg: 3.90 running (1): test_tools (8 min 48 sec)
+0:15:42 load avg: 3.00 running (1): test_tools (9 min 18 sec)
+0:16:12 load avg: 2.53 running (1): test_tools (9 min 48 sec)
+0:16:42 load avg: 2.19 running (1): test_tools (10 min 18 sec)
+0:16:49 load avg: 2.09 [484/484] test_tools passed (10 min 24 sec)
+cwd: /Users/zeedh/slowcoders/cpython/_debug/build/test_python_68524æ
+creating the script to be frozen at /private/var/folders/58/jrqrf7l554jffktqjx21n7dr0000gn/T/test_python_kgz2w8ob/tmpfj1v8wpz/app.py
+copying the source tree from /Users/zeedh/slowcoders/cpython to /private/var/folders/58/jrqrf7l554jffktqjx21n7dr0000gn/T/test_python_kgz2w8ob/tmpfj1v8wpz/cpython...
+configuring python in /private/var/folders/58/jrqrf7l554jffktqjx21n7dr0000gn/T/test_python_kgz2w8ob/tmpfj1v8wpz/python-build...
++ cd /private/var/folders/58/jrqrf7l554jffktqjx21n7dr0000gn/T/test_python_kgz2w8ob/tmpfj1v8wpz/python-build
++ /private/var/folders/58/jrqrf7l554jffktqjx21n7dr0000gn/T/test_python_kgz2w8ob/tmpfj1v8wpz/cpython/configure --with-pydebug --with-lto --cache-file /private/var/folders/58/jrqrf7l554jffktqjx21n7dr0000gn/T/test_python_kgz2w8ob/tmpfj1v8wpz/python-config.cache --prefix /private/var/folders/58/jrqrf7l554jffktqjx21n7dr0000gn/T/test_python_kgz2w8ob/tmpfj1v8wpz/python-installation
+building python parallel='-j5' in /private/var/folders/58/jrqrf7l554jffktqjx21n7dr0000gn/T/test_python_kgz2w8ob/tmpfj1v8wpz/python-build...
++ cd /private/var/folders/58/jrqrf7l554jffktqjx21n7dr0000gn/T/test_python_kgz2w8ob/tmpfj1v8wpz/python-build
++ /usr/bin/make -j5
+installing python into /private/var/folders/58/jrqrf7l554jffktqjx21n7dr0000gn/T/test_python_kgz2w8ob/tmpfj1v8wpz/python-installation...
++ cd /private/var/folders/58/jrqrf7l554jffktqjx21n7dr0000gn/T/test_python_kgz2w8ob/tmpfj1v8wpz/python-build
++ /usr/bin/make install
+freezing /private/var/folders/58/jrqrf7l554jffktqjx21n7dr0000gn/T/test_python_kgz2w8ob/tmpfj1v8wpz/app.py...
++ cd /private/var/folders/58/jrqrf7l554jffktqjx21n7dr0000gn/T/test_python_kgz2w8ob/tmpfj1v8wpz
++ /private/var/folders/58/jrqrf7l554jffktqjx21n7dr0000gn/T/test_python_kgz2w8ob/tmpfj1v8wpz/python-installation/bin/python3 -E /Users/zeedh/slowcoders/cpython/Tools/freeze/freeze.py -o /private/var/folders/58/jrqrf7l554jffktqjx21n7dr0000gn/T/test_python_kgz2w8ob/tmpfj1v8wpz /private/var/folders/58/jrqrf7l554jffktqjx21n7dr0000gn/T/test_python_kgz2w8ob/tmpfj1v8wpz/app.py
++ cd /private/var/folders/58/jrqrf7l554jffktqjx21n7dr0000gn/T/test_python_kgz2w8ob/tmpfj1v8wpz
++ /usr/bin/make
++ /private/var/folders/58/jrqrf7l554jffktqjx21n7dr0000gn/T/test_python_kgz2w8ob/tmpfj1v8wpz/app
+
+== Tests result: SUCCESS ==
+
+32 tests skipped:
+    test.test_asyncio.test_windows_events
+    test.test_asyncio.test_windows_utils test.test_gdb.test_backtrace
+    test.test_gdb.test_cfunction test.test_gdb.test_cfunction_full
+    test.test_gdb.test_misc test.test_gdb.test_pretty_print
+    test.test_multiprocessing_fork.test_manager
+    test.test_multiprocessing_fork.test_misc
+    test.test_multiprocessing_fork.test_processes
+    test.test_multiprocessing_fork.test_threads test_dbm_gnu
+    test_devpoll test_epoll test_idle test_ioctl test_launcher
+    test_lzma test_msilib test_smtpnet test_spwd test_ssl
+    test_startfile test_tcl test_tix test_tk test_ttk_guionly
+    test_ttk_textonly test_turtle test_winconsoleio test_winreg
+    test_zoneinfo
+
+3 tests skipped (resource denied):
+    test_ossaudiodev test_winsound test_zipfile64
+
+449 tests OK.
+
+Total duration: 16 min 49 sec
+Total tests: run=39,091 skipped=1,680
+Total test files: run=481/484 skipped=32 resource_denied=3
+Result: SUCCESS
+zeedh@DaeHoons-MacBook-Pro _debug % 

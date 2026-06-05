@@ -786,6 +786,9 @@ _PyGC_Init(PyInterpreterState *interp)
         return _PyStatus_NO_MEMORY();
     }
 
+#ifdef ENABLE_RTGC_GC
+    // do something.
+#endif    
     return _PyStatus_OK();
 }
 

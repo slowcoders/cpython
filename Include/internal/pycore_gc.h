@@ -292,6 +292,9 @@ struct _gc_runtime_state {
     /* linked lists of container objects */
     struct gc_generation generations[NUM_GENERATIONS];
     PyGC_Head *generation0;
+#ifdef ENABLE_RTGC
+    struct gc_generation circuit_roots;
+#endif    
     /* a permanent generation which won't be collected */
     struct gc_generation permanent_generation;
     struct gc_generation_stats generation_stats[NUM_GENERATIONS];

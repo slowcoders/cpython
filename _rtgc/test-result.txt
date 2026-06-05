@@ -1,0 +1,1014 @@
+zeedh@DaeHoons-MacBook-Pro _debug % make test                               
+ CC='gcc' LDSHARED='gcc -bundle -undefined dynamic_lookup   -flto -Wl,-export_dynamic -g ' OPT='-g -Og -Wall'  ./python.exe -E ../setup.py  build
+Unsafe Dict_Copy 0x1077782f0 owner 0x1075ff6c0
+running build
+running build_ext
+
+The necessary bits to build these optional modules were not found:
+_gdbm                 _hashlib              _lzma              
+_ssl                  _tkinter                                 
+To find the necessary bits, look in setup.py in detect_modules() for the module's name.
+
+
+Could not build the ssl module!
+Python requires a OpenSSL 1.1.1 or newer
+
+running build_scripts
+copying and adjusting /Users/zeedh/slowcoders/cpython/Tools/scripts/pydoc3 -> build/scripts-3.11
+copying and adjusting /Users/zeedh/slowcoders/cpython/Tools/scripts/idle3 -> build/scripts-3.11
+copying and adjusting /Users/zeedh/slowcoders/cpython/Tools/scripts/2to3 -> build/scripts-3.11
+changing mode of build/scripts-3.11/pydoc3 from 644 to 755
+changing mode of build/scripts-3.11/idle3 from 644 to 755
+changing mode of build/scripts-3.11/2to3 from 644 to 755
+renaming build/scripts-3.11/pydoc3 to build/scripts-3.11/pydoc3.11
+renaming build/scripts-3.11/idle3 to build/scripts-3.11/idle3.11
+renaming build/scripts-3.11/2to3 to build/scripts-3.11/2to3-3.11
+./python.exe -E  ../Tools/scripts/run_tests.py 
+/Users/zeedh/slowcoders/cpython/_debug/python.exe -u -W default -bb -E -E -m test -r -w -j 0 -u all,-largefile,-audio,-gui
+== CPython 3.11.7 (heads/rtgc-3.11.7-dirty:25a17a1740, Feb 3 2024, 21:32:38) [Clang 13.0.0 (clang-1300.0.29.30)]
+== macOS-11.7.10-x86_64-i386-64bit little-endian
+== Python build: debug LTO
+== cwd: /Users/zeedh/slowcoders/cpython/_debug/build/test_python_worker_56619æ
+== CPU count: 8
+== encodings: locale=UTF-8 FS=utf-8
+== resources: all,-audio,-gui,-largefile
+
+Using random seed: 1432015768
+0:00:00 load avg: 2.75 Run 484 tests in parallel using 10 worker processes
+0:00:00 load avg: 2.75 [  1/484] test_named_expressions passed
+0:00:00 load avg: 2.75 [  2/484] test_dynamic passed
+0:00:00 load avg: 2.75 [  3/484] test_userlist passed
+0:00:00 load avg: 2.75 [  4/484] test_compare passed
+0:00:00 load avg: 2.75 [  5/484] test_listcomps passed
+0:00:00 load avg: 2.75 [  6/484] test_posixpath passed
+0:00:00 load avg: 2.75 [  7/484] test_file passed
+0:00:00 load avg: 2.75 [  8/484] test_winsound skipped (resource denied)
+test_winsound skipped -- Use of the 'audio' resource not enabled
+0:00:00 load avg: 2.75 [  9/484] test.test_future_stmt.test_future_multiple_features passed
+0:00:01 load avg: 2.75 [ 10/484] test_ttk_textonly skipped
+test_ttk_textonly skipped -- No module named '_tkinter'
+0:00:01 load avg: 2.75 [ 11/484] test_strptime passed
+0:00:01 load avg: 2.75 [ 12/484] test_dict passed
+0:00:01 load avg: 2.75 [ 13/484] test__osx_support passed
+0:00:01 load avg: 2.75 [ 14/484] test.test_asyncio.test_windows_events skipped
+test.test_asyncio.test_windows_events skipped -- Windows only
+0:00:02 load avg: 2.75 [ 15/484] test_fcntl passed
+Unsafe Dict_Copy 0x101430b90 owner 0x1014583d0
+struct.pack:  b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00'
+Unsafe Dict_Copy 0x10b9e5eb0 owner 0x10bb197d0
+struct.pack:  b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00'
+Unsafe Dict_Copy 0x1066f9f10 owner 0x10682d690
+0:00:02 load avg: 2.75 [ 16/484] test.test_inspect.test_inspect passed
+Unsafe Dict_Copy 0x109c72390 owner 0x109d915a0
+Unsafe Dict_Copy 0x109c72390 owner 0x109d902e0
+Unsafe Dict_Copy 0x109c723f0 owner 0x109d902e0
+Unsafe Dict_Copy 0x109db9970 owner 0x109d915a0
+Unsafe Dict_Copy 0x109c723f0 owner 0x109d902e0
+Unsafe Dict_Copy 0x109db9970 owner 0x109d915a0
+Unsafe Dict_Copy 0x109c723f0 owner 0x109d902e0
+Unsafe Dict_Copy 0x109db9970 owner 0x109d915a0
+Unsafe Dict_Copy 0x109c723f0 owner 0x109d902e0
+Unsafe Dict_Copy 0x109db9970 owner 0x109d915a0
+Unsafe Dict_Copy 0x109c72450 owner 0x109d75280
+Unsafe Dict_Copy 0x109c72450 owner 0x109d75280
+Unsafe Dict_Copy 0x109c724b0 owner 0x109d74420
+0:00:02 load avg: 2.75 [ 17/484] test_secrets passed
+0:00:03 load avg: 2.75 [ 18/484] test_collections passed
+0:00:03 load avg: 2.75 [ 19/484] test_heapq passed
+0:00:03 load avg: 2.75 [ 20/484] test_c_locale_coercion passed
+0:00:03 load avg: 2.75 [ 21/484] test_popen passed
+0:00:03 load avg: 2.75 [ 22/484] test_winreg skipped
+test_winreg skipped -- No module named 'winreg'
+0:00:03 load avg: 2.75 [ 23/484] test_winconsoleio skipped
+test_winconsoleio skipped -- test only relevant on win32
+0:00:03 load avg: 2.75 [ 24/484] test_turtle skipped
+test_turtle skipped -- No module named '_tkinter'
+0:00:03 load avg: 2.75 [ 25/484] test_devpoll skipped
+test_devpoll skipped -- test works only on Solaris OS family
+0:00:03 load avg: 2.75 [ 26/484] test_lltrace passed
+0:00:04 load avg: 4.45 [ 27/484] test_xml_dom_minicompat passed
+0:00:04 load avg: 4.45 [ 28/484] test_xxtestfuzz passed
+/Users/zeedh/slowcoders/cpython/Lib/re/__init__.py:289: DeprecationWarning: The re.TEMPLATE/re.T flag is deprecated as it is an undocumented flag without an obvious purpose. Don't use it.
+  warnings.warn("The re.TEMPLATE/re.T flag is deprecated "
+0:00:04 load avg: 4.45 [ 29/484] test_sysconfig passed
+0:00:04 load avg: 4.45 [ 30/484] test_xxlimited passed
+0:00:04 load avg: 4.45 [ 31/484] test___all__ passed
+Unsafe Dict_Copy 0x10be09910 owner 0x10be17f80
+0:00:04 load avg: 4.45 [ 32/484] test_stable_abi_ctypes passed
+0:00:05 load avg: 4.45 [ 33/484] test_augassign passed
+0:00:05 load avg: 4.45 [ 34/484] test_sys_settrace passed
+0:00:05 load avg: 4.45 [ 35/484] test_gzip passed
+0:00:05 load avg: 4.45 [ 36/484] test_with passed
+0:00:06 load avg: 4.45 [ 37/484] test_mailcap passed
+0:00:06 load avg: 4.45 [ 38/484] test_typing passed
+/Users/zeedh/slowcoders/cpython/Lib/doctest.py:1062: DeprecationWarning: typing.io is deprecated, import directly from typing instead. typing.io will be removed in Python 3.12.
+  if obj.__doc__ is None:
+/Users/zeedh/slowcoders/cpython/Lib/doctest.py:1065: DeprecationWarning: typing.io is deprecated, import directly from typing instead. typing.io will be removed in Python 3.12.
+  docstring = obj.__doc__
+/Users/zeedh/slowcoders/cpython/Lib/doctest.py:1096: DeprecationWarning: typing.io is deprecated, import directly from typing instead. typing.io will be removed in Python 3.12.
+  docstring = getattr(obj, '__doc__', None)
+/Users/zeedh/slowcoders/cpython/Lib/doctest.py:1062: DeprecationWarning: typing.re is deprecated, import directly from typing instead. typing.re will be removed in Python 3.12.
+  if obj.__doc__ is None:
+/Users/zeedh/slowcoders/cpython/Lib/doctest.py:1065: DeprecationWarning: typing.re is deprecated, import directly from typing instead. typing.re will be removed in Python 3.12.
+  docstring = obj.__doc__
+/Users/zeedh/slowcoders/cpython/Lib/doctest.py:1096: DeprecationWarning: typing.re is deprecated, import directly from typing instead. typing.re will be removed in Python 3.12.
+  docstring = getattr(obj, '__doc__', None)
+Unsafe Dict_Copy 0x10a0e11f0 owner 0x10a5b2090
+Unsafe Dict_Copy 0x10a5c2630 owner 0x10a5c6720
+Unsafe Dict_Copy 0x10a5dacf0 owner 0x10a5e05b0
+Unsafe Dict_Copy 0x10a77cd70 owner 0x109a8a050
+Unsafe Dict_Copy 0x10a5eca10 owner 0x10a7b4ba0
+Unsafe Dict_Copy 0x10a5eca10 owner 0x10a7b4ba0
+Unsafe Dict_Copy 0x10a5efa70 owner 0x10a5f6c70
+Unsafe Dict_Copy 0x10a60ab70 owner 0x10a7c7da0
+Unsafe Dict_Copy 0x10a60b170 owner 0x10a6078a0
+Unsafe Dict_Copy 0x10a60b8f0 owner 0x10a615e60
+0:00:06 load avg: 4.45 [ 39/484] test_unpack passed
+0:00:07 load avg: 4.45 [ 40/484] test_struct passed
+0:00:07 load avg: 4.45 [ 41/484] test__xxsubinterpreters passed
+0:00:07 load avg: 4.45 [ 42/484] test_abc passed
+0:00:07 load avg: 4.45 [ 43/484] test_httpservers passed
+0:00:07 load avg: 4.45 [ 44/484] test_codecencodings_kr passed
+0:00:08 load avg: 4.45 [ 45/484] test_xdrlib passed
+0:00:08 load avg: 4.45 [ 46/484] test_operator passed
+0:00:08 load avg: 4.45 [ 47/484] test_source_encoding passed
+0:00:08 load avg: 4.45 [ 48/484] test_pep646_syntax passed
+0:00:08 load avg: 4.45 [ 49/484] test_pkgutil passed
+0:00:09 load avg: 5.38 [ 50/484] test_iter passed
+0:00:09 load avg: 5.38 [ 51/484] test_socketserver passed
+0:00:10 load avg: 5.38 [ 52/484] test_ftplib passed
+0:00:10 load avg: 5.38 [ 53/484] test_email passed
+Unsafe Dict_Copy 0x106c98110 owner 0x106675b40
+Unsafe Dict_Copy 0x106798290 owner 0x106795be0
+Unsafe Dict_Copy 0x106799610 owner 0x106795c80
+Unsafe Dict_Copy 0x106b5e270 owner 0x106795d20
+Unsafe Dict_Copy 0x106df10d0 owner 0x106795cd0
+Unsafe Dict_Copy 0x106d84d70 owner 0x106795c30
+Unsafe Dict_Copy 0x106df3830 owner 0x106cf2270
+0:00:10 load avg: 5.38 [ 54/484] test_yield_from passed
+0:00:11 load avg: 5.38 [ 55/484] test_generators passed
+0:00:11 load avg: 5.38 [ 56/484] test_select passed
+0:00:11 load avg: 5.38 [ 57/484] test_weakset passed
+0:00:11 load avg: 5.38 [ 58/484] test_uu passed
+0:00:12 load avg: 5.38 [ 59/484] test_stringprep passed
+0:00:13 load avg: 5.38 [ 60/484] test_pickletools passed
+Unsafe Dict_Copy 0x10f26e870 owner 0x10f1ddfa0
+Unsafe Dict_Copy 0x10f1e7350 owner 0x10f267e40
+Unsafe Dict_Copy 0x10f1e5c10 owner 0x1114dddc0
+Unsafe Dict_Copy 0x10f1e7350 owner 0x10f267e40
+Unsafe Dict_Copy 0x10f1e74d0 owner 0x1114ddc80
+Unsafe Dict_Copy 0x10f1e7350 owner 0x10f267e40
+Unsafe Dict_Copy 0x10f2e6030 owner 0x1114ddbe0
+Unsafe Dict_Copy 0x10f1e7350 owner 0x10f267e40
+Unsafe Dict_Copy 0x10f285e50 owner 0x10e9a5a00
+Unsafe Dict_Copy 0x10f1e7350 owner 0x10f267e40
+Unsafe Dict_Copy 0x10f2e4290 owner 0x1114dd780
+Unsafe Dict_Copy 0x10f1e7350 owner 0x10f267e40
+Unsafe Dict_Copy 0x10f2845f0 owner 0x10e9c06a0
+Unsafe Dict_Copy 0x10f1e7710 owner 0x10f34bf80
+Unsafe Dict_Copy 0x10f1e7890 owner 0x11146fda0
+Unsafe Dict_Copy 0x10f1e7710 owner 0x10f34bf80
+Unsafe Dict_Copy 0x10f2e4410 owner 0x1114dfb20
+Unsafe Dict_Copy 0x10f1e7710 owner 0x10f34bf80
+Unsafe Dict_Copy 0x10f1e6150 owner 0x1114dfa80
+Unsafe Dict_Copy 0x10f1e7710 owner 0x10f34bf80
+Unsafe Dict_Copy 0x10f2e4a10 owner 0x10f1dfe90
+Unsafe Dict_Copy 0x10f1e7710 owner 0x10f34bf80
+Unsafe Dict_Copy 0x10f2e5130 owner 0x10f25fd50
+Unsafe Dict_Copy 0x10f1e7710 owner 0x10f34bf80
+0:00:14 load avg: 5.59 [ 61/484] test_pyclbr passed
+0:00:14 load avg: 5.59 [ 62/484] test_zipimport passed
+0:00:15 load avg: 5.59 [ 63/484] test.test_asyncio.test_context passed
+0:00:15 load avg: 5.59 [ 64/484] test_coroutines passed
+0:00:16 load avg: 5.59 [ 65/484] test_ucn passed
+0:00:17 load avg: 5.59 [ 66/484] test_nntplib passed
+0:00:17 load avg: 5.59 [ 67/484] test_unicode_file_functions passed
+0:00:17 load avg: 5.59 [ 68/484] test_queue passed
+0:00:17 load avg: 5.59 [ 69/484] test_dbm_gnu skipped
+test_dbm_gnu skipped -- No module named '_gdbm'
+0:00:17 load avg: 5.59 [ 70/484] test_pyexpat passed
+0:00:17 load avg: 5.59 [ 71/484] test_xmlrpc_net passed
+0:00:18 load avg: 5.59 [ 72/484] test_sched passed
+0:00:18 load avg: 5.59 [ 73/484] test_type_annotations passed
+0:00:18 load avg: 5.59 [ 74/484] test_pwd passed
+0:00:19 load avg: 7.30 [ 75/484] test_slice passed
+0:00:19 load avg: 7.30 [ 76/484] test_frame passed
+0:00:19 load avg: 7.30 [ 77/484] test_cmd_line_script passed
+0:00:19 load avg: 7.30 [ 78/484] test_picklebuffer passed
+0:00:20 load avg: 7.30 [ 79/484] test_memoryview passed
+0:00:21 load avg: 7.30 [ 80/484] test.test_asyncio.test_proactor_events passed
+0:00:21 load avg: 7.30 [ 81/484] test_glob passed
+0:00:22 load avg: 7.30 [ 82/484] test_binascii passed
+0:00:22 load avg: 7.30 [ 83/484] test_numeric_tower passed
+0:00:22 load avg: 7.30 [ 84/484] test_global passed
+0:00:22 load avg: 7.30 [ 85/484] test_scope passed
+0:00:23 load avg: 7.30 [ 86/484] test_utf8_mode passed
+0:00:23 load avg: 7.30 [ 87/484] test_exception_hierarchy passed
+0:00:23 load avg: 7.30 [ 88/484] test.test_asyncio.test_timeouts passed
+0:00:24 load avg: 7.30 [ 89/484] test_tcl skipped
+test_tcl skipped -- No module named '_tkinter'
+0:00:27 load avg: 8.00 [ 90/484] test_strtod passed
+0:00:27 load avg: 8.00 [ 91/484] test_audioop passed
+0:00:28 load avg: 8.00 [ 92/484] test_genexps passed
+0:00:28 load avg: 8.00 [ 93/484] test_statistics passed
+0:00:28 load avg: 8.00 [ 94/484] test_httplib passed
+0:00:29 load avg: 9.92 [ 95/484/1] test_clinic failed (2 failures)
+Unsafe Dict_Copy 0x1068c2570 owner 0x1068b73a0
+Unsafe Dict_Copy 0x106954290 owner 0x1068b6040
+Unsafe Dict_Copy 0x1068c1f70 owner 0x1068b5820
+Unsafe Dict_Copy 0x1068c17f0 owner 0x1068e3170
+Unsafe Dict_Copy 0x106954e90 owner 0x1068e3ad0
+Unsafe Dict_Copy 0x1068c15b0 owner 0x106968600
+Unsafe Dict_Copy 0x106954e90 owner 0x1068e38a0
+Unsafe Dict_Copy 0x1068c1bb0 owner 0x1068e10a0
+Unsafe Dict_Copy 0x1068c21b0 owner 0x1068b69f0
+Unsafe Dict_Copy 0x106956bd0 owner 0x1068b6130
+Unsafe Dict_Copy 0x1068c23f0 owner 0x1068ca6d0
+Unsafe Dict_Copy 0x1069554f0 owner 0x106968e20
+Unsafe Dict_Copy 0x106954650 owner 0x1069699b0
+Unsafe Dict_Copy 0x1068c1370 owner 0x10696a950
+Unsafe Dict_Copy 0x1068c0e90 owner 0x10696b800
+Unsafe Dict_Copy 0x1068c0ad0 owner 0x1068c47e0
+Unsafe Dict_Copy 0x10676f0b0 owner 0x1068c55a0
+Unsafe Dict_Copy 0x105f28e90 owner 0x1068c61d0
+Unsafe Dict_Copy 0x1068d1cd0 owner 0x1068c6a90
+Unsafe Dict_Copy 0x106980ef0 owner 0x1068c7350
+Unsafe Dict_Copy 0x1068c0d10 owner 0x10696b800
+Unsafe Dict_Copy 0x1068c0e30 owner 0x10696adb0
+Unsafe Dict_Copy 0x1068c0e90 owner 0x10696a090
+Unsafe Dict_Copy 0x10696cfb0 owner 0x1069690f0
+Unsafe Dict_Copy 0x1068d1010 owner 0x1068cbb70
+Unsafe Dict_Copy 0x106955910 owner 0x1068b71c0
+Unsafe Dict_Copy 0x1068c23f0 owner 0x1068b6040
+Unsafe Dict_Copy 0x1068c2b10 owner 0x1068e3120
+Unsafe Dict_Copy 0x1068c28d0 owner 0x1068e3260
+Unsafe Dict_Copy 0x1068c21b0 owner 0x1068c6590
+Unsafe Dict_Copy 0x1068c1310 owner 0x1068c5e10
+Unsafe Dict_Copy 0x1068d17f0 owner 0x106988330
+Unsafe Dict_Copy 0x1068c1a30 owner 0x1068c5780
+Unsafe Dict_Copy 0x1068c2b10 owner 0x1068c64f0
+Unsafe Dict_Copy 0x10696cad0 owner 0x1068c6220
+Unsafe Dict_Copy 0x1068c2d50 owner 0x1068b55f0
+Unsafe Dict_Copy 0x10696de50 owner 0x1068b7e40
+Unsafe Dict_Copy 0x1069570b0 owner 0x1068b6220
+Unsafe Dict_Copy 0x10696d910 owner 0x1068cad60
+Unsafe Dict_Copy 0x1068c14f0 owner 0x1068c81a0
+Unsafe Dict_Copy 0x1068c0ef0 owner 0x1068e3210
+Unsafe Dict_Copy 0x1068c2c90 owner 0x1068e1960
+Unsafe Dict_Copy 0x1068c0950 owner 0x106969820
+Unsafe Dict_Copy 0x1069821b0 owner 0x10696b5d0
+Unsafe Dict_Copy 0x1068c0dd0 owner 0x1068e3350
+Unsafe Dict_Copy 0x1068d0f50 owner 0x1068c8510
+Unsafe Dict_Copy 0x10696cfb0 owner 0x1068caae0
+Unsafe Dict_Copy 0x1068c2bd0 owner 0x1068b7cb0
+Unsafe Dict_Copy 0x10696ca70 owner 0x1068b5f00
+Unsafe Dict_Copy 0x1068c24b0 owner 0x1068b55a0
+Unsafe Dict_Copy 0x1068c1b50 owner 0x1068c5870
+Unsafe Dict_Copy 0x106932b70 owner 0x1068c6950
+Unsafe Dict_Copy 0x1068c1c70 owner 0x1068c55a0
+Unsafe Dict_Copy 0x1069554f0 owner 0x1068c5780
+Unsafe Dict_Copy 0x10696cad0 owner 0x106968e70
+Unsafe Dict_Copy 0x1068c2b70 owner 0x106968920
+Unsafe Dict_Copy 0x1068c1f70 owner 0x10696b1c0
+Unsafe Dict_Copy 0x1068d1df0 owner 0x106989190
+Unsafe Dict_Copy 0x106954290 owner 0x1068c77b0
+Unsafe Dict_Copy 0x1068c3ef0 owner 0x1068c6770
+Unsafe Dict_Copy 0x1068c2990 owner 0x1068b7e40
+Unsafe Dict_Copy 0x1068c1f10 owner 0x1068b6860
+Unsafe Dict_Copy 0x106954b30 owner 0x1068c7a80
+Unsafe Dict_Copy 0x1068c1c70 owner 0x1068c54b0
+test test_clinic failed -- multiple errors occurred; run in verbose mode for details
+0:00:30 load avg: 9.92 [ 96/484/1] test_hmac passed
+0:00:31 load avg: 9.92 [ 97/484/1] test_configparser passed
+Unsafe Dict_Copy 0x10d4db9b0 owner 0x10d4ebc60
+Unsafe Dict_Copy 0x10d4f8b90 owner 0x10d4ebbc0
+Unsafe Dict_Copy 0x10d4f85f0 owner 0x10d1d3760
+Unsafe Dict_Copy 0x10d4fad50 owner 0x10d4a15f0
+Unsafe Dict_Copy 0x10d4fb890 owner 0x10d4a1730
+Unsafe Dict_Copy 0x10d3e4bf0 owner 0x10d4eba80
+Unsafe Dict_Copy 0x10d4f9cd0 owner 0x10d4fd7d0
+Unsafe Dict_Copy 0x10d4db8f0 owner 0x10d5082e0
+Unsafe Dict_Copy 0x10d4dbd70 owner 0x10d4a1eb0
+Unsafe Dict_Copy 0x10d50ea50 owner 0x10d509690
+Unsafe Dict_Copy 0x10d50e5d0 owner 0x10d509280
+Unsafe Dict_Copy 0x10d514110 owner 0x10d4a1c30
+Unsafe Dict_Copy 0x10d5153d0 owner 0x10d4fcb50
+Unsafe Dict_Copy 0x10d5162d0 owner 0x10d4fe4f0
+Unsafe Dict_Copy 0x10d517710 owner 0x10d4a1b90
+Unsafe Dict_Copy 0x10d50e450 owner 0x10d4a1b40
+Unsafe Dict_Copy 0x10d517bf0 owner 0x10d4fd820
+Unsafe Dict_Copy 0x10d5052b0 owner 0x10d4fd410
+Unsafe Dict_Copy 0x10d3bbbf0 owner 0x10d4fda00
+Unsafe Dict_Copy 0x10d517410 owner 0x10d4ffe90
+Unsafe Dict_Copy 0x10d4f9310 owner 0x10d509960
+Unsafe Dict_Copy 0x10d4f9850 owner 0x10d5087e0
+Unsafe Dict_Copy 0x10d4f8bf0 owner 0x10cb50560
+Unsafe Dict_Copy 0x10d4f9cd0 owner 0x10d4a1690
+Unsafe Dict_Copy 0x10d5057f0 owner 0x10d4a1f50
+Unsafe Dict_Copy 0x10d505f70 owner 0x10d4a20e0
+Unsafe Dict_Copy 0x10d520350 owner 0x10d4fe6d0
+Unsafe Dict_Copy 0x10d5210d0 owner 0x10d50bda0
+Unsafe Dict_Copy 0x10d521bb0 owner 0x10d50bfd0
+Unsafe Dict_Copy 0x10d5227b0 owner 0x10d50a6d0
+Unsafe Dict_Copy 0x10d1b43b0 owner 0x10d50ad10
+Unsafe Dict_Copy 0x10d5237d0 owner 0x10d524970
+Unsafe Dict_Copy 0x10d522c30 owner 0x10d4a2090
+Unsafe Dict_Copy 0x10d52c4d0 owner 0x10cb50560
+Unsafe Dict_Copy 0x10d4f9e50 owner 0x10d4a17d0
+Unsafe Dict_Copy 0x10d523a10 owner 0x10d4a22c0
+Unsafe Dict_Copy 0x10d4dbdd0 owner 0x10d4a2270
+Unsafe Dict_Copy 0x10d4f8d70 owner 0x10d4a2310
+Unsafe Dict_Copy 0x10d514050 owner 0x10d4a23b0
+Unsafe Dict_Copy 0x10d497410 owner 0x10d4a2450
+Unsafe Dict_Copy 0x10d4f8050 owner 0x10d4a24f0
+Unsafe Dict_Copy 0x10d5175f0 owner 0x10d4a2590
+Unsafe Dict_Copy 0x10d516150 owner 0x10d4a26d0
+Unsafe Dict_Copy 0x10d50f710 owner 0x10d4a1c30
+Unsafe Dict_Copy 0x10d52cad0 owner 0x10d50a3b0
+Unsafe Dict_Copy 0x10d497770 owner 0x10d50a8b0
+Unsafe Dict_Copy 0x10d514050 owner 0x10d508920
+Unsafe Dict_Copy 0x10d4f8d10 owner 0x10d508880
+Unsafe Dict_Copy 0x10d5211f0 owner 0x10d509910
+Unsafe Dict_Copy 0x10d514170 owner 0x10d5083d0
+Unsafe Dict_Copy 0x10d4f8b30 owner 0x10d50b080
+Unsafe Dict_Copy 0x10d50e8d0 owner 0x10d509af0
+Unsafe Dict_Copy 0x10d5231d0 owner 0x10d509730
+Unsafe Dict_Copy 0x10d523530 owner 0x10d509be0
+Unsafe Dict_Copy 0x10d523650 owner 0x10d50bf30
+Unsafe Dict_Copy 0x10d50cad0 owner 0x10d4fc600
+Unsafe Dict_Copy 0x10d4978f0 owner 0x10d4fe450
+Unsafe Dict_Copy 0x10d506c90 owner 0x10d50a9a0
+Unsafe Dict_Copy 0x10d507a70 owner 0x10d4fcfb0
+Unsafe Dict_Copy 0x10d5205f0 owner 0x10d508a60
+Unsafe Dict_Copy 0x10d497e30 owner 0x10d50acc0
+Unsafe Dict_Copy 0x10d506ab0 owner 0x10d509cd0
+Unsafe Dict_Copy 0x10d50e6f0 owner 0x10d4a2fe0
+Unsafe Dict_Copy 0x10d506630 owner 0x10d4a3080
+Unsafe Dict_Copy 0x10d521c10 owner 0x10d4a19b0
+Unsafe Dict_Copy 0x10d516c90 owner 0x10d4a2cc0
+Unsafe Dict_Copy 0x10d5210d0 owner 0x10d4fe6d0
+Unsafe Dict_Copy 0x10d4f8d10 owner 0x10d4a1e60
+Unsafe Dict_Copy 0x10d4fac90 owner 0x10d4fe720
+Unsafe Dict_Copy 0x10d520230 owner 0x10d4fdb40
+Unsafe Dict_Copy 0x10d4f8ef0 owner 0x10d4a3030
+Unsafe Dict_Copy 0x10d517890 owner 0x10d4a2bd0
+Unsafe Dict_Copy 0x10d514d10 owner 0x10d50ad10
+Unsafe Dict_Copy 0x10d520e90 owner 0x10d4a3260
+Unsafe Dict_Copy 0x10d497770 owner 0x10d4a3300
+Unsafe Dict_Copy 0x10cbd0d70 owner 0x10d4a33a0
+Unsafe Dict_Copy 0x10d50e330 owner 0x10d5090f0
+Unsafe Dict_Copy 0x10d50f470 owner 0x10d4a3350
+Unsafe Dict_Copy 0x10d517d70 owner 0x10d525230
+Unsafe Dict_Copy 0x10d516990 owner 0x10d525460
+Unsafe Dict_Copy 0x10d517350 owner 0x10d525690
+Unsafe Dict_Copy 0x10d514950 owner 0x10d50bee0
+Unsafe Dict_Copy 0x10d50dc10 owner 0x10d4a3e40
+Unsafe Dict_Copy 0x10d4fa9f0 owner 0x10d50a6d0
+Unsafe Dict_Copy 0x10d4bc290 owner 0x10d50a130
+Unsafe Dict_Copy 0x10d5051f0 owner 0x10d4ebc60
+Unsafe Dict_Copy 0x10d5202f0 owner 0x10d4fefe0
+Unsafe Dict_Copy 0x10d5203b0 owner 0x10d4fe3b0
+Unsafe Dict_Copy 0x10d523f50 owner 0x10d4fc880
+Unsafe Dict_Copy 0x10d52db50 owner 0x10d509730
+Unsafe Dict_Copy 0x10d52e1b0 owner 0x10d4feef0
+Unsafe Dict_Copy 0x10d52d670 owner 0x10d4fc100
+Unsafe Dict_Copy 0x10d523950 owner 0x10d1495a0
+Unsafe Dict_Copy 0x10d52e690 owner 0x10d50b670
+Unsafe Dict_Copy 0x10d520a10 owner 0x10d50b2b0
+Unsafe Dict_Copy 0x10d4dbcb0 owner 0x10d4a2bd0
+Unsafe Dict_Copy 0x10d5043b0 owner 0x10d1495a0
+Unsafe Dict_Copy 0x10d3e4bf0 owner 0x10d4feef0
+Unsafe Dict_Copy 0x10d4fb8f0 owner 0x10d50a770
+Unsafe Dict_Copy 0x10d4fae10 owner 0x10d50a270
+Unsafe Dict_Copy 0x10d4fb3b0 owner 0x10d4fe590
+Unsafe Dict_Copy 0x10d50d610 owner 0x10d1ac240
+Unsafe Dict_Copy 0x10d517b30 owner 0x10d3a70d0
+Unsafe Dict_Copy 0x10d516ab0 owner 0x10d509960
+Unsafe Dict_Copy 0x10d50dd90 owner 0x10d50ac20
+Unsafe Dict_Copy 0x10d50cfb0 owner 0x10d509d20
+Unsafe Dict_Copy 0x10d50cef0 owner 0x10d4a2630
+Unsafe Dict_Copy 0x10d50d190 owner 0x10d50a0e0
+Unsafe Dict_Copy 0x10d507cb0 owner 0x10d50a3b0
+Unsafe Dict_Copy 0x10d50f470 owner 0x10d3a7f80
+Unsafe Dict_Copy 0x10d507890 owner 0x10d4a2220
+Unsafe Dict_Copy 0x10d505f10 owner 0x10d4a15f0
+Unsafe Dict_Copy 0x10d506630 owner 0x10d4c00b0
+Unsafe Dict_Copy 0x10d4bc950 owner 0x10d4c01f0
+Unsafe Dict_Copy 0x10d5212b0 owner 0x10d4c0290
+Unsafe Dict_Copy 0x10d52f170 owner 0x10d4c0330
+Unsafe Dict_Copy 0x10d504170 owner 0x10d4c03d0
+Unsafe Dict_Copy 0x10d520230 owner 0x10d4c0470
+Unsafe Dict_Copy 0x10d52d5b0 owner 0x10d4c0510
+Unsafe Dict_Copy 0x10d4f9910 owner 0x10d4c06a0
+Unsafe Dict_Copy 0x10d514830 owner 0x10d4a1b90
+Unsafe Dict_Copy 0x10d52f4d0 owner 0x10d4a1ff0
+Unsafe Dict_Copy 0x10d52f110 owner 0x10d4c0740
+Unsafe Dict_Copy 0x10d52e090 owner 0x10d4fe4f0
+Unsafe Dict_Copy 0x10d50ce30 owner 0x10d4ebe90
+Unsafe Dict_Copy 0x10d505070 owner 0x10d4a3f30
+Unsafe Dict_Copy 0x10d50f470 owner 0x10d4a1b90
+Unsafe Dict_Copy 0x10d516e70 owner 0x10d4a1fa0
+Unsafe Dict_Copy 0x10d4bcb90 owner 0x10d4a38a0
+Unsafe Dict_Copy 0x10d523950 owner 0x10d4a3760
+Unsafe Dict_Copy 0x10d4fb8f0 owner 0x10d4a1960
+Unsafe Dict_Copy 0x10d52dfd0 owner 0x10d1ac240
+Unsafe Dict_Copy 0x10d4bd070 owner 0x10d4a18c0
+Unsafe Dict_Copy 0x10d4bd130 owner 0x10d4c0880
+Unsafe Dict_Copy 0x10d506db0 owner 0x10d4a3120
+Unsafe Dict_Copy 0x10d504230 owner 0x10d4a38f0
+Unsafe Dict_Copy 0x10d504a70 owner 0x10cae3df0
+Unsafe Dict_Copy 0x10d506390 owner 0x10d4c0e70
+Unsafe Dict_Copy 0x10d505f10 owner 0x10cb50560
+Unsafe Dict_Copy 0x10d4fb350 owner 0x10d50bc10
+Unsafe Dict_Copy 0x10d4f87d0 owner 0x10d50b300
+Unsafe Dict_Copy 0x10d4f9010 owner 0x10d4fed60
+Unsafe Dict_Copy 0x10d4f8ad0 owner 0x10d4ffa30
+Unsafe Dict_Copy 0x10d530050 owner 0x10d525280
+Unsafe Dict_Copy 0x10d52c4d0 owner 0x10d4ffe40
+Unsafe Dict_Copy 0x10d52d490 owner 0x10d4fc650
+Unsafe Dict_Copy 0x10d506570 owner 0x10d4fdc80
+Unsafe Dict_Copy 0x10d50fbf0 owner 0x10d5089c0
+Unsafe Dict_Copy 0x10d5239b0 owner 0x10d50ab30
+Unsafe Dict_Copy 0x10d52ef30 owner 0x10d509870
+Unsafe Dict_Copy 0x10d522330 owner 0x10d509f50
+Unsafe Dict_Copy 0x10d50cdd0 owner 0x10d4ff760
+Unsafe Dict_Copy 0x10d4bd550 owner 0x10d508560
+Unsafe Dict_Copy 0x10d4fba70 owner 0x10d4c0920
+Unsafe Dict_Copy 0x10d5232f0 owner 0x10d50b8a0
+Unsafe Dict_Copy 0x10d50fef0 owner 0x10d4c0380
+Unsafe Dict_Copy 0x10d52f770 owner 0x10d4c0f60
+Unsafe Dict_Copy 0x10d50e630 owner 0x10d4c06a0
+Unsafe Dict_Copy 0x10d4f9610 owner 0x10d4c1af0
+Unsafe Dict_Copy 0x10d5079b0 owner 0x10d50bfd0
+Unsafe Dict_Copy 0x10d50da90 owner 0x10d50a4f0
+Unsafe Dict_Copy 0x10d5065d0 owner 0x10d4c1a50
+Unsafe Dict_Copy 0x10d52e810 owner 0x10d4c19b0
+Unsafe Dict_Copy 0x10d506e10 owner 0x10d509e10
+Unsafe Dict_Copy 0x10d52f350 owner 0x10d4c1910
+Unsafe Dict_Copy 0x10d4bd7f0 owner 0x10d50b300
+Unsafe Dict_Copy 0x10d505070 owner 0x10d4c1870
+Unsafe Dict_Copy 0x10d50d310 owner 0x10d50a630
+Unsafe Dict_Copy 0x10d3ab170 owner 0x10d4a3800
+Unsafe Dict_Copy 0x10d517290 owner 0x10d4c17d0
+Unsafe Dict_Copy 0x10d5145f0 owner 0x10d4c1550
+Unsafe Dict_Copy 0x10d50ed50 owner 0x10d4c1dc0
+Unsafe Dict_Copy 0x10d50cc50 owner 0x10d524920
+Unsafe Dict_Copy 0x10d52f7d0 owner 0x10d4a1ff0
+Unsafe Dict_Copy 0x10d50ddf0 owner 0x10d4a2f40
+Unsafe Dict_Copy 0x10d523410 owner 0x10d4a24a0
+Unsafe Dict_Copy 0x10d523470 owner 0x10d4a1960
+Unsafe Dict_Copy 0x10d516e70 owner 0x10d4a2180
+Unsafe Dict_Copy 0x10d523650 owner 0x10d4a32b0
+Unsafe Dict_Copy 0x10d52eff0 owner 0x10d4a2090
+Unsafe Dict_Copy 0x10d5239b0 owner 0x10d4fc240
+Unsafe Dict_Copy 0x10d516ed0 owner 0x10d4ff300
+Unsafe Dict_Copy 0x10d4fa7b0 owner 0x10cae3df0
+Unsafe Dict_Copy 0x10d520e90 owner 0x10d4a3c60
+Unsafe Dict_Copy 0x10d4bc830 owner 0x10d4a15a0
+Unsafe Dict_Copy 0x10d517710 owner 0x10d4a2360
+Unsafe Dict_Copy 0x10d50c3b0 owner 0x10d4a2ef0
+Unsafe Dict_Copy 0x10d190bf0 owner 0x10d4a3b70
+Unsafe Dict_Copy 0x10d52dc10 owner 0x10d4a2a90
+Unsafe Dict_Copy 0x10d4bdf10 owner 0x10d4fe450
+Unsafe Dict_Copy 0x10d532270 owner 0x10d4c1550
+Unsafe Dict_Copy 0x10d516e70 owner 0x10d50adb0
+Unsafe Dict_Copy 0x10d4bc590 owner 0x10d509690
+Unsafe Dict_Copy 0x10d523410 owner 0x10d4fc060
+Unsafe Dict_Copy 0x10d52f290 owner 0x10d4ff8a0
+Unsafe Dict_Copy 0x10d520d70 owner 0x10d50b300
+Unsafe Dict_Copy 0x10d521df0 owner 0x10d4a2860
+Unsafe Dict_Copy 0x10d4faff0 owner 0x10d50ad60
+Unsafe Dict_Copy 0x10d4fbd70 owner 0x10d508ba0
+Unsafe Dict_Copy 0x10d5046b0 owner 0x10d4a2680
+Unsafe Dict_Copy 0x10d4fa8d0 owner 0x10d4a3850
+Unsafe Dict_Copy 0x10d517710 owner 0x10d4a2ea0
+Unsafe Dict_Copy 0x10d4be210 owner 0x10d50b5d0
+Unsafe Dict_Copy 0x10d504290 owner 0x10d50b210
+Unsafe Dict_Copy 0x10d4bd3d0 owner 0x10d50a630
+Unsafe Dict_Copy 0x10d530830 owner 0x10d524600
+Unsafe Dict_Copy 0x10d52ef90 owner 0x10d4a2ea0
+Unsafe Dict_Copy 0x10d52c6b0 owner 0x10d4a3e90
+Unsafe Dict_Copy 0x10d5076b0 owner 0x10d4a2a40
+Unsafe Dict_Copy 0x10d523170 owner 0x10d4a3ad0
+Unsafe Dict_Copy 0x10d52da90 owner 0x10d4a19b0
+Unsafe Dict_Copy 0x10d530650 owner 0x10d4fe950
+Unsafe Dict_Copy 0x10d530770 owner 0x10cae3df0
+Unsafe Dict_Copy 0x10d4fb290 owner 0x10d4a2310
+Unsafe Dict_Copy 0x10d505070 owner 0x10d4a3f30
+Unsafe Dict_Copy 0x10d5065d0 owner 0x10d4c2270
+Unsafe Dict_Copy 0x10d5055b0 owner 0x10d4c2f40
+Unsafe Dict_Copy 0x10d52ebd0 owner 0x10d4c2400
+Unsafe Dict_Copy 0x10d52f170 owner 0x10d4c07e0
+Unsafe Dict_Copy 0x10d52fa10 owner 0x10d12a540
+Unsafe Dict_Copy 0x10d530d10 owner 0x10d4a2180
+Unsafe Dict_Copy 0x10d533950 owner 0x10d4c30d0
+Unsafe Dict_Copy 0x10d5342f0 owner 0x10d4a30d0
+Unsafe Dict_Copy 0x10d534e30 owner 0x10d1ac240
+Unsafe Dict_Copy 0x10d534f50 owner 0x10d4c3260
+Unsafe Dict_Copy 0x10d5225d0 owner 0x10cae3df0
+Unsafe Dict_Copy 0x10d52d790 owner 0x10d4c22c0
+Unsafe Dict_Copy 0x10d516750 owner 0x10d4c3bc0
+Unsafe Dict_Copy 0x10d4fbd70 owner 0x10d4c2590
+Unsafe Dict_Copy 0x10d4f9610 owner 0x10d12a680
+Unsafe Dict_Copy 0x10d4fa5d0 owner 0x10d4c39e0
+Unsafe Dict_Copy 0x10d520170 owner 0x10d4a3940
+Unsafe Dict_Copy 0x10d516930 owner 0x10d4a3580
+Unsafe Dict_Copy 0x10d514b30 owner 0x10d4c3940
+Unsafe Dict_Copy 0x10d535730 owner 0x10d4a3850
+Unsafe Dict_Copy 0x10d534dd0 owner 0x10d4c1910
+Unsafe Dict_Copy 0x10d507ad0 owner 0x10d4a2ea0
+Unsafe Dict_Copy 0x10d4db470 owner 0x10d4a2d60
+Unsafe Dict_Copy 0x10d4f8b30 owner 0x10d4a3120
+Unsafe Dict_Copy 0x10d52deb0 owner 0x10d4a32b0
+Unsafe Dict_Copy 0x10d4bebd0 owner 0x10d4a1d70
+Unsafe Dict_Copy 0x10d4fad50 owner 0x10d4a18c0
+Unsafe Dict_Copy 0x10d4fba10 owner 0x10d4c2a90
+Unsafe Dict_Copy 0x10d504fb0 owner 0x10d4c3350
+Unsafe Dict_Copy 0x10d5055b0 owner 0x10d4a21d0
+Unsafe Dict_Copy 0x10d533350 owner 0x10d4a24f0
+Unsafe Dict_Copy 0x10d523170 owner 0x10d12a6d0
+Unsafe Dict_Copy 0x10d52c650 owner 0x10d1ac240
+Unsafe Dict_Copy 0x10d50ddf0 owner 0x10d4fc470
+Unsafe Dict_Copy 0x10d5043b0 owner 0x10d4c3d50
+Unsafe Dict_Copy 0x10d505d30 owner 0x10d4c3df0
+Unsafe Dict_Copy 0x10d506990 owner 0x10d4d00b0
+Unsafe Dict_Copy 0x10d50d190 owner 0x10d4d0150
+Unsafe Dict_Copy 0x10d50c830 owner 0x10d4d01f0
+Unsafe Dict_Copy 0x10d4bdeb0 owner 0x10d4d0290
+Unsafe Dict_Copy 0x10d4fba10 owner 0x10d4d0380
+Unsafe Dict_Copy 0x10d506b70 owner 0x10d1ac240
+Unsafe Dict_Copy 0x10d4972f0 owner 0x10d4d0470
+Unsafe Dict_Copy 0x10d52f650 owner 0x10d4d0600
+Unsafe Dict_Copy 0x10d4f87d0 owner 0x10d4c3990
+Unsafe Dict_Copy 0x10d534fb0 owner 0x10d4d06a0
+Unsafe Dict_Copy 0x10d5232f0 owner 0x10d4d04c0
+Unsafe Dict_Copy 0x10d4dbfb0 owner 0x10d4d01a0
+Unsafe Dict_Copy 0x10d4f8d70 owner 0x10d4d0510
+Unsafe Dict_Copy 0x10d52c170 owner 0x10d508380
+Unsafe Dict_Copy 0x10d52eb70 owner 0x10d50ab30
+Unsafe Dict_Copy 0x10d4fa750 owner 0x10d4d0b00
+Unsafe Dict_Copy 0x10d4f9190 owner 0x10d4d0a60
+Unsafe Dict_Copy 0x10d532990 owner 0x10d4d09c0
+Unsafe Dict_Copy 0x10d4f9730 owner 0x10d50b7b0
+Unsafe Dict_Copy 0x10d4fbc50 owner 0x10d4d0920
+Unsafe Dict_Copy 0x10d4bd250 owner 0x10d4d0880
+Unsafe Dict_Copy 0x10d4be3f0 owner 0x10d4d07e0
+Unsafe Dict_Copy 0x10d517170 owner 0x10d4d05b0
+Unsafe Dict_Copy 0x10d505b50 owner 0x10d509820
+Unsafe Dict_Copy 0x10d507f50 owner 0x10d50af40
+Unsafe Dict_Copy 0x10d507ef0 owner 0x10d4fe450
+Unsafe Dict_Copy 0x10d5357f0 owner 0x10d4c3850
+Unsafe Dict_Copy 0x10d535f70 owner 0x10d4c0240
+Unsafe Dict_Copy 0x10d534710 owner 0x10d4c1730
+Unsafe Dict_Copy 0x10d534890 owner 0x10d4d0d80
+Unsafe Dict_Copy 0x10d4f99d0 owner 0x10d4c1eb0
+Unsafe Dict_Copy 0x10d4f9fd0 owner 0x10d4c0060
+Unsafe Dict_Copy 0x10d4be870 owner 0x10d4c1b40
+Unsafe Dict_Copy 0x10d4bc6b0 owner 0x10d4c0510
+Unsafe Dict_Copy 0x10d5143b0 owner 0x10d4c0560
+Unsafe Dict_Copy 0x10d4bee10 owner 0x10d4feb80
+Unsafe Dict_Copy 0x10d532b70 owner 0x10cae2860
+Unsafe Dict_Copy 0x10d4bd010 owner 0x10d50ba80
+Unsafe Dict_Copy 0x10d5497f0 owner 0x10d4a2720
+Unsafe Dict_Copy 0x10d4be570 owner 0x10d4feb80
+Unsafe Dict_Copy 0x10d514290 owner 0x10d4c1140
+Unsafe Dict_Copy 0x10d4bdd90 owner 0x10d4ff6c0
+Unsafe Dict_Copy 0x10d505130 owner 0x10d50b4e0
+Unsafe Dict_Copy 0x10d4be630 owner 0x10d50a130
+Unsafe Dict_Copy 0x10d4f9fd0 owner 0x10d4d1230
+Unsafe Dict_Copy 0x10d4bd0d0 owner 0x10d149820
+Unsafe Dict_Copy 0x10d507dd0 owner 0x10d4d0880
+Unsafe Dict_Copy 0x10d516150 owner 0x10d4c0d30
+Unsafe Dict_Copy 0x10d506bd0 owner 0x10d4a2fe0
+Unsafe Dict_Copy 0x10d507d70 owner 0x10d4c2360
+Unsafe Dict_Copy 0x10d505af0 owner 0x10d4a3710
+Unsafe Dict_Copy 0x10d506d50 owner 0x10d4d1690
+Unsafe Dict_Copy 0x10d4bcf50 owner 0x10d4d1500
+Unsafe Dict_Copy 0x10d549250 owner 0x10d4a3e90
+Unsafe Dict_Copy 0x10d548230 owner 0x10d4d1460
+Unsafe Dict_Copy 0x10d4bfd70 owner 0x10d4d13c0
+Unsafe Dict_Copy 0x10d54ce30 owner 0x10d4a3990
+Unsafe Dict_Copy 0x10d4bc890 owner 0x10d4a2950
+Unsafe Dict_Copy 0x10d514710 owner 0x10d4a3350
+Unsafe Dict_Copy 0x10d5163f0 owner 0x10d4a2b30
+Unsafe Dict_Copy 0x10d532750 owner 0x10d4a1a50
+Unsafe Dict_Copy 0x10d504a10 owner 0x10d4eaea0
+Unsafe Dict_Copy 0x10d52d4f0 owner 0x10d4a3620
+Unsafe Dict_Copy 0x10d5159d0 owner 0x10d508e20
+Unsafe Dict_Copy 0x10d5494f0 owner 0x10d4fc880
+Unsafe Dict_Copy 0x10d4dbef0 owner 0x10d509c80
+Unsafe Dict_Copy 0x10d4bddf0 owner 0x10d4a1410
+Unsafe Dict_Copy 0x10d4bf830 owner 0x10d4c0240
+Unsafe Dict_Copy 0x10d5063f0 owner 0x10d509b40
+Unsafe Dict_Copy 0x10d4bff50 owner 0x10d508920
+Unsafe Dict_Copy 0x10d536b70 owner 0x10d508ba0
+Unsafe Dict_Copy 0x10d54d8b0 owner 0x10d4d1be0
+Unsafe Dict_Copy 0x10d54e9f0 owner 0x10d4c0c90
+Unsafe Dict_Copy 0x10d507770 owner 0x10d4c11e0
+Unsafe Dict_Copy 0x10d5502f0 owner 0x10d4d1230
+Unsafe Dict_Copy 0x10d4fb950 owner 0x10d4c2cc0
+Unsafe Dict_Copy 0x10d4d8170 owner 0x10d4c3940
+Unsafe Dict_Copy 0x10d4d82f0 owner 0x10d4c1140
+Unsafe Dict_Copy 0x10d4bfdd0 owner 0x10d4c0fb0
+Unsafe Dict_Copy 0x10d4d8410 owner 0x10d4c0560
+Unsafe Dict_Copy 0x10d4bee10 owner 0x10cae3df0
+Unsafe Dict_Copy 0x10d4bdd90 owner 0x10d4d1eb0
+Unsafe Dict_Copy 0x10d515190 owner 0x10d4d0c90
+Unsafe Dict_Copy 0x10d4be870 owner 0x10d4d1b90
+Unsafe Dict_Copy 0x10d506c90 owner 0x10d5090f0
+Unsafe Dict_Copy 0x10d4d8890 owner 0x10d4c3440
+Unsafe Dict_Copy 0x10d532cf0 owner 0x10d4d3030
+Unsafe Dict_Copy 0x10d532810 owner 0x10d4d31c0
+Unsafe Dict_Copy 0x10d4f8170 owner 0x10d1faf40
+Unsafe Dict_Copy 0x10d653410 owner 0x10d4d33a0
+Unsafe Dict_Copy 0x10d6561b0 owner 0x10d566db0
+Unsafe Dict_Copy 0x10d6a3890 owner 0x10d4c20e0
+Unsafe Dict_Copy 0x10d6aa870 owner 0x10d65ad60
+Unsafe Dict_Copy 0x10d67e750 owner 0x10d65afe0
+Unsafe Dict_Copy 0x10d67e870 owner 0x10cd3ebd0
+Unsafe Dict_Copy 0x10d5743b0 owner 0x10d65a130
+Unsafe Dict_Copy 0x10d5764b0 owner 0x10d4c1410
+Unsafe Dict_Copy 0x10d576030 owner 0x10cb50560
+Unsafe Dict_Copy 0x10d56c770 owner 0x10d65a4f0
+Unsafe Dict_Copy 0x10d6e3110 owner 0x10d4c1f50
+Unsafe Dict_Copy 0x10d54ee10 owner 0x10d4d0a10
+Unsafe Dict_Copy 0x10d6e42f0 owner 0x10d4c3580
+Unsafe Dict_Copy 0x10d6e5190 owner 0x10d4a1a00
+Unsafe Dict_Copy 0x10d732ff0 owner 0x10d50b3a0
+Unsafe Dict_Copy 0x10d669cd0 owner 0x10d12a680
+Unsafe Dict_Copy 0x10d77ad50 owner 0x10d6cfcb0
+Unsafe Dict_Copy 0x10d77acf0 owner 0x10d6ce5e0
+Unsafe Dict_Copy 0x10d76ee10 owner 0x10d4d3670
+Unsafe Dict_Copy 0x10d7cb3b0 owner 0x10d6cff80
+Unsafe Dict_Copy 0x10d75e150 owner 0x10d8cbbc0
+Unsafe Dict_Copy 0x10d712ed0 owner 0x10d8cbcb0
+Unsafe Dict_Copy 0x10d7c1cd0 owner 0x10d8cbe40
+Unsafe Dict_Copy 0x10d5764b0 owner 0x10d8c8ba0
+Unsafe Dict_Copy 0x10d575010 owner 0x10d8cb350
+Unsafe Dict_Copy 0x10d8fae70 owner 0x10d8c5550
+Unsafe Dict_Copy 0x10d8fb530 owner 0x10d8c2f40
+Unsafe Dict_Copy 0x10d75cb90 owner 0x10d8c43d0
+Unsafe Dict_Copy 0x10d76e510 owner 0x10d8c78a0
+Unsafe Dict_Copy 0x10d54e930 owner 0x10d8c5690
+Unsafe Dict_Copy 0x10d54c5f0 owner 0x10d8c6d60
+Unsafe Dict_Copy 0x10d54c8f0 owner 0x10d8c7710
+Unsafe Dict_Copy 0x10d52d2b0 owner 0x10d8c7800
+Unsafe Dict_Copy 0x10d54fcb0 owner 0x10d8c7df0
+Unsafe Dict_Copy 0x10d4bd130 owner 0x10d8c7b20
+Unsafe Dict_Copy 0x10d54f710 owner 0x10d8c7260
+Unsafe Dict_Copy 0x10d733b90 owner 0x10d8cac70
+Unsafe Dict_Copy 0x10d7337d0 owner 0x10d8c6450
+Unsafe Dict_Copy 0x10d7304d0 owner 0x10d8c3170
+Unsafe Dict_Copy 0x10d7328d0 owner 0x10d8c5190
+Unsafe Dict_Copy 0x10d947170 owner 0x10d8c3ee0
+Unsafe Dict_Copy 0x10d6f9cd0 owner 0x10d8c98c0
+Unsafe Dict_Copy 0x10d99aed0 owner 0x10d8cb3f0
+Unsafe Dict_Copy 0x10d9566f0 owner 0x10d8c7490
+Unsafe Dict_Copy 0x10d9e3050 owner 0x10d8c90f0
+Unsafe Dict_Copy 0x10d9c8bf0 owner 0x10d8c0830
+Unsafe Dict_Copy 0x10d9c4c50 owner 0x10d8bc6a0
+Unsafe Dict_Copy 0x10d9c7170 owner 0x10cb729a0
+Unsafe Dict_Copy 0x10d9c6690 owner 0x10cb729a0
+Unsafe Dict_Copy 0x10d9c7110 owner 0x10d8bc0b0
+Unsafe Dict_Copy 0x10d9c5e50 owner 0x10d8bafe0
+Unsafe Dict_Copy 0x10d9c4470 owner 0x10d8c15f0
+Unsafe Dict_Copy 0x10d9c4c50 owner 0x10d8c35d0
+Unsafe Dict_Copy 0x10d9c6570 owner 0x10cd6e450
+Unsafe Dict_Copy 0x10d9b9910 owner 0x10d8b9730
+Unsafe Dict_Copy 0x10d9b7410 owner 0x10d8c3d00
+Unsafe Dict_Copy 0x10d9b63f0 owner 0x10d4e8510
+Unsafe Dict_Copy 0x10d9ba810 owner 0x10d4e8470
+Unsafe Dict_Copy 0x10d9b7a70 owner 0x10d8c9e10
+Unsafe Dict_Copy 0x10d9b9970 owner 0x10d4e8380
+Unsafe Dict_Copy 0x10d9b6150 owner 0x10d8bdff0
+Unsafe Dict_Copy 0x10d9b7110 owner 0x10d4e8330
+Unsafe Dict_Copy 0x10d9aab10 owner 0x10d4e8290
+Unsafe Dict_Copy 0x10d9a9a90 owner 0x10d4e81f0
+Unsafe Dict_Copy 0x10d9a90d0 owner 0x10d4e8150
+Unsafe Dict_Copy 0x10d9c5eb0 owner 0x10d8c3d50
+Unsafe Dict_Copy 0x10d9b6450 owner 0x10d8c1640
+Unsafe Dict_Copy 0x10d9c4d70 owner 0x10d8c3cb0
+Unsafe Dict_Copy 0x10d9c18b0 owner 0x10d4e8240
+Unsafe Dict_Copy 0x10d9c2a50 owner 0x10d4e8600
+Unsafe Dict_Copy 0x10d9c1010 owner 0x10d8b8fb0
+Unsafe Dict_Copy 0x10d9bad50 owner 0x10d8bf0d0
+Unsafe Dict_Copy 0x10d9c1e50 owner 0x10d8be4f0
+Unsafe Dict_Copy 0x10d9b98b0 owner 0x10d8c0ce0
+Unsafe Dict_Copy 0x10d9c08f0 owner 0x10d8bf3f0
+Unsafe Dict_Copy 0x10d9c3b90 owner 0x10d8bc6f0
+Unsafe Dict_Copy 0x10d9c3290 owner 0x10d4e8970
+Unsafe Dict_Copy 0x10d9c1af0 owner 0x10d4e8a10
+Unsafe Dict_Copy 0x10d9c41d0 owner 0x10d4e8ab0
+Unsafe Dict_Copy 0x10d9c7710 owner 0x10d4e8b50
+Unsafe Dict_Copy 0x10d9c79b0 owner 0x10d4e8bf0
+Unsafe Dict_Copy 0x10d9ab230 owner 0x10d8baf90
+Unsafe Dict_Copy 0x10d9b8b90 owner 0x10d8bf030
+Unsafe Dict_Copy 0x10d9c34d0 owner 0x10d8bafe0
+Unsafe Dict_Copy 0x10d9b6450 owner 0x10d8bc5b0
+Unsafe Dict_Copy 0x10d9bb170 owner 0x10d8c0330
+Unsafe Dict_Copy 0x10d9b9d90 owner 0x10d8c3e90
+Unsafe Dict_Copy 0x10d9b92b0 owner 0x10d4e87e0
+Unsafe Dict_Copy 0x10d9b65d0 owner 0x10d8c8c40
+Unsafe Dict_Copy 0x10d9a41d0 owner 0x10d8cbc60
+Unsafe Dict_Copy 0x10d9a6c90 owner 0x10d4e9280
+Unsafe Dict_Copy 0x10d9b7d70 owner 0x10d4e91e0
+Unsafe Dict_Copy 0x10d9a5af0 owner 0x10d8ca720
+Unsafe Dict_Copy 0x10d9b8350 owner 0x10d4e9140
+Unsafe Dict_Copy 0x10d9a43b0 owner 0x10d8c8ce0
+Unsafe Dict_Copy 0x10d9a4590 owner 0x10d4e8fb0
+Unsafe Dict_Copy 0x10d9a3dd0 owner 0x10d4e8f10
+Unsafe Dict_Copy 0x10d4d99d0 owner 0x10d8c06f0
+Unsafe Dict_Copy 0x10d9c6690 owner 0x10d8c0100
+Unsafe Dict_Copy 0x10d9b5bb0 owner 0x10d8c0fb0
+Unsafe Dict_Copy 0x10d9a6690 owner 0x10d4e95a0
+Unsafe Dict_Copy 0x10d9c0f50 owner 0x10d8c0560
+Unsafe Dict_Copy 0x10d9c18b0 owner 0x10d8c0880
+Unsafe Dict_Copy 0x10d9c1c10 owner 0x10d4e98c0
+Unsafe Dict_Copy 0x10d9c30b0 owner 0x10d4e9960
+Unsafe Dict_Copy 0x10d9baa50 owner 0x10d8c3d50
+Unsafe Dict_Copy 0x10d9b84d0 owner 0x10d8bcd80
+Unsafe Dict_Copy 0x10d9bb950 owner 0x10d4e8dd0
+Unsafe Dict_Copy 0x10d9abef0 owner 0x10d8b8ba0
+Unsafe Dict_Copy 0x10d9a0b30 owner 0x10d4e9b90
+Unsafe Dict_Copy 0x10d9a2810 owner 0x10d4e9b40
+Unsafe Dict_Copy 0x10d9a1790 owner 0x10d4e9eb0
+Unsafe Dict_Copy 0x10d9a23f0 owner 0x10d8c83d0
+Unsafe Dict_Copy 0x10d9a34d0 owner 0x10d8b9ff0
+Unsafe Dict_Copy 0x10d9a1370 owner 0x10d8ba6d0
+Unsafe Dict_Copy 0x10d9b9cd0 owner 0x10d8c9500
+Unsafe Dict_Copy 0x10d9a4350 owner 0x10d8caea0
+Unsafe Dict_Copy 0x10d9c1070 owner 0x10d4e9f00
+Unsafe Dict_Copy 0x10d9c1970 owner 0x10d4ea4a0
+Unsafe Dict_Copy 0x10d9c1190 owner 0x10d8bf6c0
+Unsafe Dict_Copy 0x10d9b8e30 owner 0x10d4e90a0
+Unsafe Dict_Copy 0x10d9c27b0 owner 0x10d8c91e0
+Unsafe Dict_Copy 0x10d9bbcb0 owner 0x10d8c1140
+Unsafe Dict_Copy 0x10d9a4350 owner 0x10d8c0600
+Unsafe Dict_Copy 0x10d9a4ad0 owner 0x10d8b8ba0
+Unsafe Dict_Copy 0x10d4da5d0 owner 0x10d8bf440
+Unsafe Dict_Copy 0x10d9a7b30 owner 0x10d8bf030
+Unsafe Dict_Copy 0x10d9a4410 owner 0x10d8bdfa0
+Unsafe Dict_Copy 0x10d9b8110 owner 0x10d8c10a0
+Unsafe Dict_Copy 0x10d9a7bf0 owner 0x10d8bb8f0
+Unsafe Dict_Copy 0x10d9b8d10 owner 0x10d4ea0e0
+Unsafe Dict_Copy 0x10d9b8e90 owner 0x10d4ea040
+Unsafe Dict_Copy 0x10d9a6c30 owner 0x10d8c2db0
+Unsafe Dict_Copy 0x10d9a1df0 owner 0x10d4ea6d0
+Unsafe Dict_Copy 0x10d4da6f0 owner 0x10d4ea770
+Unsafe Dict_Copy 0x10d9bb3b0 owner 0x10d8cbd50
+Unsafe Dict_Copy 0x10d9baab0 owner 0x10d8c77b0
+Unsafe Dict_Copy 0x10d9a49b0 owner 0x10d8bcd80
+Unsafe Dict_Copy 0x10d9a7dd0 owner 0x10d8bf210
+Unsafe Dict_Copy 0x10d9a63f0 owner 0x10d8c6b30
+Unsafe Dict_Copy 0x10d99f530 owner 0x10d8c6a40
+Unsafe Dict_Copy 0x10d99ea50 owner 0x10d4ea860
+Unsafe Dict_Copy 0x10d9b8c50 owner 0x10cc0eef0
+Unsafe Dict_Copy 0x10d9c4d10 owner 0x10d8c8420
+Unsafe Dict_Copy 0x10d9c0c50 owner 0x10d8c9870
+Unsafe Dict_Copy 0x10d9c1970 owner 0x10d8caea0
+Unsafe Dict_Copy 0x10d9c2c90 owner 0x10d8cad10
+Unsafe Dict_Copy 0x10d9a5370 owner 0x10d8c81f0
+Unsafe Dict_Copy 0x10d9b73b0 owner 0x10d4eac70
+Unsafe Dict_Copy 0x10d9a4a10 owner 0x10d4ead10
+Unsafe Dict_Copy 0x10d9a7470 owner 0x10d4ea630
+Unsafe Dict_Copy 0x10d9c0230 owner 0x10d4e94b0
+Unsafe Dict_Copy 0x10d9c2e70 owner 0x10d8c3940
+Unsafe Dict_Copy 0x10d9c3e30 owner 0x10d8be720
+Unsafe Dict_Copy 0x10d9b7ef0 owner 0x10d4e8b00
+Unsafe Dict_Copy 0x10d9c08f0 owner 0x10d4e87e0
+Unsafe Dict_Copy 0x10d9a4410 owner 0x10d4eb170
+Unsafe Dict_Copy 0x10d9a11f0 owner 0x10d4e82e0
+Unsafe Dict_Copy 0x10d9b9430 owner 0x10d4e9dc0
+Unsafe Dict_Copy 0x10d9c1490 owner 0x10d4eb0d0
+Unsafe Dict_Copy 0x10d9aa150 owner 0x10d8c3710
+Unsafe Dict_Copy 0x10d9c2090 owner 0x10d8ca400
+Unsafe Dict_Copy 0x10d9fe2d0 owner 0x10cee2720
+Unsafe Dict_Copy 0x10d4daed0 owner 0x10d4eb030
+Unsafe Dict_Copy 0x10d9a1af0 owner 0x10d4eaf90
+Unsafe Dict_Copy 0x10d99eff0 owner 0x10d4eaef0
+Unsafe Dict_Copy 0x10d99cef0 owner 0x10d8cb4e0
+Unsafe Dict_Copy 0x10d99aed0 owner 0x10d8b89c0
+Unsafe Dict_Copy 0x10d99b230 owner 0x10d8bacc0
+Unsafe Dict_Copy 0x10d9994f0 owner 0x10d8cae00
+Unsafe Dict_Copy 0x10d99a510 owner 0x10d8c86a0
+Unsafe Dict_Copy 0x10d9a6990 owner 0x10d8c64f0
+Unsafe Dict_Copy 0x10d9b8350 owner 0x10d8bafe0
+Unsafe Dict_Copy 0x10d9b5bb0 owner 0x10d8c8dd0
+Unsafe Dict_Copy 0x10d9c1970 owner 0x10d8cac20
+Unsafe Dict_Copy 0x10d99d5b0 owner 0x10d8c8740
+Unsafe Dict_Copy 0x10d9a8c50 owner 0x10d8c8290
+Unsafe Dict_Copy 0x10d9c5430 owner 0x10d8cbb20
+Unsafe Dict_Copy 0x10d9aa0f0 owner 0x10d8c3710
+0:00:31 load avg: 9.92 [ 98/484/1] test_platform passed
+^C
+Kill <WorkerThread #1 running test=test.test_multiprocessing_forkserver.test_threads pid=57717 time=15.3 sec> process group
+Kill <WorkerThread #2 running test=test_tools pid=56768 time=28.5 sec> process group
+Kill <WorkerThread #3 running test=test_io pid=57146 time=20.9 sec> process group
+Kill <WorkerThread #4 running test=test_decimal pid=58158 time=9.9 sec> process group
+Kill <WorkerThread #5 running test=test.test_asyncio.test_selector_events pid=59042 time=2.0 sec> process group
+Kill <WorkerThread #6 running test=test_support pid=58665 time=4.6 sec> process group
+Kill <WorkerThread #7 running test=test.test_asyncio.test_tasks pid=56785 time=27.2 sec> process group
+Kill <WorkerThread #8 running test=test_cppext pid=57474 time=17.6 sec> process group
+Kill <WorkerThread #9 running test=test_csv pid=59142 time=1.3 sec> process group
+Kill <WorkerThread #10 running test=test_subprocess pid=56793 time=26.7 sec> process group
+
+== Tests result: FAILURE, INTERRUPTED ==
+
+386 tests omitted:
+    test.test_asyncio.test_base_events
+    test.test_asyncio.test_buffered_proto
+    test.test_asyncio.test_events test.test_asyncio.test_futures
+    test.test_asyncio.test_futures2 test.test_asyncio.test_locks
+    test.test_asyncio.test_pep492 test.test_asyncio.test_protocols
+    test.test_asyncio.test_queues test.test_asyncio.test_runners
+    test.test_asyncio.test_selector_events
+    test.test_asyncio.test_sendfile test.test_asyncio.test_server
+    test.test_asyncio.test_sock_lowlevel test.test_asyncio.test_ssl
+    test.test_asyncio.test_sslproto test.test_asyncio.test_streams
+    test.test_asyncio.test_subprocess
+    test.test_asyncio.test_taskgroups test.test_asyncio.test_tasks
+    test.test_asyncio.test_threads test.test_asyncio.test_transports
+    test.test_asyncio.test_unix_events test.test_asyncio.test_waitfor
+    test.test_asyncio.test_windows_utils
+    test.test_concurrent_futures.test_as_completed
+    test.test_concurrent_futures.test_deadlock
+    test.test_concurrent_futures.test_future
+    test.test_concurrent_futures.test_init
+    test.test_concurrent_futures.test_process_pool
+    test.test_concurrent_futures.test_shutdown
+    test.test_concurrent_futures.test_thread_pool
+    test.test_concurrent_futures.test_wait
+    test.test_future_stmt.test_future
+    test.test_future_stmt.test_future_flags
+    test.test_future_stmt.test_future_multiple_imports
+    test.test_future_stmt.test_future_single_import
+    test.test_gdb.test_backtrace test.test_gdb.test_cfunction
+    test.test_gdb.test_cfunction_full test.test_gdb.test_misc
+    test.test_gdb.test_pretty_print
+    test.test_multiprocessing_fork.test_manager
+    test.test_multiprocessing_fork.test_misc
+    test.test_multiprocessing_fork.test_processes
+    test.test_multiprocessing_fork.test_threads
+    test.test_multiprocessing_forkserver.test_manager
+    test.test_multiprocessing_forkserver.test_misc
+    test.test_multiprocessing_forkserver.test_processes
+    test.test_multiprocessing_forkserver.test_threads
+    test.test_multiprocessing_spawn.test_manager
+    test.test_multiprocessing_spawn.test_misc
+    test.test_multiprocessing_spawn.test_processes
+    test.test_multiprocessing_spawn.test_threads test__locale
+    test__opcode test_abstract_numbers test_aifc test_argparse
+    test_array test_asdl_parser test_ast test_asyncgen test_asynchat
+    test_asyncore test_atexit test_audit test_base64
+    test_baseexception test_bdb test_bigaddrspace test_bigmem
+    test_binop test_bisect test_bool test_buffer test_bufio
+    test_builtin test_bytes test_bz2 test_calendar test_call test_capi
+    test_cgi test_cgitb test_charmapcodec test_check_c_globals
+    test_class test_cmath test_cmd test_cmd_line test_code
+    test_code_module test_codeccallbacks test_codecencodings_cn
+    test_codecencodings_hk test_codecencodings_iso2022
+    test_codecencodings_jp test_codecencodings_tw test_codecmaps_cn
+    test_codecmaps_hk test_codecmaps_jp test_codecmaps_kr
+    test_codecmaps_tw test_codecs test_codeop test_colorsys
+    test_compile test_compileall test_complex test_contains
+    test_context test_contextlib test_contextlib_async test_copy
+    test_copyreg test_cppext test_cprofile test_crashers test_crypt
+    test_csv test_ctypes test_curses test_dataclasses test_datetime
+    test_dbm test_dbm_dumb test_dbm_ndbm test_decimal test_decorators
+    test_defaultdict test_deque test_descr test_descrtut
+    test_dict_version test_dictcomps test_dictviews test_difflib
+    test_dis test_distutils test_doctest test_doctest2 test_docxmlrpc
+    test_dtrace test_dynamicclassattribute test_eintr test_embed
+    test_ensurepip test_enum test_enumerate test_eof test_epoll
+    test_errno test_except_star test_exception_group
+    test_exception_variations test_exceptions test_extcall
+    test_faulthandler test_file_eintr test_filecmp test_fileinput
+    test_fileio test_fileutils test_finalization test_float test_flufl
+    test_fnmatch test_fork1 test_format test_fractions test_frozen
+    test_fstring test_funcattrs test_functools test_gc
+    test_generator_stop test_genericalias test_genericclass
+    test_genericpath test_getopt test_getpass test_getpath
+    test_gettext test_grammar test_graphlib test_grp test_hash
+    test_hashlib test_html test_htmlparser test_http_cookiejar
+    test_http_cookies test_idle test_imaplib test_imghdr test_imp
+    test_import test_importlib test_index test_int test_int_literal
+    test_interpreters test_io test_ioctl test_ipaddress
+    test_isinstance test_iterlen test_itertools test_json test_keyword
+    test_keywordonlyarg test_kqueue test_largefile test_launcher
+    test_lib2to3 test_linecache test_list test_locale test_logging
+    test_long test_longexp test_lzma test_mailbox test_marshal
+    test_math test_memoryio test_metaclass test_mimetypes test_minidom
+    test_mmap test_module test_modulefinder test_msilib
+    test_multibytecodec test_multiprocessing_main_handling test_netrc
+    test_nis test_ntpath test_opcache test_opcodes test_openpty
+    test_optparse test_ordered_dict test_os test_ossaudiodev
+    test_osx_env test_pathlib test_patma test_pdb test_peepholer
+    test_peg_generator test_pickle test_pipes test_pkg test_plistlib
+    test_poll test_poplib test_positional_only_arg test_posix test_pow
+    test_pprint test_print test_profile test_property test_pstats
+    test_pty test_pulldom test_py_compile test_pydoc test_quopri
+    test_raise test_random test_range test_re test_readline
+    test_regrtest test_repl test_reprlib test_resource test_richcmp
+    test_rlcompleter test_robotparser test_runpy test_sax
+    test_script_helper test_selectors test_set test_setcomps
+    test_shelve test_shlex test_shutil test_signal test_site
+    test_smtpd test_smtplib test_smtpnet test_sndhdr test_socket
+    test_sort test_spwd test_sqlite3 test_ssl test_startfile test_stat
+    test_strftime test_string test_string_literals test_structseq
+    test_subclassinit test_subprocess test_sunau test_sundry
+    test_super test_support test_symtable test_syntax test_sys
+    test_sys_setprofile test_syslog test_tabnanny test_tarfile
+    test_telnetlib test_tempfile test_termios test_textwrap
+    test_thread test_threadedtempfile test_threading
+    test_threading_local test_threadsignals test_time test_timeit
+    test_timeout test_tix test_tk test_tokenize test_tomllib
+    test_tools test_trace test_traceback test_tracemalloc
+    test_ttk_guionly test_tty test_tuple test_type_cache
+    test_type_comments test_typechecks test_types test_unary
+    test_unicode test_unicode_file test_unicode_identifiers
+    test_unicodedata test_unittest test_univnewlines test_unpack_ex
+    test_unparse test_urllib test_urllib2 test_urllib2_localnet
+    test_urllib2net test_urllib_response test_urllibnet test_urlparse
+    test_userdict test_userstring test_utf8source test_uuid test_venv
+    test_wait3 test_wait4 test_warnings test_wave test_weakref
+    test_webbrowser test_wsgiref test_xml_etree test_xml_etree_c
+    test_xmlrpc test_zipapp test_zipfile test_zipfile64
+    test_zipimport_support test_zlib test_zoneinfo
+
+8 tests skipped:
+    test.test_asyncio.test_windows_events test_dbm_gnu test_devpoll
+    test_tcl test_ttk_textonly test_turtle test_winconsoleio
+    test_winreg
+
+1 test skipped (resource denied):
+    test_winsound
+
+1 test failed:
+    test_clinic
+
+88 tests OK.
+
+Test suite interrupted by signal SIGINT.
+
+0:00:33 load avg: 9.92 Re-running 1 failed tests in verbose mode in subprocesses
+0:00:33 load avg: 9.92 Run 1 test in parallel using 1 worker process
+0:00:34 load avg: 9.44 [1/1/1] test_clinic failed (2 failures)
+Re-running test_clinic in verbose mode (matching: test_cli_force, test_external)
+test_cli_force (test.test_clinic.ClinicExternalTest.test_cli_force) ... FAIL
+test_external (test.test_clinic.ClinicExternalTest.test_external) ... FAIL
+
+======================================================================
+FAIL: test_cli_force (test.test_clinic.ClinicExternalTest.test_cli_force)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zeedh/slowcoders/cpython/Lib/test/test_clinic.py", line 1408, in test_cli_force
+    self.assertEqual(out, "")
+AssertionError: 'Unsafe Dict_Copy 0x10f337f50 owner 0x10f44db40\n' != ''
+- Unsafe Dict_Copy 0x10f337f50 owner 0x10f44db40
+
+
+======================================================================
+FAIL: test_external (test.test_clinic.ClinicExternalTest.test_external)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/zeedh/slowcoders/cpython/Lib/test/test_clinic.py", line 1351, in test_external
+    self.assertEqual(out, "")
+AssertionError: 'Unsafe Dict_Copy 0x1030c3d70 owner 0x1032277b0\n' != ''
+- Unsafe Dict_Copy 0x1030c3d70 owner 0x1032277b0
+
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.575s
+
+FAILED (failures=2)
+test test_clinic failed
+1 test failed again:
+    test_clinic
+
+== Tests result: FAILURE, INTERRUPTED then FAILURE, INTERRUPTED ==
+
+8 tests skipped:
+    test.test_asyncio.test_windows_events test_dbm_gnu test_devpoll
+    test_tcl test_ttk_textonly test_turtle test_winconsoleio
+    test_winreg
+
+1 test skipped (resource denied):
+    test_winsound
+
+1 re-run test:
+    test_clinic
+
+1 test failed:
+    test_clinic
+
+88 tests OK.
+
+Test suite interrupted by signal SIGINT.
+
+Total duration: 34.8 sec
+Total tests: run=6,652 failures=4 skipped=151
+Total test files: run=98/484 failed=1 skipped=8 resource_denied=1 rerun=1
+Result: FAILURE, INTERRUPTED then FAILURE, INTERRUPTED
+make: *** [test] Error 2
+
+zeedh@DaeHoons-MacBook-Pro _debug % 

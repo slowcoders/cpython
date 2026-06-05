@@ -173,7 +173,11 @@ struct _object {
     __pragma(warning(disable: 4201))
 #endif
     union {
+#ifdef ENABLE_RTGC
+       PY_UINT32_T ob_refcnt; 
+#else
        Py_ssize_t ob_refcnt;
+#endif
 #if SIZEOF_VOID_P > 4
        PY_UINT32_T ob_refcnt_split[2];
 #endif
