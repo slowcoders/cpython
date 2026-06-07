@@ -71,18 +71,6 @@ typedef struct _gc_runtime_state GCState;
 
 #ifdef ENABLE_RTGC_GC
 
-struct _CircuitPartion {
-    PyGC_Head head;
-    PyLongObject obj;
-} rtgc_partion = {
-    .obj = {
-        .ob_base = {
-            .ob_refcnt = 0xFFFF,
-            .ob_type = &PyLong_Type
-        }
-    }
-};
-
 
 typedef struct _RtgcState {
     PyGC_Head* unsafe_list;
@@ -98,13 +86,12 @@ struct _RtgcScanStack {
     PyGC_Head* reachable;
     PyGC_Head* unreachable;
     PyGC_Head* circuit_roots;
-    PyGC_Head* circuit_partion;
+    PyGC_Head* cyclic_end;
     int  cyclic_root_refcnt;
     int generation;
     PyObject* dbgObj;
 } rtStack = {
     .dbgObj = NULL,
-    .circuit_partion = &rtgc_partion.head
 };
 static int circuit_cnt = 0;
 const static bool fast_dealloc = false;
@@ -217,9 +204,15 @@ _PyGC_InitState(GCState *gcstate)
         INIT_HEAD(gcstate->generations[i]);
     };
 #ifdef ENABLE_RTGC_GC
-    INIT_HEAD(gcstate->circuit_roots);
-    gc_list_append(&rtgc_partion.head, &gcstate->circuit_roots.head);
-    //gc_list_append(&rtgc_partion.head, &gcstate->generations[NUM_GENERATIONS-1].head);
+    for (size_t i = 0; i < sizeof(gcstate->cyclic) / sizeof(gcstate->cyclic[0]); i ++) {
+        PyListObject* op = &gcstate->cyclic[i].obj;
+        ((PyObject*)op)->ob_refcnt = 0xFFFF;
+        ((PyObject*)op)->ob_type = &PyList_Type;
+        ((PyObject*)op)->ob_flags = 0;
+        op->allocated = 0;
+        op->ob_item = NULL;
+        gc_list_append(AS_GC(op), &gcstate->generations[NUM_GENERATIONS-1].head);
+    }
 #endif    
     gcstate->generation0 = GEN_HEAD(gcstate, 0);
     INIT_HEAD(gcstate->permanent_generation);
@@ -470,7 +463,10 @@ validate_list(PyGC_Head *head, enum flagstates flags)
         PyGC_Head *trueprev = GC_PREV(gc);
         PyGC_Head *truenext = (PyGC_Head *)(gc->_gc_next  & ~NEXT_MASK_UNREACHABLE);
         assert(truenext != NULL);
-        assert(trueprev == prev);
+        if (trueprev != prev) {
+            printf("prev: %p(true: %p), gc: %p(as next of prev: %p)\n", prev, trueprev, gc, GC_NEXT(prev));
+            assert(trueprev == prev);
+        }
         assert((gc->_gc_prev & PREV_MASK_COLLECTING) == prev_value);
         assert((gc->_gc_next & NEXT_MASK_UNREACHABLE) == next_value);
         prev = gc;
@@ -525,7 +521,9 @@ update_refs(PyGC_Head *containers)
          * so serious that maybe this should be a release-build
          * check instead of an assert?
          */
-        _PyObject_ASSERT(op, gc_get_refs(gc) != 0);
+        if (gc_get_refs(gc) == 0) {
+            _PyObject_ASSERT(op, gc_get_refs(gc) != 0);
+        }
         gc = next;
     }
 }
@@ -710,7 +708,7 @@ visit_reachable(PyObject *op, void *arg)
  * So we can not gc_list_* functions for unreachable until we remove the flag.
  */
 static void
-move_unreachable(PyGC_Head *young, PyGC_Head *unreachable, bool do_detect_cyclic)
+move_unreachable(PyGC_Head *young, PyGC_Head *unreachable, GCState* gcstate)
 {
 #ifdef ENABLE_RTGC_GC        
     rtStack.reachable = young;
@@ -730,16 +728,27 @@ move_unreachable(PyGC_Head *young, PyGC_Head *unreachable, bool do_detect_cyclic
      */
 
     while (gc != young) {
+        {
+            PyGC_Head* prev2 = rtStack.circuit_roots;
+            for (PyGC_Head* gc2 = GC_NEXT(prev2); gc2 != gc; gc2 = GC_NEXT(gc2)) {
+                if (GC_NEXT(prev2) != gc2) {
+                    assert(GC_NEXT(prev2) == gc2);
+                }
+                prev2 = gc2;
+            }
+        }
 #ifdef ENABLE_RTGC_GC        
         if (!gc_is_collecting(gc)) {
+            rtStack.dbgObj = FROM_GC(gc);
             if (!rtgc_is_cyclic(FROM_GC(gc))) {
                 _PyGCHead_SET_PREV(gc, prev);
                 prev = gc;
             }
             else {
+                assert(gcstate != NULL);
                 prev->_gc_next = gc->_gc_next;
 
-                PyGC_Head* head = rtStack.circuit_partion;
+                PyGC_Head* head = &gcstate->cyclic[0].head;
                 gc->_gc_next = head->_gc_next;
                 _PyGCHead_SET_PREV(gc, head);
                 _PyGCHead_SET_PREV((PyGC_Head*)gc->_gc_next, gc);
@@ -765,7 +774,7 @@ move_unreachable(PyGC_Head *young, PyGC_Head *unreachable, bool do_detect_cyclic
             // young->_gc_prev == gc.  Don't do gc = GC_NEXT(gc) before!
 #ifdef ENABLE_RTGC_GC
             intptr_t scanDepth;
-            if (op->ob_refcnt > 1 && do_detect_cyclic) {
+            if (op->ob_refcnt > 1 && gcstate != NULL) {
                 if (rtgc_is_cyclic(op)) {
                     assert(!rtgc_is_cyclic(op));
                 }
@@ -1338,7 +1347,7 @@ flag is cleared (for example, by using 'clear_unreachable_mask' function or
 by a call to 'move_legacy_finalizers'), the 'unreachable' list is not a normal
 list and we can not use most gc_list_* functions for it. */
 static inline void
-deduce_unreachable(PyGC_Head *base, PyGC_Head *unreachable, bool do_detect_cyclic) {
+deduce_unreachable(PyGC_Head *base, PyGC_Head *unreachable, GCState* gcstate) {
     validate_list(base, collecting_clear_unreachable_clear);
     /* Using ob_refcnt and gc_refs, calculate which objects in the
      * container set are reachable from outside the set (i.e., have a
@@ -1386,7 +1395,7 @@ deduce_unreachable(PyGC_Head *base, PyGC_Head *unreachable, bool do_detect_cycli
 #ifndef ENABLE_RTGC_GC    
     gc_list_init(unreachable);
 #endif
-    move_unreachable(base, unreachable, do_detect_cyclic);  // gc_prev is pointer again
+    move_unreachable(base, unreachable, gcstate);  // gc_prev is pointer again
     validate_list(base, collecting_clear_unreachable_clear);
     validate_list(unreachable, collecting_set_unreachable_set);
 }
@@ -1419,7 +1428,7 @@ handle_resurrected_objects(PyGC_Head *unreachable, PyGC_Head* still_unreachable,
 #ifdef ENABLE_RTGC_GC    
     gc_list_init(still_unreachable);
 #endif
-    deduce_unreachable(resurrected, still_unreachable, true);
+    deduce_unreachable(resurrected, still_unreachable, NULL);
     clear_unreachable_mask(still_unreachable);
 
     // Move the resurrected objects to the old generation for future collection.
@@ -1579,6 +1588,7 @@ gc_collect_main(PyThreadState *tstate, int generation, _PyGC_Reason reason)
 
     assert(generation >= 0 && generation < NUM_GENERATIONS);
     rtgc_log(true, "gc generation %d\n", generation);
+    // validate_list(GEN_HEAD(gcstate, NUM_GENERATIONS-1), collecting_clear_unreachable_clear);
 
 #ifdef Py_STATS
     if (_Py_stats) {
@@ -1626,7 +1636,7 @@ gc_collect_main(PyThreadState *tstate, int generation, _PyGC_Reason reason)
     validate_list(old, collecting_clear_unreachable_clear);
 
 #ifdef ENABLE_RTGC_GC
-    rtStack.circuit_roots = &gcstate->circuit_roots.head;
+    rtStack.circuit_roots = GEN_HEAD(gcstate, NUM_GENERATIONS-1);
     rtStack.unreachable = &unreachable;
     rtStack.generation = generation;
     gc_list_init(&unreachable);
@@ -1635,21 +1645,27 @@ gc_collect_main(PyThreadState *tstate, int generation, _PyGC_Reason reason)
 #ifdef ENABLE_RTGC_GC        
     // rtStack.reachable = young;
     if (generation == NUM_GENERATIONS-1) {
-        finalize_unlink_gc_head(&rtgc_partion.head);
-
-        PyGC_Head* gc_next;
         int cnt_cyclic = 0;
-        for (PyGC_Head* gc = GC_NEXT(rtStack.circuit_roots); gc != rtStack.circuit_roots; gc = GC_NEXT(gc)) {
-            rtgc_log(true, "unmark cyclic %p\n", gc);
+        for (PyGC_Head* gc = GC_NEXT(rtStack.circuit_roots); gc != &gcstate->cyclic[1].head; gc = GC_NEXT(gc)) {
             rtgc_unmark_cyclic(FROM_GC(gc));
             cnt_cyclic ++;
         }
         rtgc_log(true, "unmarked cyclic %d\n", cnt_cyclic);
-        gc_list_merge(rtStack.circuit_roots, old);
-        gc_list_append(&rtgc_partion.head, rtStack.circuit_roots);
+        finalize_unlink_gc_head(&gcstate->cyclic[0].head);
+        finalize_unlink_gc_head(&gcstate->cyclic[1].head);
+
+        PyGC_Head* first = GC_NEXT(rtStack.circuit_roots);
+        _PyGCHead_SET_NEXT(&gcstate->cyclic[0].head, &gcstate->cyclic[1].head);
+        _PyGCHead_SET_PREV(&gcstate->cyclic[1].head, &gcstate->cyclic[0].head);
+        _PyGCHead_SET_NEXT(&gcstate->cyclic[1].head, first);
+        _PyGCHead_SET_PREV(&gcstate->cyclic[0].head, rtStack.circuit_roots);
+
+        _PyGCHead_SET_PREV(first, &gcstate->cyclic[1].head);
+        _PyGCHead_SET_NEXT(rtStack.circuit_roots, &gcstate->cyclic[0].head);
+
     } else {
         PyGC_Head* gc_next;
-        for (PyGC_Head* gc = GC_NEXT(rtStack.circuit_roots); gc != rtStack.circuit_roots; gc = gc_next) {
+        for (PyGC_Head* gc = GC_NEXT(rtStack.circuit_roots); gc != &gcstate->cyclic[0].head; gc = gc_next) {
             gc_next = GC_NEXT(gc);
             PyObject *op = FROM_GC(gc);
             if (op->ob_refcnt == 1) {
@@ -1714,7 +1730,7 @@ gc_collect_main(PyThreadState *tstate, int generation, _PyGC_Reason reason)
         }
     }
 #endif    
-    deduce_unreachable(young, &unreachable, true);
+    deduce_unreachable(young, &unreachable, gcstate);
 
     untrack_tuples(young);
     /* Move reachable objects to next generation. */
@@ -1846,7 +1862,7 @@ gc_collect_main(PyThreadState *tstate, int generation, _PyGC_Reason reason)
     }
 
 #ifdef ENABLE_RTGC_GC
-    rtgc_log(true, "finished gc. generation: %d cyclic-count: %d\n", generation, gc_list_size(rtStack.circuit_roots));
+    rtgc_log(true, "finished gc. generation: %d old-obj: %d\n", generation, (int)gc_list_size(rtStack.circuit_roots));
 #endif
 
     assert(!_PyErr_Occurred(tstate));
@@ -1903,12 +1919,6 @@ _PyGC_GetReferrers(PyInterpreterState *interp, PyObject *objs)
             return NULL;
         }
     }
-#if 0 // def ENABLE_RTGC_GC    
-    if (!(gc_referrers_for(objs, &gcstate->circuit_roots.head, result))) {
-        Py_DECREF(result);
-        return NULL;
-    }
-#endif
     return result;
 }
 
@@ -1930,23 +1940,11 @@ _PyGC_GetObjects(PyInterpreterState *interp, int generation)
                 goto error;
             }
         }
-#ifdef ENABLE_RTGC_GC
-        if (append_objects(result, &gcstate->circuit_roots.head)) {
-            goto error;
-        }
-#endif        
     }
     else {
         if (append_objects(result, GEN_HEAD(gcstate, generation))) {
             goto error;
         }
-#ifdef ENABLE_RTGC_GC
-        if (generation == NUM_GENERATIONS - 1) {
-            if (append_objects(result, &gcstate->circuit_roots.head)) {
-                goto error;
-            }
-        }
-#endif        
     }
 
     return result;
@@ -1959,13 +1957,20 @@ void
 _PyGC_Freeze(PyInterpreterState *interp)
 {
     GCState *gcstate = &interp->gc;
+#ifdef ENABLE_RTGC_GC
+    PyGC_Head head;
+    gc_list_init(&head);
+    for (int i = NUM_GENERATIONS; --i >= 0; ) {
+        gc_list_merge(GEN_HEAD(gcstate, i), &head);
+        gcstate->generations[i].count = 0;
+    }
+    gc_list_merge(&gcstate->permanent_generation.head, &head);
+    gc_list_merge(&head, &gcstate->permanent_generation.head);
+#else
     for (int i = 0; i < NUM_GENERATIONS; ++i) {
         gc_list_merge(GEN_HEAD(gcstate, i), &gcstate->permanent_generation.head);
         gcstate->generations[i].count = 0;
     }
-#ifdef ENABLE_RTGC_GC
-    gc_list_merge(&gcstate->circuit_roots.head, &gcstate->permanent_generation.head);
-    gcstate->circuit_roots.count = 0;
 #endif
 }
 
@@ -2113,9 +2118,6 @@ _PyGC_Fini(PyInterpreterState *interp)
     for (int i = 0; i < NUM_GENERATIONS; i++) {
         finalize_unlink_gc_head(&gcstate->generations[i].head);
     }
-#ifdef ENABLE_RTGC_GC
-    finalize_unlink_gc_head(&gcstate->circuit_roots.head);
-#endif
     finalize_unlink_gc_head(&gcstate->permanent_generation.head);
 }
 
@@ -2380,9 +2382,6 @@ PyUnstable_GC_VisitObjects(gcvisitobjects_t callback, void *arg)
             goto done;
         }
     }
-#ifdef ENABLE_RTGC_GC
-    visit_generation(callback, arg, &gcstate->circuit_roots);
-#endif    
     visit_generation(callback, arg, &gcstate->permanent_generation);
 done:
     gcstate->enabled = origenstate;

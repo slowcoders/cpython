@@ -293,7 +293,10 @@ struct _gc_runtime_state {
     struct gc_generation generations[NUM_GENERATIONS];
     PyGC_Head *generation0;
 #ifdef ENABLE_RTGC
-    struct gc_generation circuit_roots;
+    struct _CircuitPartion {
+        PyGC_Head head;
+        PyListObject obj;
+    } cyclic[2];
 #endif    
     /* a permanent generation which won't be collected */
     struct gc_generation permanent_generation;
