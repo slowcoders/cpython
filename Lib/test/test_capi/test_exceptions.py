@@ -101,6 +101,7 @@ class Test_Exceptions(unittest.TestCase):
 
             ref = Foo()
         ''')
+        print("executing test_warn_during_finalization.")
         proc = assert_python_ok("-c", code)
         warnings = proc.err.splitlines()
         # Due to the finalization of the interpreter, the source will be ommited

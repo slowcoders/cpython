@@ -144,6 +144,7 @@ class GCTests(unittest.TestCase):
         a.a = a
         gc.collect()
         del a
+        print("gc.collect after del")
         self.assertNotEqual(gc.collect(), 0)
         class B(list):
             pass

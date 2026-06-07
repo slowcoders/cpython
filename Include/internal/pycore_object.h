@@ -376,6 +376,11 @@ static inline void _PyObject_GC_TRACK(
 #ifdef Py_GIL_DISABLED
     _PyObject_SET_GC_BITS(op, _PyGC_BITS_TRACKED);
 #else
+#ifdef ENABLE_RTGC_REF32
+    op->ob_flags = 0;
+#else
+    assert(op->ob_refcnt_split[PY_BIG_ENDIAN^1] == 0);
+#endif
     PyGC_Head *gc = _Py_AS_GC(op);
     _PyObject_ASSERT_FROM(op,
                           (gc->_gc_prev & _PyGC_PREV_MASK_COLLECTING) == 0,

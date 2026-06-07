@@ -31,22 +31,22 @@ class IncrementalGCTests(unittest.TestCase):
             head.next.prev = head
             return head
 
-        head = make_ll(1000*1000)
-
         assert(gc.isenabled())
-        olds = []
+        g0, g1, g2 = gc.get_threshold();
+        print(f"max_young: {g0} yg_loop: {g1} g1_loop: {g2}");
+
+        gc.collect();
+        print("gc.collect")
+        gids = [];
+        for i in range(g1 * g2):
+            gids.append(make_ll(g0))
+
+        print("gids prepared")
         # initial_heap_size = _testinternalcapi.get_tracked_heap_size()
-        idx = 0;
-        for i in range(20_000):
-            newhead = make_ll(300)
-            newhead.surprise = head
-            idx += 1;
-            if len(olds) == 200:
-                # new_objects = _testinternalcapi.get_tracked_heap_size() - initial_heap_size
-                # self.assertLess(new_objects, 27_000, f"Heap growing. Reached limit after {i} iterations")
-                olds[idx % 200] = newhead;
-            else:
-                olds.append(newhead)
+        for i in range(2_000):
+            print(f"loop - {i}")
+            idx = i % (g1 * g2);
+            gids[idx] = make_ll(g0)
 
         
 if __name__ == "__main__":

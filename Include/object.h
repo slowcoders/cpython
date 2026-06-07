@@ -173,13 +173,29 @@ struct _object {
     __pragma(warning(disable: 4201))
 #endif
     union {
-#ifdef ENABLE_RTGC
-       PY_UINT32_T ob_refcnt; 
+#ifdef ENABLE_RTGC_REF32
+        PY_INT64_T ob_refcnt_full;
+        struct {
+#  if PY_BIG_ENDIAN
+            uint16_t ob_flags;
+            uint16_t ob_overflow;
+            uint32_t ob_refcnt;
+#  else
+    #ifdef ENABLE_RTGC_REF_ANCHOR
+            uint32_t ob_anchored: 1;
+            uint32_t ob_refcnt: 31;
+    #else
+            uint32_t ob_refcnt;
+    #endif
+            uint16_t ob_overflow;
+            uint16_t ob_flags;
+#  endif
+        };
 #else
-       Py_ssize_t ob_refcnt;
-#endif
-#if SIZEOF_VOID_P > 4
-       PY_UINT32_T ob_refcnt_split[2];
+        Py_ssize_t ob_refcnt;
+#  if SIZEOF_VOID_P > 4
+        PY_UINT32_T ob_refcnt_split[2];
+#  endif
 #endif
     };
 #ifdef _MSC_VER
@@ -824,6 +840,16 @@ static inline Py_ALWAYS_INLINE void Py_INCREF(PyObject *op)
         _Py_atomic_add_ssize(&op->ob_ref_shared, (1 << _Py_REF_SHARED_SHIFT));
     }
 #elif SIZEOF_VOID_P > 4
+#  ifdef ENABLE_RTGC_REF32
+    PY_UINT32_T cur_refcnt = op->ob_refcnt;
+    PY_UINT32_T new_refcnt = cur_refcnt + 1;
+    if (new_refcnt == 0) {
+        // cur_refcnt is equal to _Py_IMMORTAL_REFCNT: the object is immortal,
+        // do nothing
+        return;
+    }
+    op->ob_refcnt = new_refcnt;
+#  else
     // Portable saturated add, branching on the carry flag and set low bits
     PY_UINT32_T cur_refcnt = op->ob_refcnt_split[PY_BIG_ENDIAN];
     PY_UINT32_T new_refcnt = cur_refcnt + 1;
@@ -833,6 +859,7 @@ static inline Py_ALWAYS_INLINE void Py_INCREF(PyObject *op)
         return;
     }
     op->ob_refcnt_split[PY_BIG_ENDIAN] = new_refcnt;
+#endif
 #else
     // Explicitly check immortality against the immortal value
     if (_Py_IsImmortal(op)) {
