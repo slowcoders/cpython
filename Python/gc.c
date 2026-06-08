@@ -18,7 +18,6 @@
 #ifndef Py_GIL_DISABLED
 
 typedef struct _gc_runtime_state GCState;
-
 #ifdef Py_DEBUG
 #  define GC_DEBUG
 #  define ENABLE_RTGC_LOG
@@ -606,7 +605,7 @@ static int
 visit_reachable(PyObject *op, void *arg)
 {
 #ifdef ENABLE_RTGC_GC
-    intptr_t scanDepth = (intptr_t)arg;
+    PyObject* parent = arg;
     PyGC_Head *reachable = rtStack.reachable;
 #else
     PyGC_Head *reachable = arg;
@@ -624,6 +623,15 @@ visit_reachable(PyObject *op, void *arg)
     // move_unreachable's scan of the 'young' list - they've already been
     // traversed, and no longer have the PREV_MASK_COLLECTING flag.
     if (! gc_is_collecting(gc)) {
+        for (int i = 0; i < 4 && parent->ob_refcnt == 1; i ++) {
+            PyGC_Head* pgc = GC_PREV(AS_GC(parent));
+            if (pgc == gc) {
+                rtgc_log(true, "circuit root found: %p (%d)\n", gc, rtStack.cyclic_root_refcnt);
+            }
+        }
+        // if (parent) {
+        //     rtStack.cyclic_root_refcnt = rtStack.cyclic_root_refcnt * 100 + scanDepth;
+        // }
         return 0;
     }
     // It would be a logic error elsewhere if the collecting flag were set on
@@ -656,6 +664,11 @@ visit_reachable(PyObject *op, void *arg)
         _PyGCHead_SET_PREV(next, prev);
 
         gc_list_append(gc, reachable);
+#ifdef ENABLE_RTGC_GC
+        if (op->ob_refcnt == 1) {
+            gc->_gc_prev |= (intptr_t)arg;
+        } else
+#endif
         gc_set_refs(gc, 1);
     }
     else if (gc_refs == 0) {
@@ -664,6 +677,11 @@ visit_reachable(PyObject *op, void *arg)
          * we need to do is tell move_unreachable that it's
          * reachable.
          */
+#ifdef ENABLE_RTGC_GC
+        if (op->ob_refcnt == 1) {
+            gc->_gc_prev |= (intptr_t)arg;
+        } else
+#endif
         gc_set_refs(gc, 1);
     }
     /* Else there's nothing to do.
@@ -672,26 +690,22 @@ visit_reachable(PyObject *op, void *arg)
      */
     else {
         _PyObject_ASSERT_WITH_MSG(op, gc_refs > 0, "refcount is too small");       
-#ifdef ENABLE_RTGC_GC
-        if (op == rtStack.stack[0]) {
-            rtStack.cyclic_root_refcnt ++;
-            // rtgc_log(true, "circuit root found: %p (%d)\n", gc, rtStack.cyclic_root_refcnt);
-        }
-        return 0;
-#endif
+// #ifdef ENABLE_RTGC_GC
+//         return 0;
+// #endif
     }
-#ifdef ENABLE_RTGC_GC
-    if (scanDepth < MAX_CIRCLE_LEN && op->ob_refcnt == 1) {
-        if (rtStack.cyclic_root_refcnt == 0) {
-            rtStack.stack[scanDepth] = op;
-        }
-        traverseproc traverse = Py_TYPE(op)->tp_traverse;
-        (void) traverse(op,
-                visit_reachable,
-                (void *)scanDepth + 1);
-        gc_clear_collecting(gc);
-    }
-#endif
+// #ifdef ENABLE_RTGC_GC
+//     if (scanDepth < MAX_CIRCLE_LEN && op->ob_refcnt == 1) {
+//         if (rtStack.cyclic_root_refcnt == 0) {
+//             rtStack.stack[scanDepth] = op;
+//         }
+//         traverseproc traverse = Py_TYPE(op)->tp_traverse;
+//         (void) traverse(op,
+//                 visit_reachable,
+//                 (void *)scanDepth + 1);
+//         gc_clear_collecting(gc);
+//     }
+// #endif
     return 0;
 }
 
@@ -728,15 +742,15 @@ move_unreachable(PyGC_Head *young, PyGC_Head *unreachable, GCState* gcstate)
      */
 
     while (gc != young) {
-        {
-            PyGC_Head* prev2 = rtStack.circuit_roots;
-            for (PyGC_Head* gc2 = GC_NEXT(prev2); gc2 != gc; gc2 = GC_NEXT(gc2)) {
-                if (GC_NEXT(prev2) != gc2) {
-                    assert(GC_NEXT(prev2) == gc2);
-                }
-                prev2 = gc2;
-            }
-        }
+        // {
+        //     PyGC_Head* prev2 = rtStack.circuit_roots;
+        //     for (PyGC_Head* gc2 = GC_NEXT(prev2); gc2 != gc; gc2 = GC_NEXT(gc2)) {
+        //         if (GC_NEXT(prev2) != gc2) {
+        //             assert(GC_NEXT(prev2) == gc2);
+        //         }
+        //         prev2 = gc2;
+        //     }
+        // }
 #ifdef ENABLE_RTGC_GC        
         if (!gc_is_collecting(gc)) {
             rtStack.dbgObj = FROM_GC(gc);
@@ -785,24 +799,28 @@ move_unreachable(PyGC_Head *young, PyGC_Head *unreachable, GCState* gcstate)
             else {
                 scanDepth = INT_MAX;
             }
+            gc_clear_collecting(gc);
             (void) traverse(op,
                     visit_reachable,
-                    (void *)scanDepth);
-            if (rtStack.cyclic_root_refcnt == 1) {
+                    (void *)op);
+            if (false && rtStack.cyclic_root_refcnt < 100) {
+                scanDepth = rtStack.cyclic_root_refcnt;
                 rtStack.cyclic_root_refcnt = -1;
-                rtgc_log((++circuit_cnt % 100) != 0, "circuit found: %d, %p\n", circuit_cnt, gc);
                 prev->_gc_next = gc->_gc_next;
 
+                rtgc_log((++circuit_cnt % 100) != 0, "circuit found: %d", circuit_cnt);
                 for (int i = scanDepth; --i >= 0; ) {
                     PyObject* cpo = rtStack.stack[i];
                     PyGC_Head* cgc = AS_GC(cpo);
-                    assert(gc_is_collecting(cgc));
-                    gc_clear_collecting(cgc);
+                    rtgc_log(true, ", %p", cgc);
+                    assert(!gc_is_collecting(cgc));
+                    // gc_clear_collecting(cgc);
                     rtgc_mark_cyclic(cpo);       
     #ifdef ENABLE_RTGC_REF_ANCHOR
                     cpo->ob_anchored = 0;     
     #endif
                 }
+                rtgc_log(true, "\n");
 
 
                 PyGC_Head* head = circuit_roots;
