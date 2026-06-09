@@ -35,19 +35,38 @@ class IncrementalGCTests(unittest.TestCase):
         assert(gc.isenabled())
         g0, g1, g2 = gc.get_threshold();
         print(f"max_young: {g0} yg_loop: {g1} g1_loop: {g2}");
-
         gc.collect();
         print("gc.collect")
         gids = [];
-        for i in range(g1 * g2):
-            gids.append(make_ll(g0))
 
-        print("gids prepared")
-        # initial_heap_size = _testinternalcapi.get_tracked_heap_size()
-        for i in range(2_000):
-            # print(f"loop - {i}")
-            idx = i % (g1 * g2);
-            gids[idx] = make_ll(g0)
+        if False:
+            # rtgc: 2.084, origin: 1.776
+            for i in range(g1 * g2):
+                gids.append(make_ll(g0))
+
+            print("gids prepared")
+            # initial_heap_size = _testinternalcapi.get_tracked_heap_size()
+            for i in range(2_000):
+                # print(f"loop - {i}")
+                idx = i % (g1 * g2)
+                gids[idx] = make_ll(g0)
+
+        else:
+            # rtgc: 1.515, 
+            # finished gc. generation: 1 garbage: 2024, circuit: 214
+            # finished gc. generation: 2 garbage: 2024, circuit: 0
+            #
+            # origin: 1.976
+            # finished gc. generation: 1 garbage: 13013, circuit: 0
+            # finished gc. generation: 1 garbage: 13013, circuit: 0
+            for i in range(g1 * g2 * 100):
+                gids.append(make_ll(g0 // 100))
+
+            print("gids prepared")
+            # initial_heap_size = _testinternalcapi.get_tracked_heap_size()
+            for i in range(g1 * g2 * 5000):
+                idx = i % (g1 * g2 * 100)
+                gids[idx] = make_ll(5)
 
         
 if __name__ == "__main__":
