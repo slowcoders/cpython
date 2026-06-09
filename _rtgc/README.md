@@ -24,6 +24,7 @@ make test
 ```sh
 mkdir _release
 cd _release
+../configure --enable-optimizations
 ../configure --enable-optimizations --with-lto
 make
 make test

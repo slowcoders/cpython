@@ -18,6 +18,7 @@ class IncrementalGCTests(unittest.TestCase):
             def __init__(self, next=None, prev=None):
                 self.next = next
                 self.prev = None
+                self.surprise = bytearray(2000)
                 # if next is not None:
                 #     next.prev = self
                 # self.prev = prev
@@ -44,7 +45,7 @@ class IncrementalGCTests(unittest.TestCase):
         print("gids prepared")
         # initial_heap_size = _testinternalcapi.get_tracked_heap_size()
         for i in range(2_000):
-            print(f"loop - {i}")
+            # print(f"loop - {i}")
             idx = i % (g1 * g2);
             gids[idx] = make_ll(g0)
 
